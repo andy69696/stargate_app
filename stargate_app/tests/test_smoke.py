@@ -8,7 +8,8 @@ from streamlit.testing.v1 import AppTest
 
 
 def test_all_tabs_render():
-    at = AppTest.from_file("app.py", default_timeout=120).run()
+    app_py = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "app.py")
+    at = AppTest.from_file(app_py, default_timeout=120).run()
     assert not at.exception, at.exception
     text = " ".join(m.value for m in at.markdown)
     for word in ("Resourcing exceptions", "Utilisation", "Demand", "Margin", "Purpose", "Objective"):

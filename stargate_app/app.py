@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from stargate_rm import config, pipeline, ui
+from stargate_rm import config, db, pipeline, ui
 from stargate_rm.views import demand, exceptions, margin, utilisation
 
 st.set_page_config(page_title="Stargate · Resource manager", page_icon="📊", layout="wide", initial_sidebar_state="collapsed")
@@ -18,7 +18,7 @@ with st.sidebar:
     st.markdown("**Data**")
     st.caption(f"Kantata: `{config.KANTATA_CATALOG}.{config.KANTATA_SCHEMA}`" + ("  \n**Sample mode** (bundled JSON)" if config.SAMPLE_MODE else ""))
     if st.button("Rebuild from the lake"):
-        st.cache_data.clear(); st.rerun()
+        st.cache_data.clear(); db.clear_cache(); st.rerun()
 
 data = pipeline.build()
 ui.gaps_banner(data.get("gaps", []))

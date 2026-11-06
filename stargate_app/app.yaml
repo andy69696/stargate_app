@@ -1,7 +1,9 @@
-# Databricks Apps manifest for the Stargate Resource manager app (Streamlit).
+# Databricks Apps manifest for Stargate Workspace v2 (FastAPI serving the artifact's own pages; see server.py).
 # Resources: add a SQL warehouse resource named "sql-warehouse" to the app in the Databricks UI (Apps > this app > Resources)
 # and the app's service principal gets CAN_USE on it; the warehouse id is injected below.
-command: ["streamlit", "run", "app.py", "--server.port", "8000", "--server.address", "0.0.0.0", "--server.headless", "true"]
+command: ["uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8000"]
+# The earlier Streamlit port is still in the folder; to deploy it instead, use:
+# command: ["streamlit", "run", "app.py", "--server.port", "8000", "--server.address", "0.0.0.0", "--server.headless", "true"]
 env:
   - name: DATABRICKS_WAREHOUSE_ID
     valueFrom: sql-warehouse            # app resource key (SQL warehouse)
@@ -12,7 +14,7 @@ env:
   - name: HUBSPOT_DEALS_TABLE
     value: "hubspot_dev.silver.deals"   # TODO(databricks): the HubSpot deals table for the Not detailed tab (see queries.hubspot_deals)
   - name: APP_STATE_SCHEMA
-    value: "salesforce_dev.stargate_app" # TODO(databricks): schema the app may write to (exception ledger, RM actions, history)
+    value: "salesforce_dev.stargate_app" # TODO(databricks): schema the app may write to (workspace_db, resourcing_history; Streamlit also uses exception_ledger, rm_actions)
   - name: LLM_ENDPOINT
     value: "databricks-claude-sonnet-4" # TODO(databricks): Foundation Model API chat endpoint for Explain; grant the app CAN_QUERY
   - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS

@@ -15,8 +15,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-import streamlit as st
-
 from . import config, db, queries
 
 HERE = Path(__file__).resolve().parent
@@ -49,23 +47,27 @@ def _last_day(ym: str) -> str:
     return (dt.date.fromisoformat(nxt + "-01") - dt.timedelta(days=1)).isoformat()
 
 
+_gaps: list[str] = []
+
+
 def _safe(fn, *args, what: str = "") -> list[dict]:
     """Run a lake query; on failure (table missing, column renamed) return no rows and remember the gap for the banner."""
     try:
         return db.records(fn(*args))
     except Exception as e:  # noqa: BLE001 - we want the page to render with a visible gap, not crash
-        st.session_state.setdefault("data_gaps", []).append(f"{what or fn.__name__}: {str(e).splitlines()[0][:200]}")
+        _gaps.append(f"{what or fn.__name__}: {str(e).splitlines()[0][:200]}")
         return []
 
 
-@st.cache_data(ttl=3600, show_spinner="Building the Resource manager views from the lake…")
-def build(today: str | None = None) -> dict:
-    """Return {'rm': ..., 'res': ..., 'match': ..., 'extras': ..., 'today': ..., 'gaps': [...]}."""
+def build_data(today: str | None = None) -> dict:
+    """Return {'rm', 'res', 'match', 'history', 'extras', 'today', 'gaps'}.  No Streamlit dependency: called by the FastAPI
+    server directly and by the Streamlit app through build().  Not re-entrant (the legacy builders read sys.argv), so callers
+    serialise it."""
     if config.SAMPLE_MODE:
         return _sample()
     from .legacy import rm_build, resourcing_refresh, match as matcher
 
-    st.session_state["data_gaps"] = []
+    _gaps.clear()
     today = today or dt.date.today().isoformat()
     t = dt.date.fromisoformat(today)
     this_monday = t - dt.timedelta(days=t.weekday()); prev_monday = this_monday - dt.timedelta(days=7)
@@ -119,7 +121,8 @@ def build(today: str | None = None) -> dict:
         with open(os.path.join(out, "match.json")) as f:
             mt = json.load(f)
         with open(os.path.join(out, "history.json")) as f:
-            _history_save(json.load(f))
+            history = json.load(f)
+        _history_save(history)
     extras = {
         "actors": _safe(queries.dg_actors, what="delivery group actors"),
         "status": _safe(queries.status_summaries, what="status summaries"),
@@ -128,7 +131,20 @@ def build(today: str | None = None) -> dict:
         "time": _safe(queries.time_entries, (t - dt.timedelta(days=120)).isoformat(), what="time entries"),
         "required": _safe(queries.required_capabilities, what="required capabilities"),
     }
-    return {"rm": rm, "res": res, "match": mt, "extras": extras, "today": today, "gaps": list(st.session_state.get("data_gaps", []))}
+    return {"rm": rm, "res": res, "match": mt, "history": history, "extras": extras, "today": today, "gaps": list(_gaps)}
+
+
+def build(today: str | None = None) -> dict:
+    """Streamlit entry point: build_data() behind st.cache_data (one hour, cleared by the sidebar's Rebuild button)."""
+    import streamlit as st
+
+    global _st_build
+    if _st_build is None:
+        _st_build = st.cache_data(ttl=3600, show_spinner="Building the Resource manager views from the lake…")(build_data)
+    return _st_build(today)
+
+
+_st_build = None
 
 
 def _sample() -> dict:
@@ -138,7 +154,7 @@ def _sample() -> dict:
         res = json.load(f)
     with open(SAMPLE / "match.json") as f:
         mt = json.load(f)
-    return {"rm": rm, "res": res, "match": mt, "extras": {"actors": [], "status": [], "po": [], "invoices": [], "time": [], "required": []},
+    return {"rm": rm, "res": res, "match": mt, "history": None, "extras": {"actors": [], "status": [], "po": [], "invoices": [], "time": [], "required": []},
             "today": res.get("today"), "gaps": ["Sample mode: bundled JSON, not the lake"]}
 
 
@@ -147,7 +163,7 @@ def _history_load() -> dict:
     """TODO(databricks): create <APP_STATE_SCHEMA>.resourcing_history (asof TIMESTAMP, payload STRING) for the weekly snapshots.
     Until it exists the history restarts on every build (the change log on the former History panel needs it)."""
     try:
-        df = db.query(f"SELECT payload FROM {config.APP_STATE_SCHEMA}.resourcing_history ORDER BY asof DESC LIMIT 1")
+        df = db.query(f"SELECT payload FROM {config.APP_STATE_SCHEMA}.resourcing_history ORDER BY asof DESC LIMIT 1", cached=False)
         if len(df):
             return json.loads(df.iloc[0]["payload"])
     except Exception:  # noqa: BLE001

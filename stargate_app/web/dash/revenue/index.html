@@ -1,0 +1,826 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.brandlogo { display: block; height: 44px; width: auto; margin: 0 0 8px; }
+body.embedded .brandlogo { display: none !important; }
+</style></head><body><script>try { if (window.parent && window.parent !== window) document.body.classList.add("embedded"); } catch (e) {}</script>
+<title>UBDS Revenue Profile</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: board-pack dashboard. Year tabs and filters on top, summary strip, two full-width charts, then one card per client with its own mini chart and commentary. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef1f5; --ink: #111418; --ink-2: #4b5563; --ink-3: #8a929e;
+  --grid: #e3e7ed; --axis: #c4cad3; --ring: rgba(17,20,24,0.10); --accent: #548ca3;
+  --won: #1f2336; --contracted: #3a5f74; --commit: #548ca3; --likely: #7fa9bb; --best: #adbedc; --placeholder: #4a3aa7; --pipeline: #eb6834;
+  --warn: #b45309; --warn-bg: #fdf3e4; --plan: #0f766e; --plan-bg: #e6f4f1;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1114; --surface: #181b20; --surface-2: #22262d; --ink: #f3f4f6; --ink-2: #b6bcc6; --ink-3: #7f8792;
+  --grid: #2a2f37; --axis: #3b414b; --ring: rgba(255,255,255,0.10); --accent: #7fb3c9;
+  --won: #256abf; --contracted: #3987e5; --commit: #6da7ec; --likely: #9ec5f4; --best: #cde2fb; --placeholder: #9085e9; --pipeline: #d95926;
+  --warn: #f4b36a; --warn-bg: #2b2114; --plan: #2dd4bf; --plan-bg: #0f2f2b; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1114; --surface: #181b20; --surface-2: #22262d; --ink: #f3f4f6; --ink-2: #b6bcc6; --ink-3: #7f8792;
+  --grid: #2a2f37; --axis: #3b414b; --ring: rgba(255,255,255,0.10); --accent: #7fb3c9;
+  --won: #256abf; --contracted: #3987e5; --commit: #6da7ec; --likely: #9ec5f4; --best: #cde2fb; --placeholder: #9085e9; --pipeline: #d95926;
+  --warn: #f4b36a; --warn-bg: #2b2114; --plan: #2dd4bf; --plan-bg: #0f2f2b; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 56px; padding-inline: 20px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 28px; line-height: 1.2; } h2 { font-size: 19px; } h3 { font-size: 16px; }
+p { margin: 0; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 500; }
+.sub { color: var(--ink-2); max-width: 70ch; margin-top: 6px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 32px; align-items: flex-end; margin-bottom: 18px; }
+.asof { font-size: 13px; color: var(--ink-3); }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 14px; }
+.tabs { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.tabs button, .basis button { all: unset; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; padding: 7px 14px; color: var(--ink-2); }
+.tabs button[aria-selected="true"], .basis button[aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+.tabs button:focus-visible, .basis button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.basis { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.chk { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); cursor: pointer; user-select: none; }
+.chk input { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); }
+.statuses { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 20px; font-size: 12px; color: var(--ink-3); }
+.statuses .lbl { margin-right: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.statuses button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--ring); background: var(--surface); color: var(--ink-2); font-size: 12px; font-weight: 500; }
+.statuses button[aria-pressed="false"] { opacity: 0.45; text-decoration: line-through; }
+.statuses button:focus-visible { outline: 2px solid var(--accent); }
+.bidnote { font-size: 12px; color: var(--warn); background: var(--warn-bg); padding: 6px 10px; border-radius: 6px; margin-bottom: 16px; }
+
+/* summary tiles */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.tile.kimble { border-color: var(--kimble); }
+:root { --kimble: #b45309; --kimble-soft: #f4b36a; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --kimble: #f4b36a; --kimble-soft: #b45309; } }
+:root[data-theme="dark"] { --kimble: #f4b36a; --kimble-soft: #b45309; }
+.chart .kline { fill: none; stroke: var(--kimble); stroke-width: 2.5; stroke-dasharray: 5 3; }
+.chart .kdot { fill: var(--kimble); stroke: var(--surface); stroke-width: 1.5; }
+.chart .kbar { fill: var(--kimble); opacity: 0.85; }
+.kl { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); } .kl i { width: 18px; border-top: 2.5px dashed var(--kimble); display: inline-block; }
+.linkbtn { all: unset; cursor: pointer; font-size: 13px; color: var(--accent); text-decoration: underline; } .linkbtn:focus-visible { outline: 2px solid var(--accent); }
+.flag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); margin: 1px 3px 1px 0; white-space: nowrap; }
+#reconList td { white-space: normal; } #reconList td.n, #reconList td.num { white-space: nowrap; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--ink-3); font-weight: 500; display: flex; align-items: center; gap: 7px; }
+.tile .v { font-size: 24px; font-weight: 600; line-height: 1.15; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.tile .s { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+.tile.total { border-color: var(--accent); }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+
+/* panels */
+.panel { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 20px 22px; margin-bottom: 20px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 20px; margin-bottom: 14px; }
+.panel-head p { font-size: 13px; color: var(--ink-2); max-width: 70ch; }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--font); fill: var(--ink-2); font-size: 12px; }
+.chart text.tick { font-family: var(--mono); fill: var(--ink-3); font-size: 11px; }
+.chart text.lab { fill: var(--ink); }
+.chart text.val { font-family: var(--mono); fill: var(--ink-2); font-size: 11px; }
+.chart line.grid { stroke: var(--grid); stroke-width: 1; }
+.chart line.axis { stroke: var(--axis); stroke-width: 1; }
+.seg { stroke: var(--surface); stroke-width: 2; }
+.hit { fill: transparent; }
+.row:hover .seg { filter: brightness(1.08); }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 8px 10px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); max-width: 320px; z-index: 5; display: none; }
+.tip b { font-weight: 600; } .tip .r { display: flex; justify-content: space-between; gap: 14px; }
+.tip .r span:last-child { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tip .d { display: flex; justify-content: space-between; gap: 12px; opacity: 0.85; } .tip .d span:first-child { display: inline-flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tip .d i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; flex: none; }
+.tip .dh { margin-top: 6px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,.25); font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+.empty { padding: 32px 0; text-align: center; color: var(--ink-3); font-size: 14px; }
+
+/* changes */
+.chg-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px 28px; }
+.chg-grid > div { min-width: 0; }
+.trendnote { font-size: 12px; color: var(--ink-3); margin-top: 6px; }
+.delta-up { color: #0a7a2f; } .delta-down { color: #b42318; }
+:root[data-theme="dark"] .delta-up, :root:not([data-theme="light"]) .delta-up { color: #4ade80; }
+:root[data-theme="dark"] .delta-down, :root:not([data-theme="light"]) .delta-down { color: #f87171; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .delta-up { color: #0a7a2f; } :root:not([data-theme="dark"]) .delta-down { color: #b42318; } }
+.chg-type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; padding: 2px 7px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+.chg-type.added { color: #0a7a2f; } .chg-type.removed { color: #b42318; }
+#changeList td { white-space: normal; } #changeList td.n, #changeList td.num, #changeList td.pill { white-space: nowrap; } #changeList td.wrap-cell { min-width: 220px; }
+.chart .trendline { fill: none; stroke: var(--accent); stroke-width: 2; }
+.chart .trenddot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.chart .trendarea { fill: var(--accent); opacity: 0.08; }
+.since { margin-top: 8px; font-size: 12px; color: var(--ink-2); background: var(--surface-2); padding: 6px 10px; border-radius: 6px; }
+.since b { font-weight: 600; color: var(--ink); }
+@media (max-width: 860px) { .chg-grid { grid-template-columns: 1fr; } }
+/* callout */
+.callout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px 32px; }
+.callout > div { min-width: 0; }
+.callout p { color: var(--ink-2); font-size: 14px; }
+.callout p + p { margin-top: 10px; }
+.callout strong { color: var(--ink); font-weight: 600; }
+.big { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.1; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.stat { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+.stat > div { background: var(--surface-2); border-radius: 8px; padding: 12px 14px; }
+.stat .k { font-size: 12px; color: var(--ink-3); } .stat .s { font-size: 12px; color: var(--ink-2); }
+
+/* client cards */
+.clients { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 18px 22px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 14px 28px; min-width: 0; }
+.card .head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.card .head .tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; color: var(--ink-2); background: var(--surface-2); padding: 2px 8px; border-radius: 999px; }
+.card .head .tag.warn { color: var(--warn); background: var(--warn-bg); }
+.card .head .tot { margin-left: auto; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.card .head .tot small { font-size: 12px; color: var(--ink-3); font-weight: 400; margin-left: 6px; }
+.card .viz { min-width: 0; }
+.card .viz .bands { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 12px; }
+.card .viz .bands div { font-size: 12px; color: var(--ink-3); }
+.card .viz .bands b { display: block; font-family: var(--mono); font-weight: 500; color: var(--ink); font-size: 14px; }
+.card .viz .bands i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 1px; }
+.card .text { min-width: 0; }
+.card .text p { font-size: 14px; color: var(--ink-2); }
+.card .text .watch { margin-top: 10px; font-size: 13px; padding: 8px 12px; border-left: 3px solid var(--warn); background: var(--warn-bg); color: var(--ink); border-radius: 0 6px 6px 0; }
+.card .text .watch span { color: var(--warn); font-weight: 500; }
+.card .text .ms { margin-top: 8px; font-size: 12px; color: var(--ink-3); }
+.ladder { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; margin-top: 2px; }
+.ladder > div { background: var(--surface-2); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.ladder .k { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ladder .v { font-family: var(--mono); font-size: 16px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.ladder .s { font-size: 11px; color: var(--ink-2); }
+.ladder .g { border: 1px solid var(--plan); }
+.ladder .g .v { color: var(--plan); }
+.card .text .plan { margin-top: 10px; font-size: 13px; padding: 8px 12px; border-left: 3px solid var(--plan); background: var(--plan-bg); color: var(--ink); border-radius: 0 6px 6px 0; }
+.card .text .plan b { color: var(--plan); font-weight: 600; }
+.card .text .plan .pw { display: block; margin-top: 6px; color: var(--ink-2); }
+.card .head .tag.plan { color: var(--plan); background: var(--plan-bg); }
+.tile.plan { border-color: var(--plan); }
+.plannote { font-size: 12px; color: var(--plan); background: var(--plan-bg); padding: 6px 10px; border-radius: 6px; margin-bottom: 16px; }
+details { grid-column: 1 / -1; border-top: 1px solid var(--grid); padding-top: 8px; }
+summary { cursor: pointer; font-size: 13px; color: var(--ink-2); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+details[open] summary::before { transform: rotate(45deg); }
+summary:focus-visible { outline: 2px solid var(--accent); border-radius: 3px; }
+.tbl { overflow-x: auto; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); font-weight: 500; }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.pill span { display: inline-flex; align-items: center; gap: 6px; } td.pill i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+tr.sum td { font-weight: 600; border-bottom: none; }
+.note { font-size: 13px; color: var(--ink-2); max-width: 78ch; }
+.note p + p { margin-top: 8px; }
+.note code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; }
+@media (max-width: 860px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .tile.total { grid-column: span 2; }
+  .callout, .card { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .wrap { padding-inline: 16px; } h1 { font-size: 24px; } .tile .v { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <img class="brandlogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAF6CAMAAAC9TIK3AAAC91BMVEVHcExSjKNSi6JTjKJYla5TjKJTjKJUjKNTjKJUjKNUjqFTjKJTi6JTjKFTjKJTi6JTi6JViqNSjKJUjKNTi6FTjKJSi6JTi6JSjKNTi6JSi6FTjKJTi6JTi6JTi6JTjKJTnZ9TjKJTjKJTjKFTjKJTiqNTjKJSi6FTi6JShZ9TjKJSjKJUi6JYhp9SjKJSi6JSiqFUi6RQi6VTjKJVjKJTjKJTi6Kuvtx0nrdEg5mtvtutvty6xeSsvt2tvtytvtyuvtysvN6svdtViqGsv9ytvtytvtxTjKKsvtytvtyrvNpTi6JSjqWsvtusvdxTi6KtvtysvdxVjaGtvtytvtytvtxTi6GsvdtTjaJSjKKtvtxTjKJTi6JTi6JSjKJTi6JTjKJSiaJTi6NTjKJTjKJTjKJTi6JTjKJSjaRSi6JTi6FRi6JTjKJSi6JTi6NVjaBUi6JTjKJUjKNUjKJTjKNUiaOvwN5VjKNRiaNSi6JTi6JVi6JVkp51n7ixwuHC0vJenrdeobhcnLNTjKJEbIIfIjQeIjUWFiguQVVgpLxXkqoUKjkfIzYgJTgdIDITCx45V2xVj6YeIzQeIzUZGy4mLUAfIjQeIjUfJDcuOU1MfZRZl64cJDQeIjU0TGEfIzYeIjU+YXYfIjQfIjUfJDceIjYUESNPgpkjIzUfIjUfIzYeIzUoM0ZJd40gIDgeIjVQhZweIjUeIzUfIjUfIzUeIjUeIjUfIjUeIjYeIjUfIjUeIjUeITYYJTUdJDUeIjUeIjYeIjUeIjUeIjYfIzUkJDAeIjUeIjUfIjUeIjUeIjUgIDcfJDQeIjYfIzYeIjYeIjUeIjUfIjYeIjUeIjUfIzUdJDceIjUeIzUeIjUeIjUfIjUeIjUfITUeIjUeIjVPgpgeIzYfIzUdIjaputi0xuTA0vLP4/9yfpcFBxi5y+qltdNGTWMKDR7M4P9teJIAARHJ3Px5hqCWpcE5QFVRWXAEBhfF2PiHlbCdrclgaoOOnLgAAAOA6ahIAAAA/XRSTlMAS+unBCDB//RXDY/XMWbushBAeBe2Tof9yitfPdH5bgGs4keAJlTxnAku1GoHntlEcxmMI2KScf//P9z/GLv//w6NMGTxNnSqgf++IlrnlSzRP04hxlyYNc73fObF99y6HF+vg+iidiiY/0L8OaobYpqw2t8T/zMycVFCFez/l6f////+HJX/////A////////1zv//820/////8Tsv+C+/9X5inO//8OoXpP//8fwf+abGmKrKfc4t/k2C0KIlNkX52DQAbG8+3KcRcxt7t1hX6Rd/i9GkToOkr1jybqe//h/TOY////sq7////////////////////////AA/xJxAAANjtJREFUeAHs3eOCJFkQR/Hompz5j23bbjPato013v/z2t7kvTnn9w6nKhVxLXxNjUOJAaizw0ckHT1mAGrr+An96OQpA1BPp8/oF2fPWf0AOH9Sv3PBANTMxUv6o8ZlA1AjyZWr+gvXrhuAurjR0N84dNwA1MHNW/p7t+/ctdgBOHdP/+z+A4sbgIf6d0ceWbwAPH6i/+TpM4sTgOcv9F89eWkRAvDqtf6PN28tNgDe6f+69N5iAuBBQyk03zUAsWi5pnSetBqAKLxqU3pvblr4ALR3dCqLe8ctbAC6unsyhi49tIAB6O3z/uyh68kxCxSAgUH3XEKXXgxZiAAMj3huoUuvn1loAIx2u+cZujRmQQHQO+6ed+hqNFkwACQTk15A6NLUtIUBwMysezGhS3PHrXoA5hfciwtdt18agIoNjLsXGrp0f9EAVGnCvfDQpUuHDUBVlma9lNClE88MQBWWV7y/rNB1dNUAlC5Z81+UELr0Yt0AlKvd+0sOXTp70QCU/L1r6aHr6hUDUN4wqlcSunTmsgEowd1B98pClzauW9EADG96+aGXeQIrgNEF96pDl7YMQAnDqNWGru23VggArya8P5DQpZ1pA5C/mRF3DyZ06ekrA5Cv0RX3sELXbqsBKPfmvPzQpb2bBiAv7e5Bhi7tHxiAnIZRgw1dakssKwDzK+4hh67GRwYg86aowEOXbt00AOkNT3oEoUsfHxiAdLpm3eMIXfrEAKTbFOXxhK5PjxmAbJuiwg9d2li3/wPAzKZHF7r02TMDkH1TVNihS58bgOybogIPXY3L9q8AJBPuEYcuXfvC/hmApRGPPHTpy8T+GcDJqPGHrq9eWnYA37uGHbq0fd7+AoC77Ztem9ClS+/tLwAMo/bXKXSpObEPEJLjr9abvv7Jg8Xjz47ftR/h7rfs3QdXIs2Xx/Gfov4w/EEHE4iIGRDM4+YcPLt6DhtdPYBh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" alt="UBDS Digital" width="160">
+    <h1>Revenue profile by client, <span id="yearName">FY27</span></h1>
+    <p class="sub" id="subline"></p>
+  </div>
+  <div class="asof">Data as at <span id="asof"></span> · <span id="dealcount"></span> deals in view</div>
+</header>
+
+<div class="controls">
+  <div class="tabs" role="tablist" aria-label="Financial year" id="tabs"></div>
+  <div class="basis" role="group" aria-label="Value basis">
+    <button type="button" id="basisFull" aria-pressed="true">Full deal value</button>
+    <button type="button" id="basisPro" aria-pressed="false">Pro-rated to year</button>
+  </div>
+  <div class="basis" role="group" aria-label="Managed Services filter" id="msGroup">
+    <button type="button" data-ms="all" aria-pressed="true">All offerings</button>
+    <button type="button" data-ms="only" aria-pressed="false">Managed Services only</button>
+    <button type="button" data-ms="exclude" aria-pressed="false">Exclude Managed Services</button>
+  </div>
+  <label class="chk"><input type="checkbox" id="incBid"> Include Bid pipeline deals</label>
+  <div class="basis" role="group" aria-label="Account plan (manual) overlay" id="planGroup" hidden></div>
+  <label class="chk" id="planWLabel" hidden><input type="checkbox" id="planW"> Weight plan by probability</label>
+  <div class="basis" id="planBasisGroup" role="group" aria-label="Account plan value basis" hidden>
+    <button type="button" data-pb="start" aria-pressed="true">Starts in year, full TCV</button>
+    <button type="button" data-pb="prorata" aria-pressed="false">Pro-rated by day</button>
+  </div>
+</div>
+<div class="statuses" id="statuses"></div>
+<div class="plannote" id="plannote" hidden></div>
+<div class="bidnote" id="bidnote" hidden>Bid pipeline deals carry framework total values rather than UBDS's share (CCS-TPAS alone is entered at £20bn), so the chart scale is dominated by them. Use with care.</div>
+
+<section class="tiles" id="tiles"></section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div><h2>Revenue by client and status</h2><p id="clientsSub"></p></div>
+  </div>
+  <div class="chart" id="chartClients"></div>
+</section>
+
+<section class="panel" id="kimblePanel" hidden>
+  <div class="panel-head">
+    <div><h2>HubSpot against Kantata</h2><p id="kimbleSub"></p></div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+      <span class="kl"><i></i> Kantata forecast</span>
+      <div class="basis" role="group" aria-label="Kantata probability level" id="kpGroup"><button type="button" data-kp="1">P1 won</button><button type="button" data-kp="2">P2 commit+</button><button type="button" data-kp="3">P3 all</button></div>
+    </div>
+  </div>
+  <div class="chart" id="chartKimble"></div>
+  <div class="eyebrow" style="margin:18px 0 8px">Reconciliation exceptions <span id="reconCount" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+  <p style="font-size:13px;color:var(--ink-2);max-width:78ch;margin-bottom:8px">HubSpot deals (grouped by engagement code, change notices rolled in) against the Kantata engagement with the same code. Flags: missing on one side, probability level disagreeing, contract value more than 10% and £25k apart, or £0 contract revenue in Kantata. Deals below Best Case are not expected in Kantata and are not flagged.</p>
+  <div class="tbl" id="reconList"></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div><h2 id="monthsTitle"></h2><p id="monthsSub"></p></div>
+  </div>
+  <div class="chart" id="chartMonths"></div>
+</section>
+
+<section class="panel">
+  <div class="callout">
+    <div><div class="eyebrow">Reading the profile</div><div id="reading" style="margin-top:8px"></div></div>
+    <div class="stat" id="stats"></div>
+  </div>
+</section>
+
+<section class="panel" id="changesPanel">
+  <div class="panel-head">
+    <div><h2>What has changed</h2><p id="changesSub"></p></div>
+    <div class="basis" role="group" aria-label="Comparison period" id="periodGroup">
+      <button type="button" data-p="last">Last refresh</button><button type="button" data-p="7">7 days</button><button type="button" data-p="30">30 days</button><button type="button" data-p="90">90 days</button><button type="button" data-p="180">6 months</button>
+    </div>
+  </div>
+  <div class="chg-grid">
+    <div><div class="eyebrow" style="margin-bottom:8px">Trend of the current view</div><div class="chart" id="trend"></div><p class="trendnote" id="trendNote"></p></div>
+    <div><div class="eyebrow" style="margin-bottom:8px">Movement by status</div><div class="tbl" id="deltas"></div></div>
+  </div>
+  <div class="eyebrow" style="margin:18px 0 8px">Deal-level changes in the period</div>
+  <div class="tbl" id="changeList"></div>
+</section>
+
+<div class="eyebrow" style="margin: 8px 0 12px">Client by client</div>
+<section class="clients" id="clients"></section>
+
+<section class="panel" style="margin-top:20px">
+  <h2 style="margin-bottom:10px">All other clients</h2>
+  <div class="tbl" id="others"></div>
+</section>
+
+<section class="panel note">
+  <h2 style="margin-bottom:10px">Method and data notes</h2>
+  <p>Source: HubSpot deals with a Start Date and End Date whose delivery window overlaps the selected year (UBDS financial years run 1 December to 30 November). Statuses follow the HubSpot <code>Forecast status</code> property, from Won Closed down to Pipeline; Not Forecasted deals are excluded. Each status can be switched on or off above; Pipeline and Forecast Placeholder are the least reliable and include a number of round-number planning records.</p>
+  <p><strong>Full deal value</strong> counts each deal's whole <code>Amount in company currency</code> once in every year it touches, so a multi-year contract appears in full in each of its years. <strong>Pro-rated to year</strong> spreads the amount evenly per day across the delivery window and counts only the days inside the selected year. Neither is the Kantata forecast.</p>
+  <p>The <strong>Managed Services</strong> filter works on <code>Primary Service Offering</code>: "Managed Services only" keeps just those deals, "Exclude" removes them. Deals with no offering recorded count as not Managed Services and are shown as Unclassified. <strong>Bid pipeline</strong> deals (the separate HubSpot bid pipeline, mostly framework PIN/EOI records) are off by default because their amounts are framework totals, not UBDS revenue.</p>
+  <p><strong>Kantata SX</strong> figures come from the Salesforce sandbox <code>ubds--fullsbx</code>: engagement contract revenue, plus forecast revenue by month built from assignment period forecasts (P1 won, P2 won and committed, P3 everything forecast; each level includes the ones above it) and fixed-price period revenue, which carries the engagement's own probability. HubSpot deals are matched to Kantata engagements by the engagement code at the start of the name, so change notices roll into their parent engagement.</p>
+  <p><strong>Account plan (manual)</strong> overlays the Tier 1 and Tier 2 account-plan opportunities maintained by the account teams outside HubSpot (<code>accountplan.json</code>, from the workbook <em>FY27 Account Plan Opportunities Tier1 and Tier 2</em>). Each opportunity carries a TCV (net revenue), a start date, a duration and the account team's own probability; in-year values are pro-rated by day over the duration, and "Weight plan by probability" multiplies by that probability. Opportunities that already have a HubSpot code are shown with it and may overlap a Pipeline record; the FY26 sheet is the prior year's plan and is kept for comparison. Rows re-budgeted to zero are excluded. The overlay never enters the Kantata comparison or the change history.</p>
+  <p><strong>FY26 → FY27 growth ladder</strong> on each client card (FY27 tab only) is always pro-rated in-year and ignores the view toggles: FY26 actual is the account's Kantata FY26 net revenue from the production report P123 (P3: actuals to date plus the remaining forecast, as of 19 Oct 2026 13:27 GMT; HubSpot won pro-rated where the account has no Kantata line), then HubSpot FY27 P1 (won), P2 (+ Commit, Most Likely), P3 (+ Best Case, Forecast Placeholder), + Pipeline, + the FY27 account-plan opportunities at full TCV with the probability-weighted figure alongside. Each step shows its growth on FY26.</p>
+  <p>Client resolution: the DWP sub-entities are rolled into Department for Work and Pensions. Where a deal is associated with both a reseller and an end client (Softcat, Littlefish, KPMG, Alexander Mann, Secon, Oakwood, i-10) it is counted under the end client. Six change-notice deals had no company attached and were assigned by deal-name prefix; they are marked with an asterisk in the deal tables.</p>
+</section>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+let DATA = null, COMM = {}, READING = {}, HIST = { runs: [], changes: [], snapshots: [], latest: null };
+const BANDS = [
+  { key: 'Closed Won', cls: 'won' }, { key: 'Contracted', cls: 'contracted' }, { key: 'Commit', cls: 'commit' },
+  { key: 'Most Likely', cls: 'likely' }, { key: 'Best Case', cls: 'best' }, { key: 'Forecast Placeholder', cls: 'placeholder' }, { key: 'Pipeline', cls: 'pipeline' },
+  { key: 'Account Plan', cls: 'plan' },
+];
+let AP = null;
+const AP_KEY = 'Account Plan';
+const planOn = () => !!(AP && AP.plans && AP.plans[state.plan]);
+const apPlan = () => planOn() ? AP.plans[state.plan] : null;
+const startFY = d => { const y = +d.start.slice(0, 4), m = +d.start.slice(5, 7); return 'FY' + String((m >= 12 ? y + 1 : y) - 2000); };
+const inYearStart = d => startFY(d) === Y().key;
+const HSIDS = () => { if (!window._hsids) window._hsids = new Set(DATA.deals.map(d => String(d.id))); return window._hsids; };
+const inHS = d => !!(d.hs_id && HSIDS().has(String(d.hs_id)));
+const apLoaded = () => planOn() ? apPlan().deals.filter(d => !d.dup && inHS(d)) : [];
+const apDeals = () => planOn() ? apPlan().deals.filter(d => !d.dup && !inHS(d) && (state.planBasis !== 'start' || inYearStart(d))) : [];
+const apLater = () => planOn() && state.planBasis === 'start' ? apPlan().deals.filter(d => !d.dup && !inHS(d) && !inYearStart(d)) : [];
+const apNarr = () => (AP && AP.plans && AP.plans.FY27 && hasAP()) ? AP.plans.FY27 : (planOn() ? apPlan() : null);
+const apDups = client => apNarr() ? apNarr().deals.filter(d => d.dup && (!client || d.client === client)) : [];
+const isPlan = d => d.band === AP_KEY;
+const hsPlan = () => DATA.deals.filter(d => d.band === AP_KEY);   // account-plan deals that live in HubSpot (tagged, own band)
+const hasAP = () => hsPlan().length > 0;
+const apVisible = () => hasAP() || planOn();
+const probOf = d => (typeof d.prob === 'number') ? d.prob : (d.band === 'Pipeline' || d.band === AP_KEY ? 0.4 : 1);
+const wt = d => (isPlan(d) && state.planW) ? probOf(d) : 1;
+const BK = Object.fromEntries(BANDS.map(b => [b.key, b]));
+const state = { year: 0, yearKey: 'FY27', basis: 'full', ms: 'all', incBid: false, period: 'last', kp: 3, plan: 'off', planW: false, planBasis: 'start', on: Object.fromEntries(BANDS.map(b => [b.key, true])) };
+try { const s = JSON.parse(localStorage.getItem('ubds-rev-state') || 'null'); if (s && typeof s === 'object') { Object.assign(state, s); if (!['all','only','exclude'].includes(state.ms)) state.ms = s.exMS ? 'exclude' : 'all'; state.on = Object.assign(Object.fromEntries(BANDS.map(b => [b.key, true])), s.on || {}); state.plan = 'off'; /* spreadsheet overlays retired 18 Oct 2026 — the account plan lives in HubSpot */ if (!['start','prorata'].includes(state.planBasis)) state.planBasis = 'start'; } } catch (e) {}
+const save = () => { try { localStorage.setItem('ubds-rev-state', JSON.stringify(state)); } catch (e) {} };
+
+const gbp = v => { const a = Math.abs(v); if (a >= 1e9) return '£' + (v / 1e9).toFixed(1) + 'bn'; if (a >= 1e6) return '£' + (v / 1e6).toFixed(a >= 1e7 ? 1 : 2) + 'm'; if (a >= 1e3) return '£' + Math.round(v / 1e3) + 'k'; return '£' + Math.round(v); };
+const ukd = v => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)) ? v.slice(8, 10) + '/' + v.slice(5, 7) + '/' + v.slice(0, 4) : (v == null ? '–' : String(v));
+const gbpFull = v => '£' + Math.round(v).toLocaleString('en-GB');
+const pct = (a, b) => b ? Math.round(100 * a / b) + '%' : '0%';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const svgNS = 'http://www.w3.org/2000/svg';
+const el = (n, a = {}, t) => { const e = document.createElementNS(svgNS, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
+const Y = () => DATA.years[state.year];
+const BASEY = () => +DATA.years[0].start.slice(0, 4);
+const syncYear = () => { const i = DATA.years.findIndex(y => y.key === state.yearKey); state.year = i >= 0 ? i : Math.max(0, DATA.years.findIndex(y => y.key === 'FY27')); state.yearKey = DATA.years[state.year].key; };
+const yslice = d => d.monthly.slice(state.year * 12, state.year * 12 + 12);
+const inYear = d => yslice(d).some(v => v > 0);
+/* ---------- Kantata ---------- */
+const KIM = { list: [], byKey: new Map(), keyClient: new Map() };
+function initKimble() {
+  KIM.list = (DATA.kimble || []); KIM.byKey = new Map(); KIM.keyClient = new Map();
+  for (const g of KIM.list) { if (!KIM.byKey.has(g.key)) KIM.byKey.set(g.key, []); KIM.byKey.get(g.key).push(g); }
+  for (const d of DATA.deals) if (d.pipe === 'Sales' && !KIM.keyClient.has(d.key)) KIM.keyClient.set(d.key, d.client);
+}
+const kimClient = g => KIM.keyClient.get(g.key) || g.account;
+const kslice = (g, k) => g[k].slice(state.year * 12, state.year * 12 + 12);
+const kval = (g, k) => kslice(g, k || ('p' + state.kp)).reduce((a, b) => a + b, 0);
+function kimbleFor(clientName) { return KIM.list.filter(g => kimClient(g) === clientName); }
+function kimbleMonthly(list, k) { const out = new Array(12).fill(0); for (const g of list) { const s = kslice(g, k || ('p' + state.kp)); for (let i = 0; i < 12; i++) out[i] += s[i]; } return out; }
+const kimbleStatus = key => { const gs = KIM.byKey.get(key) || []; return gs.length ? { contract: gs.reduce((s, g) => s + g.contract, 0), status: [...new Set(gs.map(g => g.status))].join(', '), inyr: gs.reduce((s, g) => s + kval(g, 'p3'), 0) } : null; };
+const planVal = d => state.planBasis === 'start' ? (inYearStart(d) ? d.amount : 0) : (state.basis === 'full' ? d.amount : yslice(d).reduce((a, b) => a + b, 0));
+const val = d => (isPlan(d) ? planVal(d) : (state.basis === 'full' ? d.amount : yslice(d).reduce((a, b) => a + b, 0))) * wt(d);
+const startIdx = d => { if (d.start < Y().start) return -1; const [y, m] = d.start.split('-').map(Number); return (y - BASEY()) * 12 + m - 12 - state.year * 12; };
+
+/* the deals currently in view */
+function pool(ignoreStatus) {
+  return DATA.deals.concat(apDeals()).filter(d => !(isPlan(d) && state.planBasis === 'start' && !inYearStart(d))).filter(d => inYear(d) && (ignoreStatus || state.on[d.band]) && (state.ms === 'all' || (state.ms === 'only') === (d.offering === 'Managed Services')) && (state.incBid || d.pipe === 'Sales'));
+}
+function bandsOf(deals) { const t = {}; for (const b of BANDS) t[b.key] = 0; for (const d of deals) t[d.band] += val(d); return t; }
+function clientRows(deals) {
+  const m = new Map();
+  for (const d of deals) { if (!m.has(d.client)) m.set(d.client, []); m.get(d.client).push(d); }
+  return [...m.entries()].map(([name, ds]) => ({ name, deals: ds, bands: bandsOf(ds), total: ds.reduce((s, d) => s + val(d), 0) })).sort((a, b) => b.total - a.total);
+}
+function columns(deals) {
+  const months = Y().months;
+  if (state.basis === 'pro') return months.map((label, i) => ({ label, deals: deals.filter(d => yslice(d)[i] > 0).map(d => ({ d, v: yslice(d)[i] * wt(d) })) }));
+  return ['Before ' + Y().key, ...months].map((label, k) => ({ label, carry: k === 0, deals: deals.filter(d => startIdx(d) === k - 1).map(d => ({ d, v: d.amount * wt(d) })) }));
+}
+const colBands = c => { const t = {}; for (const b of BANDS) t[b.key] = 0; for (const x of c.deals) t[x.d.band] += x.v; return t; };
+const colTotal = c => c.deals.reduce((s, x) => s + x.v, 0);
+
+/* tooltip with deal names */
+const tip = document.getElementById('tip');
+function moveTip(ev) {
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = ev.pageX + pad, y = ev.pageY + pad;
+  if (x + w > document.documentElement.clientWidth + window.scrollX - 8) x = ev.pageX - w - pad;
+  if (y + h > document.documentElement.scrollHeight - 8) y = ev.pageY - h - pad;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+}
+function showTip(ev, html) { tip.innerHTML = html; tip.style.display = 'block'; moveTip(ev); }
+function hideTip() { tip.style.display = 'none'; }
+function tipHtml(title, items, showClient) {
+  // items: [{d, v}] already filtered to visible statuses
+  const bands = {}; for (const b of BANDS) bands[b.key] = 0; for (const x of items) bands[x.d.band] += x.v;
+  const total = items.reduce((s, x) => s + x.v, 0);
+  let h = `<b>${esc(title)}</b>`;
+  for (const b of BANDS) if (bands[b.key] > 0) h += `<div class="r"><span>${b.key}</span><span>${gbpFull(bands[b.key])}</span></div>`;
+  h += `<div class="r" style="margin-top:3px;border-top:1px solid rgba(255,255,255,.25);padding-top:3px"><span>Total</span><span>${gbpFull(total)}</span></div>`;
+  const sorted = [...items].sort((a, b) => b.v - a.v), MAXD = 9;
+  if (sorted.length) h += `<div class="dh">Deals (${sorted.length})</div>`;
+  for (const x of sorted.slice(0, MAXD)) h += `<div class="d"><span><i style="background:var(--${BK[x.d.band].cls})"></i>${esc(x.d.name)}${showClient ? ' · ' + esc(x.d.client) : ''}</span><span>${gbp(x.v)}</span></div>`;
+  if (sorted.length > MAXD) h += `<div class="d"><span>+ ${sorted.length - MAXD} more</span><span>${gbp(sorted.slice(MAXD).reduce((s, x) => s + x.v, 0))}</span></div>`;
+  return h;
+}
+
+/* controls */
+function initControls() {
+  const t = document.getElementById('tabs');
+  t.innerHTML = DATA.years.map((y, i) => `<button type="button" role="tab" aria-selected="${i === state.year}" data-i="${i}">${y.label}</button>`).join('');
+  t.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.year = +b.dataset.i; state.yearKey = DATA.years[state.year].key; save(); renderAll(); });
+  const s = document.getElementById('statuses');
+  renderChips();
+  s.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.on[b.dataset.band] = !state.on[b.dataset.band]; save(); renderAll(); });
+  document.getElementById('basisFull').addEventListener('click', () => { state.basis = 'full'; save(); renderAll(); });
+  document.getElementById('basisPro').addEventListener('click', () => { state.basis = 'pro'; save(); renderAll(); });
+  document.getElementById('msGroup').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.ms = b.dataset.ms; save(); renderAll(); });
+  const bid = document.getElementById('incBid');
+  bid.addEventListener('change', () => { state.incBid = bid.checked; save(); renderAll(); });
+  document.getElementById('asof').textContent = fmtAsof(DATA.generated);
+  document.getElementById('planGroup').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.plan = b.dataset.plan; if (!planOn()) state.plan = 'off'; save(); renderAll(); });
+  const pw = document.getElementById('planW'); pw.addEventListener('change', () => { state.planW = pw.checked; save(); renderAll(); });
+  document.getElementById('planBasisGroup').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.planBasis = b.dataset.pb; save(); renderAll(); });
+  document.getElementById('planGroup').hidden = true;
+  document.getElementById('kpGroup').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.kp = +b.dataset.kp; save(); renderAll(); });
+  document.getElementById('periodGroup').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; state.period = b.dataset.p; save(); renderChanges(pool(false)); });
+}
+function renderChips() {
+  const s = document.getElementById('statuses');
+  s.innerHTML = `<span class="lbl">Status</span>` + BANDS.filter(b => b.key !== AP_KEY || apVisible()).map(b => `<button type="button" data-band="${b.key}" aria-pressed="${state.on[b.key] !== false}"><span class="sw" style="background:var(--${b.cls})"></span>${b.key}${b.key === AP_KEY ? (hasAP() ? ' (HubSpot)' : ' (' + state.plan + ')') : ''}</button>`).join('');
+}
+const fmtAsof = s => { const d = new Date(s.length > 10 ? s + ':00Z' : s + 'T12:00:00'); return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + (s.length > 10 ? ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : ''); };
+
+function niceStep(max, target) { const raw = max / target, p = Math.pow(10, Math.floor(Math.log10(raw))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= raw) return m * p; return 10 * p; }
+
+/* chart 1 */
+const TOPN = 14;
+function drawClients(deals) {
+  const host = document.getElementById('chartClients');
+  const all = clientRows(deals), top = all.slice(0, TOPN), rest = all.slice(TOPN);
+  const rows = top.map(c => ({ name: c.name, deals: c.deals, total: c.total, bands: c.bands }));
+  if (rest.length) { const ds = rest.flatMap(c => c.deals); rows.push({ name: `All other clients (${rest.length})`, deals: ds, total: ds.reduce((s, d) => s + val(d), 0), bands: bandsOf(ds), other: true }); }
+  if (!rows.length) { host.innerHTML = '<div class="empty">No deals match the current selection.</div>'; return; }
+  const narrow = host.clientWidth < 560;
+  const W = Math.max(host.clientWidth, 320), labW = narrow ? 120 : 250, rH = narrow ? 26 : 28, padT = 22, padB = 8, valW = 60;
+  const H = padT + rows.length * rH + padB;
+  const max = Math.max(...rows.map(r => r.total), 1), step = niceStep(max, 5), axisMax = Math.ceil(max / step) * step;
+  const x0 = labW, x1 = W - valW, sx = v => x0 + (v / axisMax) * (x1 - x0);
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Revenue by client, stacked by status' });
+  for (let v = 0; v <= axisMax + 1e-6; v += step) { svg.appendChild(el('line', { class: 'grid', x1: sx(v), x2: sx(v), y1: padT - 6, y2: H - padB })); svg.appendChild(el('text', { class: 'tick', x: sx(v), y: padT - 10, 'text-anchor': 'middle' }, gbp(v))); }
+  rows.forEach((r, i) => {
+    const y = padT + i * rH, bh = rH - 10, g = el('g', { class: 'row' });
+    const nm = r.name.length > (narrow ? 16 : 34) ? r.name.slice(0, narrow ? 15 : 33) + '…' : r.name;
+    g.appendChild(el('text', { class: 'lab', x: x0 - 10, y: y + bh / 2 + 4, 'text-anchor': 'end', 'font-weight': r.other ? 400 : 500 }, nm));
+    let acc = 0;
+    for (const b of BANDS) { const v = r.bands[b.key]; if (v <= 0) continue; g.appendChild(el('rect', { class: 'seg', fill: `var(--${b.cls})`, x: sx(acc), y, width: Math.max(sx(acc + v) - sx(acc), 1), height: bh })); acc += v; }
+    if (r.total > 0) g.appendChild(el('text', { class: 'val', x: sx(r.total) + 6, y: y + bh / 2 + 4 }, gbp(r.total)));
+    const hit = el('rect', { class: 'hit', x: 0, y, width: W, height: rH });
+    hit.addEventListener('mousemove', ev => showTip(ev, tipHtml(r.name, r.deals.map(d => ({ d, v: val(d) })), !!r.other))); hit.addEventListener('mouseleave', hideTip);
+    g.appendChild(hit); svg.appendChild(g);
+  });
+  svg.appendChild(el('line', { class: 'axis', x1: x0, x2: x0, y1: padT - 6, y2: H - padB }));
+  host.innerHTML = ''; host.appendChild(svg);
+}
+
+/* stacked columns */
+function drawColumns(host, cols, o) {
+  const totals = cols.map(colTotal);
+  const max = Math.max(...totals, ...(o.overlay || [0]), 1), step = niceStep(max, o.ticks || 4), axisMax = Math.ceil(max / step) * step;
+  const sy = v => o.padT + (1 - v / axisMax) * (o.H - o.padT - o.padB);
+  const slot = (o.W - o.padL - o.padR) / cols.length, bw = Math.min(slot * 0.62, o.maxBar);
+  const svg = el('svg', { viewBox: `0 0 ${o.W} ${o.H}`, role: 'img', 'aria-label': o.aria });
+  for (let v = 0; v <= axisMax + 1e-6; v += step) { svg.appendChild(el('line', { class: 'grid', x1: o.padL, x2: o.W - o.padR, y1: sy(v), y2: sy(v) })); svg.appendChild(el('text', { class: 'tick', x: o.padL - 6, y: sy(v) + 3.5, 'text-anchor': 'end', 'font-size': o.tickSize }, gbp(v))); }
+  cols.forEach((c, i) => {
+    const cx = o.padL + slot * i + slot / 2, x = cx - bw / 2, g = el('g', { class: 'row' }), bands = colBands(c);
+    let acc = 0;
+    for (const b of BANDS) { const v = bands[b.key]; if (v <= 0) continue; g.appendChild(el('rect', { class: 'seg', fill: `var(--${b.cls})`, x, y: sy(acc + v), width: bw, height: Math.max(sy(acc) - sy(acc + v), 1), 'stroke-width': o.stroke })); acc += v; }
+    if (totals[i] > 0 && o.values) g.appendChild(el('text', { class: 'val', x: cx, y: sy(totals[i]) - 5, 'text-anchor': 'middle' }, gbp(totals[i])));
+    svg.appendChild(el('text', { class: 'tick', x: cx, y: o.H - o.padB + o.labelDy, 'text-anchor': 'middle', 'font-size': o.tickSize, 'font-style': c.carry ? 'italic' : 'normal' }, o.labelFn(c)));
+    if (c.carry) svg.appendChild(el('line', { class: 'axis', x1: o.padL + slot, x2: o.padL + slot, y1: o.padT, y2: o.H - o.padB, 'stroke-dasharray': '3 3' }));
+    const hit = el('rect', { class: 'hit', x: o.padL + slot * i, y: o.padT, width: slot, height: o.H - o.padT - o.padB });
+    hit.addEventListener('mousemove', ev => showTip(ev, tipHtml(o.titleFn(c), c.deals, o.showClient))); hit.addEventListener('mouseleave', hideTip);
+    g.appendChild(hit); svg.appendChild(g);
+  });
+  if (o.overlay && o.overlay.some(v => v > 0)) {
+    const pts = o.overlay.map((v, i) => [o.padL + slot * (i + (o.overlayOffset || 0)) + slot / 2, sy(Math.min(v, axisMax))]);
+    svg.appendChild(el('path', { class: 'kline', d: pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ') }));
+    pts.forEach((p, i) => { const dot = el('circle', { class: 'kdot', cx: p[0], cy: p[1], r: 3.5 }); const hit = el('circle', { class: 'hit', cx: p[0], cy: p[1], r: 10 });
+      hit.addEventListener('mousemove', ev => showTip(ev, `<b>${esc(o.overlayLabel)} · ${esc(Y().months[i])}</b><div class="r"><span>Kantata P${state.kp}</span><span>${gbpFull(o.overlay[i])}</span></div>`)); hit.addEventListener('mouseleave', hideTip); svg.appendChild(dot); svg.appendChild(hit); });
+  }
+  svg.appendChild(el('line', { class: 'axis', x1: o.padL, x2: o.W - o.padR, y1: sy(0), y2: sy(0) }));
+  host.innerHTML = ''; host.appendChild(svg);
+}
+function drawMonths(deals) {
+  const host = document.getElementById('chartMonths'), narrow = host.clientWidth < 560;
+  if (!deals.length) { host.innerHTML = '<div class="empty">No deals match the current selection.</div>'; return; }
+  drawColumns(host, columns(deals), { W: Math.max(host.clientWidth, 320), H: 260, padL: 52, padR: 8, padT: 14, padB: 28, tickSize: 11, maxBar: 56, values: !narrow, stroke: 2, labelDy: 16, showClient: true,
+    labelFn: c => narrow ? (c.carry ? 'Pre' : c.label.slice(0, 3)) : c.label, titleFn: c => c.carry ? `Started before ${Y().key}` : (state.basis === 'full' ? 'Starting ' + c.label : c.label),
+    aria: state.basis === 'full' ? 'Full deal value by delivery start month' : 'Monthly revenue phasing, stacked by status',
+    overlay: (state.basis === 'pro' && KIM.list.length) ? kimbleMonthly(KIM.list) : null, overlayLabel: 'All clients' });
+}
+function miniChart(c) {
+  const host = document.createElement('div'); host.className = 'chart';
+  drawColumns(host, columns(c.deals), { W: 480, H: 130, padL: 38, padR: 4, padT: 10, padB: 20, tickSize: 10, ticks: 3, maxBar: 60, values: false, stroke: 1.5, labelDy: 13, showClient: false,
+    labelFn: cc => cc.carry ? 'Pre' : cc.label.slice(0, 3), titleFn: cc => `${c.name} · ${cc.carry ? 'started before ' + Y().key : (state.basis === 'full' ? 'starting ' + cc.label : cc.label)}`,
+    aria: `${state.basis === 'full' ? 'Deal value by start month' : 'Monthly revenue'} for ${c.name}`,
+    overlay: (state.basis === 'pro' && KIM.list.length) ? kimbleMonthly(kimbleFor(c.name)) : null, overlayLabel: c.name });
+  return host;
+}
+
+const dealTable = deals => {
+  const rows = [...deals].sort((a, b) => val(b) - val(a)), yr = Y().key;
+  const hasK = KIM.list.length > 0;
+  let h = `<table><thead><tr><th>Deal</th><th>Status</th><th>Offering</th><th>Delivery</th><th>Close</th><th class="n">Deal value</th><th class="n">In ${yr}</th>${hasK ? '<th>Kantata</th><th class="n">Kantata contract</th>' : ''}</tr></thead><tbody>`;
+  for (const d of rows) {
+    const flag = isPlan(d) ? ` <span style="color:var(--plan)" title="${esc((d.desc ? d.desc + ' ' : '') + (d.comments ? '— ' + d.comments : ''))}">${d.unit && d.unit !== d.client ? esc(d.unit) + ' · ' : ''}plan${d.hs ? ' · ' + esc(d.hs) : ''}</span>` : d.inferred ? ' <span title="No company attached in HubSpot; assigned from deal name" style="color:var(--warn)">*</span>' : (d.via.length ? ` <span style="color:var(--ink-3)">via ${esc(d.via[0])}</span>` : '');
+    const inyr = yslice(d).reduce((a, b) => a + b, 0) * wt(d);
+    h += `<tr><td>${esc(d.name)}${flag}</td><td class="pill"><span><i style="background:var(--${BK[d.band].cls})"></i>${d.band}${isPlan(d) ? ' · ' + Math.round(probOf(d) * 100) + '%' : ''}</span></td><td>${esc(d.offering)}</td><td class="num">${ukd(d.start)} – ${ukd(d.end)}</td><td class="num">${d.close ? ukd(d.close) : '–'}</td><td class="n">${gbpFull(d.amount * wt(d))}</td><td class="n">${gbpFull(inyr)}</td>${hasK ? (ks => `<td>${ks ? esc(ks.status) : '<span style="color:var(--ink-3)">–</span>'}</td><td class="n">${ks ? gbpFull(ks.contract) : '–'}</td>`)(kimbleStatus(d.key)) : ''}</tr>`;
+  }
+  h += `<tr class="sum"><td colspan="5">Total</td><td class="n">${gbpFull(rows.reduce((s, d) => s + d.amount * wt(d), 0))}</td><td class="n">${gbpFull(rows.reduce((s, d) => s + yslice(d).reduce((a, b) => a + b, 0) * wt(d), 0))}</td>${hasK ? '<td></td><td></td>' : ''}</tr></tbody></table>`;
+  return h;
+};
+
+function renderSummary(deals) {
+  const yr = Y(), totals = bandsOf(deals), grand = Object.values(totals).reduce((a, b) => a + b, 0), rows = clientRows(deals);
+  document.getElementById('yearName').textContent = yr.key;
+  document.getElementById('dealcount').textContent = deals.length;
+  const span = `${new Date(yr.start + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} to ${new Date(yr.end + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+  document.getElementById('subline').textContent = state.basis === 'full' ? `${span}. Every deal delivering inside the year, counted at its full value and grouped by HubSpot forecast status. Values in GBP.` : `${span}. Deal value pro-rated evenly across each engagement’s delivery window, grouped by HubSpot forecast status. Values in GBP.`;
+  document.getElementById('clientsSub').textContent = (state.ms === 'only' ? 'Managed Services deals only. ' : state.ms === 'exclude' ? 'Managed Services excluded. ' : '') + `Top clients by ${state.basis === 'full' ? 'full value of deals delivering in ' + yr.key : 'pro-rated ' + yr.key + ' value'}, each bar split by status. Hover a bar for the deals behind it.`;
+  document.getElementById('monthsTitle').textContent = state.basis === 'full' ? 'Deals by delivery start' : 'Monthly phasing';
+  document.getElementById('monthsSub').textContent = state.basis === 'full' ? `Full deal value placed in the month the engagement starts. "Before ${yr.key}" is work already running on ${new Date(yr.start + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}. Hover a column for the deals.` : `${yr.key} revenue by month, stacked by status. Hover a column for the deals.`;
+  document.getElementById('bidnote').hidden = !state.incBid;
+  const pn = document.getElementById('plannote'); pn.hidden = !apVisible(); document.getElementById('planWLabel').hidden = !apVisible();
+  if (hasAP() && !planOn()) { const hp = hsPlan(), inY = hp.filter(inYearStart), later = hp.filter(d => !inYearStart(d));
+    pn.textContent = `FY27 account plan, from HubSpot: ${hp.length} deals tagged [FY27 account plan], ${gbp(hp.reduce((s, d) => s + d.amount, 0))} TCV, ${gbp(hp.reduce((s, d) => s + d.amount * probOf(d), 0))} weighted at the account teams' own probabilities (held in each deal's probability field). Shown as the "Account Plan" status, separate from Pipeline.${state.planBasis === 'start' ? ` Start-date basis: the ${inY.length} that start in ${Y().key} count at full TCV (${gbp(inY.reduce((s, d) => s + d.amount, 0))}, weighted ${gbp(inY.reduce((s, d) => s + d.amount * probOf(d), 0))}); ${later.length} that start later (${gbp(later.reduce((s, d) => s + d.amount, 0))}) are left out.` : ' Values are pro-rated by day into the year in view.'} The account-plan spreadsheets are retired – HubSpot is the source.`; }
+  else if (planOn()) { const P = apPlan(); pn.textContent = `${P.label}: ${P.totals.n} opportunities, ${gbp(P.totals.tcv)} TCV, ${gbp(P.totals.weighted)} probability-weighted, overlaid as the "Account Plan" status.${state.planBasis === 'start' ? ` Counted on a start-date basis: only the ${apDeals().length} opportunities that start in ${Y().key} are included, at full TCV (${gbp(apDeals().reduce((s, d) => s + d.amount, 0))}, weighted ${gbp(apDeals().reduce((s, d) => s + d.amount * d.prob, 0))}); ${apLater().length} that start in later years (${gbp(apLater().reduce((s, d) => s + d.amount, 0))} TCV) are ignored for now.` : ' Values are pro-rated by day into the year in view.'}${apLoaded().length ? ` ${apLoaded().length} rows (${gbp(apLoaded().reduce((s, d) => s + d.amount, 0))} TCV) were loaded into HubSpot on 18 Oct 2026 as Pipeline deals and now appear under the Pipeline status instead of here.` : ''}${P.totals.dups ? ` ${P.totals.dups} further rows (${gbp(P.totals.dup_tcv)} TCV) are disregarded because they duplicate deals already in the HubSpot pipeline – they are counted once, under their HubSpot status.` : ''} ${P.note}`; }
+  const rd = READING[yr.key] || {}; document.getElementById('reading').innerHTML = (rd[state.basis] || rd.any || '') + planReading(deals);
+  let h = `<div class="tile total"><div class="k">${state.basis === 'full' ? yr.key + ' deals, full value' : 'Visible ' + yr.key + ' revenue'}</div><div class="v num">${gbp(grand)}</div><div class="s">${rows.length} clients · ${pct(totals['Closed Won'] + totals['Contracted'] + totals['Commit'], grand)} won or committed</div></div>`;
+  const groups = [['Closed Won', 'Contracted'], ['Commit', 'Most Likely', 'Best Case'], ['Forecast Placeholder', 'Pipeline']];
+  const labels = ['Won and contracted', 'Commit to Best Case', 'Placeholder and Pipeline'];
+  groups.forEach((g, i) => { const v = g.reduce((s, k) => s + totals[k], 0); h += `<div class="tile"><div class="k">${g.map(k => `<span class="sw" style="background:var(--${BK[k].cls})"></span>`).join('')}${labels[i]}</div><div class="v num">${gbp(v)}</div><div class="s">${pct(v, grand)} of total · ${g.map(k => `${k.replace('Forecast ', '')} ${gbp(totals[k])}`).join(' · ')}</div></div>`; });
+  if (KIM.list.length) {
+    const kp3 = KIM.list.reduce((s, g) => s + kval(g, 'p3'), 0), kp2 = KIM.list.reduce((s, g) => s + kval(g, 'p2'), 0), kp1 = KIM.list.reduce((s, g) => s + kval(g, 'p1'), 0);
+    h += `<div class="tile kimble"><div class="k">Kantata forecast ${yr.key}</div><div class="v num">${gbp(kp3)}</div><div class="s">P1 ${gbp(kp1)} · P2 ${gbp(kp2)} · P3 ${gbp(kp3)}</div></div>`;
+  }
+  if (apVisible()) { const pd = deals.filter(isPlan), pv = pd.reduce((s, d) => s + val(d), 0), pw = pd.reduce((s, d) => s + planVal(d) * probOf(d), 0);
+    h += `<div class="tile plan"><div class="k"><span class="sw" style="background:var(--plan)"></span>${hasAP() && !planOn() ? 'FY27 account plan (HubSpot)' : state.plan + ' account plan'}${state.planBasis === 'start' ? ' · starts in ' : ' in '}${yr.key}</div><div class="v num">${gbp(pv)}</div><div class="s">${pd.length} opportunities · ${new Set(pd.map(d => d.client)).size} clients · ${state.planW ? 'weighted' : 'weighted ' + gbp(pw)}</div></div>`; }
+  document.getElementById('tiles').innerHTML = h;
+  const top5 = rows.slice(0, 5).reduce((s, c) => s + c.total, 0);
+  const aprDate = yr.start.slice(0, 4) * 1 + 1 + '-04-01';
+  const apr = deals.filter(d => d.start === aprDate && d.band !== 'Closed Won' && d.band !== 'Contracted' && !isPlan(d)), aprV = apr.reduce((s, d) => s + val(d), 0);
+  let s;
+  if (state.basis === 'full') {
+    const carry = deals.filter(d => d.start < yr.start), fresh = deals.filter(d => d.start >= yr.start), cv = carry.reduce((x, d) => x + d.amount, 0), fv = fresh.reduce((x, d) => x + d.amount, 0);
+    const wonOf = ds => ds.filter(d => d.band === 'Closed Won' || d.band === 'Contracted').reduce((x, d) => x + d.amount, 0);
+    s = `<div><div class="k">Already running at year start</div><div class="big num">${gbp(cv)}</div><div class="s">${carry.length} deals · ${pct(wonOf(carry), cv)} won</div></div><div><div class="k">Starting inside ${yr.key}</div><div class="big num">${gbp(fv)}</div><div class="s">${fresh.length} deals · ${pct(wonOf(fresh), fv)} won</div></div>`;
+  } else {
+    const cols = columns(deals), tot = cs => cs.reduce((x, c) => x + colTotal(c), 0), won = cs => cs.reduce((x, c) => x + colBands(c)['Closed Won'] + colBands(c)['Contracted'], 0);
+    const h1 = cols.slice(0, 4), h2 = cols.slice(4);
+    s = `<div><div class="k">Dec to Mar</div><div class="big num">${gbp(tot(h1))}</div><div class="s">${pct(won(h1), tot(h1))} won</div></div><div><div class="k">Apr to Nov</div><div class="big num">${gbp(tot(h2))}</div><div class="s">${pct(won(h2), tot(h2))} won</div></div>`;
+  }
+  s += `<div><div class="k">Unsigned 1 April starts</div><div class="big num">${gbp(aprV)}</div><div class="s">${apr.length} deals · ${pct(aprV, grand)} of total</div></div><div><div class="k">Top five clients</div><div class="big num">${pct(top5, grand)}</div><div class="s">${gbp(top5)} of ${gbp(grand)}</div></div>`;
+  document.getElementById('stats').innerHTML = s;
+}
+
+function growthLadder(client) {
+  // FY26 actual → FY27 P1 → P2 → P3 → + Pipeline (unweighted, and weighted at HubSpot stage probability 40%) → + FY27 account plan; HubSpot bands always pro-rated in-year; plan follows the plan-basis toggle (FY27 starts at full TCV, or pro-rated); weighted total = P3 + weighted pipeline + weighted plan
+  const yr = Y(); if (yr.key !== 'FY27') return '';
+  const yi = state.year, sl = d => d.monthly.slice(yi * 12, yi * 12 + 12).reduce((a, b) => a + b, 0);
+  const ds = DATA.deals.filter(d => d.pipe === 'Sales' && d.client === client);
+  const sum = bands => ds.filter(d => bands.includes(d.band)).reduce((a, d) => a + sl(d), 0);
+  const p1 = sum(['Closed Won', 'Contracted']), p2 = p1 + sum(['Commit', 'Most Likely']), p3 = p2 + sum(['Best Case', 'Forecast Placeholder']), pipe = sum(['Pipeline']);
+  const sb = state.planBasis === 'start';
+  const plan = hasAP() ? hsPlan().filter(d => d.client === client && (!sb || startFY(d) === 'FY27')) : ((AP && AP.plans && AP.plans.FY27) ? AP.plans.FY27.deals.filter(d => d.client === client && !d.dup && (!sb || startFY(d) === 'FY27')) : []);
+  const pv = d => sb ? d.amount : sl(d);
+  const planV = plan.reduce((a, d) => a + pv(d), 0), planW = plan.reduce((a, d) => a + pv(d) * probOf(d), 0);
+  const led = (AP && AP.fy26_ledger && AP.fy26_ledger.outturn) || {}; let fy26 = led[client]; let base26 = 'Kantata ledger outturn';
+  if (fy26 == null) { fy26 = DATA.years[0] && DATA.years[0].key === 'FY26' ? ds.filter(d => d.band === 'Closed Won' || d.band === 'Contracted').reduce((a, d) => a + d.monthly.slice(0, 12).reduce((x, y) => x + y, 0), 0) : 0; base26 = 'HubSpot won, pro-rated'; }
+  // pipeline weighted at each deal's own HubSpot probability (today every Pipeline deal sits in 'Qualifying and Deal Shaping' = 40%)
+  const pipeW = ds.filter(d => d.band === 'Pipeline').reduce((a, d) => a + sl(d) * probOf(d), 0);
+  const tot = p3 + pipe + planV, totW = p3 + pipeW + planW;
+  const g = v => fy26 > 0 ? ((v / fy26 - 1) >= 0 ? '+' : '−') + Math.abs(Math.round((v / fy26 - 1) * 100)) + '%' : 'new';
+  if (!fy26 && !tot) return '';
+  return `<div class="ladder" aria-label="FY26 to FY27 growth ladder">
+    <div><div class="k">FY26 actual</div><div class="v">${gbp(fy26)}</div><div class="s">${base26}</div></div>
+    <div><div class="k">FY27 P1 won</div><div class="v">${gbp(p1)}</div><div class="s">${g(p1)} on FY26</div></div>
+    <div><div class="k">FY27 P2</div><div class="v">${gbp(p2)}</div><div class="s">${g(p2)} · + Commit, ML</div></div>
+    <div><div class="k">FY27 P3</div><div class="v">${gbp(p3)}</div><div class="s">${g(p3)} · + BC, Placeholder</div></div>
+    <div><div class="k">+ Pipeline</div><div class="v">${gbp(p3 + pipe)}</div><div class="s">${g(p3 + pipe)} · pipeline ${gbp(pipe)} (weighted at HubSpot probability ${gbp(pipeW)} → ${gbp(p3 + pipeW)}, ${g(p3 + pipeW)})</div></div>
+    <div class="g"><div class="k">+ Account plan${sb ? ' (FY27 starts)' : ''}</div><div class="v">${gbp(tot)}</div><div class="s">${g(tot)} · plan ${gbp(planV)} (weighted ${gbp(planW)} on weighted pipeline → ${gbp(totW)}, ${g(totW)})</div></div>
+  </div>`;
+}
+function planReading(deals) {
+  if (!apVisible()) return '';
+  const pd = deals.filter(isPlan); if (!pd.length) return '';
+  const by = new Map(); for (const d of pd) by.set(d.client, (by.get(d.client) || 0) + val(d));
+  const top = [...by.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4), tot = pd.reduce((s, d) => s + val(d), 0), hs = pd.filter(d => d.hs).length;
+  return `<p><strong>Account plan (${hasAP() && !planOn() ? 'HubSpot, tagged deals' : esc(state.plan) + ' sheet'}).</strong> ${pd.length} opportunities across ${by.size} clients add ${gbp(tot)} ${state.planBasis === 'start' ? `of TCV (opportunities starting in ${esc(Y().key)} only)` : state.basis === 'full' ? 'of TCV' : 'in-year'}${state.planW ? ', probability-weighted' : ' before weighting'}: ${top.map(([c, v]) => `${esc(c)} ${gbp(v)}`).join(', ')}. ${apDups().length ? `${apDups().length} sheet rows (${gbp(apDups().reduce((s, d) => s + d.amount, 0))} TCV) are disregarded here because they duplicate HubSpot deals and are already counted under their HubSpot status. ` : ''}Toggle the weighting to see the account teams’ own view of what will land.</p>`;
+}
+
+function renderClients(deals) {
+  const host = document.getElementById('clients'); const openState = {}; host.querySelectorAll('details').forEach(d => { openState[d.dataset.c] = d.open; }); host.innerHTML = '';
+  const rows = clientRows(deals), grand = rows.reduce((s, c) => s + c.total, 0), cm = COMM[Y().key] || {};
+  const pn = apNarr() ? (apNarr().narrative || {}) : {};
+  const allPool = pool(true);
+  for (const c of rows.filter(c => cm[c.name] || pn[c.name])) {
+    const k = cm[c.name] || { tag: (pn[c.name] || {}).tag || 'Account plan', text: '', watch: null, planOnly: true }, card = document.createElement('article'); card.className = 'card';
+    const pk = pn[c.name], pdeals = c.deals.filter(isPlan), pv = pdeals.reduce((s, d) => s + val(d), 0);
+    const dups = apDups(c.name), dupTcv = dups.reduce((s, d) => s + d.amount, 0);
+    const dupHtml = dups.length ? `<span class="pw"><b>Disregarded as already in HubSpot (${dups.length}, ${gbp(dupTcv)} TCV):</b> ${esc(dups.map(d => `${d.name} → ${d.dup.code}${d.dup.confidence !== 'definite' ? ' (' + d.dup.confidence + ')' : ''}`).join('; '))}</span>` : '';
+    const planHtml = pk ? `<div class="plan"><b>${hasAP() && !planOn() ? 'FY27 account plan (HubSpot)' : esc(state.plan) + ' account plan'} · ${pdeals.length} opportunit${pdeals.length === 1 ? 'y' : 'ies'} · ${gbp(pv)} in view</b><br>${esc(pk.text)}${pk.watch ? `<span class="pw"><b>Watch:</b> ${esc(pk.watch)}</span>` : ''}${dupHtml}</div>` : '';
+    const warnTag = !k.planOnly && /cliff|empty|dependent|swing|unconverted|thin|placeholder|unforecast/i.test(k.tag);
+    const msHidden = state.ms === 'all' ? [] : allPool.filter(d => d.client === c.name && (d.offering === 'Managed Services') === (state.ms === 'exclude'));
+    card.innerHTML = `
+      <div class="head"><h3>${esc(c.name)}</h3><span class="tag ${warnTag ? 'warn' : k.planOnly ? 'plan' : ''}">${esc(k.tag)}</span><div class="tot num">${gbp(c.total)}<small>${pct(c.total, grand)} of total · ${c.deals.length} deals${KIM.list.length ? ` · Kantata P${state.kp} ${gbp(kimbleFor(c.name).reduce((s, g) => s + kval(g), 0))}` : ''}</small></div></div>
+      <div class="viz"><div class="bands">${BANDS.filter(b => c.bands[b.key] > 0).map(b => `<div><i style="background:var(--${b.cls})"></i>${b.key}<b>${gbp(c.bands[b.key])}</b></div>`).join('')}</div></div>
+      <div class="text">${k.text ? `<p>${esc(k.text)}</p>` : `<p>No HubSpot forecast-band deals for ${esc(c.name)} in ${Y().key}; this card comes from the account plan.</p>`}${k.watch ? `<div class="watch"><span>Watch:</span> ${esc(k.watch)}</div>` : ''}${planHtml}${sinceLine(c.name)}${msHidden.length ? `<div class="ms">${msHidden.length} ${state.ms === 'exclude' ? 'Managed Services' : 'non-Managed Services'} deal${msHidden.length > 1 ? 's' : ''} hidden (${gbp(msHidden.reduce((s, d) => s + val(d), 0))}): ${esc(msHidden.map(d => d.name).join(', '))}</div>` : ''}</div>
+      ${growthLadder(c.name)}
+      <details data-c="${esc(c.name)}"${openState[c.name] ? ' open' : ''}><summary>Deals (${c.deals.length})</summary><div class="tbl">${dealTable(c.deals)}</div></details>`;
+    card.querySelector('.viz').appendChild(miniChart(c));
+    host.appendChild(card);
+  }
+  const rest = rows.filter(c => !cm[c.name] && !pn[c.name]);
+  const VB = BANDS.filter(b => b.key !== AP_KEY || apVisible());
+  let h = `<table><thead><tr><th>Client</th><th class="n">Deals</th>${VB.map(b => `<th class="n">${b.key.replace('Forecast ', '')}</th>`).join('')}<th class="n">Total</th></tr></thead><tbody>`;
+  for (const c of rest) h += `<tr><td>${esc(c.name)}</td><td class="n">${c.deals.length}</td>${VB.map(b => `<td class="n">${c.bands[b.key] > 0 ? gbpFull(c.bands[b.key]) : '–'}</td>`).join('')}<td class="n">${gbpFull(c.total)}</td></tr>`;
+  h += `<tr class="sum"><td>Total (${rest.length} clients)</td><td></td>${VB.map(b => `<td class="n">${gbpFull(rest.reduce((s, c) => s + c.bands[b.key], 0))}</td>`).join('')}<td class="n">${gbpFull(rest.reduce((s, c) => s + c.total, 0))}</td></tr></tbody></table>`;
+  document.getElementById('others').innerHTML = rest.length ? h : '<div class="empty">Every client in view has its own card above.</div>';
+}
+
+
+/* ---------- changes / history ---------- */
+const runsSorted = () => [...(HIST.runs || [])].sort((a, b) => a.asof.localeCompare(b.asof));
+function baselineRun() {
+  const runs = runsSorted(); if (runs.length < 2) return null;
+  const latest = runs[runs.length - 1];
+  if (state.period === 'last') return runs[runs.length - 2];
+  const days = +state.period, cutoff = new Date(new Date(latest.asof + ':00Z').getTime() - days * 86400000);
+  const older = runs.filter(r => new Date(r.asof + ':00Z') <= cutoff);
+  return older.length ? older[older.length - 1] : runs[0];
+}
+// value of a run summary under the current year / basis / status selection (Sales pipeline only, as stored)
+function runValue(run, yearKey) {
+  const s = run.summary[yearKey]; if (!s) return 0;
+  const by = state.basis === 'full' ? s.full : s.pro;
+  return BANDS.reduce((a, b) => a + (state.on[b.key] ? (by[b.key] || 0) : 0), 0);
+}
+function renderChanges(deals) {
+  const yr = Y(), runsAll = runsSorted(), runs = runsAll.filter(r => r.summary && r.summary[yr.key]), latest = runs[runs.length - 1], base = (() => { const b = baselineRun(); return b && b.summary && b.summary[yr.key] ? b : (runs.length > 1 ? runs[runs.length - 2] : null); })();
+  const sub = document.getElementById('changesSub'), host = document.getElementById('changeList');
+  document.querySelectorAll('#periodGroup button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === state.period));
+  if (!latest || !base) {
+    sub.textContent = 'History starts with this refresh; changes will appear from the next one.';
+    document.getElementById('trend').innerHTML = ''; document.getElementById('deltas').innerHTML = ''; host.innerHTML = ''; document.getElementById('trendNote').textContent = '';
+    return;
+  }
+  const spanDays = Math.round((new Date(latest.asof + ':00Z') - new Date(base.asof + ':00Z')) / 86400000);
+  const wanted = state.period === 'last' ? null : +state.period;
+  sub.textContent = `Comparing ${fmtAsof(base.asof)} with ${fmtAsof(latest.asof)}` + (wanted && spanDays < wanted - 1 ? ` (history only goes back ${spanDays} day${spanDays === 1 ? '' : 's'} so far)` : '') + `. Figures are for ${yr.key}, ${state.basis === 'full' ? 'full deal value' : 'pro-rated'}, Sales pipeline, statuses as selected above.`;
+
+  /* trend */
+  const th = document.getElementById('trend'), W = Math.max(th.clientWidth, 300), H = 150, padL = 50, padR = 12, padT = 12, padB = 26;
+  const pts = runs.map(r => ({ t: new Date(r.asof + ':00Z').getTime(), v: runValue(r, yr.key), asof: r.asof, run: r }));
+  const t0 = pts[0].t, t1 = pts[pts.length - 1].t || t0 + 1, vmax = Math.max(...pts.map(p => p.v), 1), vmin = Math.min(...pts.map(p => p.v));
+  const lo = Math.max(0, vmin - (vmax - vmin) * 0.6), step = niceStep(Math.max(vmax - lo, 1), 3), yTop = Math.ceil(vmax / step) * step, yBot = Math.max(0, Math.floor(lo / step) * step);
+  const sx = x => padL + (t1 === t0 ? 0.5 : (x - t0) / (t1 - t0)) * (W - padL - padR), sy = v => padT + (1 - (v - yBot) / Math.max(yTop - yBot, 1)) * (H - padT - padB);
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Trend of the selected total across refreshes' });
+  for (let v = yBot; v <= yTop + 1e-6; v += step) { svg.appendChild(el('line', { class: 'grid', x1: padL, x2: W - padR, y1: sy(v), y2: sy(v) })); svg.appendChild(el('text', { class: 'tick', x: padL - 6, y: sy(v) + 3.5, 'text-anchor': 'end' }, gbp(v))); }
+  const path = pts.map((p, i) => (i ? 'L' : 'M') + sx(p.t).toFixed(1) + ' ' + sy(p.v).toFixed(1)).join(' ');
+  svg.appendChild(el('path', { class: 'trendarea', d: path + ` L${sx(pts[pts.length - 1].t).toFixed(1)} ${sy(yBot)} L${sx(pts[0].t).toFixed(1)} ${sy(yBot)} Z` }));
+  svg.appendChild(el('path', { class: 'trendline', d: path }));
+  pts.forEach((p, i) => {
+    const dot = el('circle', { class: 'trenddot', cx: sx(p.t), cy: sy(p.v), r: 4.5 });
+    const hit = el('circle', { class: 'hit', cx: sx(p.t), cy: sy(p.v), r: 14 });
+    hit.addEventListener('mousemove', ev => showTip(ev, `<b>${esc(fmtAsof(p.asof))}</b><div class="r"><span>${yr.key} total</span><span>${gbpFull(p.v)}</span></div><div class="r"><span>Deals tracked</span><span>${p.run.deals}</span></div>${i ? `<div class="r"><span>Changes vs previous</span><span>+${p.run.n_added} / −${p.run.n_removed} / ~${p.run.n_changed}</span></div>` : ''}`));
+    hit.addEventListener('mouseleave', hideTip); svg.appendChild(dot); svg.appendChild(hit);
+    if (i === 0 || i === pts.length - 1) svg.appendChild(el('text', { class: 'tick', x: sx(p.t), y: H - padB + 16, 'text-anchor': i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle' }, new Date(p.t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })));
+  });
+  svg.appendChild(el('line', { class: 'axis', x1: padL, x2: W - padR, y1: sy(yBot), y2: sy(yBot) }));
+  th.innerHTML = ''; th.appendChild(svg);
+  document.getElementById('trendNote').textContent = `${runs.length} refresh${runs.length === 1 ? '' : 'es'} on record, from ${fmtAsof(runs[0].asof)}. Hover a point for the run detail. Six months of history is kept.`;
+
+  /* deltas by status */
+  const bs = base.summary[yr.key] || {}, ls = latest.summary[yr.key] || {};
+  const pick = s => state.basis === 'full' ? (s.full || {}) : (s.pro || {});
+  let h = `<table><thead><tr><th>Status</th><th class="n">${esc(fmtAsof(base.asof).split(' ').slice(0, 2).join(' '))}</th><th class="n">Now</th><th class="n">Change</th></tr></thead><tbody>`;
+  let tb = 0, tl = 0;
+  for (const b of BANDS) { if (!state.on[b.key]) continue; const a = pick(bs)[b.key] || 0, c = pick(ls)[b.key] || 0, d = c - a; tb += a; tl += c;
+    h += `<tr><td class="pill"><span><i style="background:var(--${b.cls})"></i>${b.key}</span></td><td class="n">${gbpFull(a)}</td><td class="n">${gbpFull(c)}</td><td class="n ${d > 0 ? 'delta-up' : d < 0 ? 'delta-down' : ''}">${d === 0 ? '–' : (d > 0 ? '+' : '−') + gbpFull(Math.abs(d))}</td></tr>`; }
+  const dT = tl - tb;
+  h += `<tr class="sum"><td>Total</td><td class="n">${gbpFull(tb)}</td><td class="n">${gbpFull(tl)}</td><td class="n ${dT > 0 ? 'delta-up' : dT < 0 ? 'delta-down' : ''}">${dT === 0 ? '–' : (dT > 0 ? '+' : '−') + gbpFull(Math.abs(dT))}</td></tr></tbody></table>`;
+  document.getElementById('deltas').innerHTML = h;
+
+  /* deal-level changes in the period */
+  const inView = new Set(deals.map(d => d.id));
+  const latestDeals = new Map((HIST.latest && HIST.latest.deals || []).map(d => [d.id, d]));
+  const yearStart = yr.start, yearEnd = yr.end;
+  let chg = (HIST.changes || []).filter(c => c.asof > base.asof && c.asof <= latest.asof && (state.incBid || c.pipe === 'Sales') && (!c.fy || c.fy.includes(yr.key)));
+  // keep changes relevant to the selected statuses (either side of a band change) and to the Managed Services filter
+  chg = chg.filter(c => { const bands = [c.band]; if (c.fields && c.fields.band) bands.push(c.fields.band[0]); return bands.some(b => state.on[b]); });
+  if (state.ms !== 'all') chg = chg.filter(c => { const d = latestDeals.get(c.id); const off = d ? d.offering : null; return off == null ? true : (state.ms === 'only') === (off === 'Managed Services'); });
+  // collapse multiple entries for the same deal into one row, oldest → newest
+  const byDeal = new Map();
+  for (const c of chg.sort((a, b) => a.asof.localeCompare(b.asof))) {
+    if (!byDeal.has(c.id)) byDeal.set(c.id, { id: c.id, name: c.name, client: c.client, band: c.band, amount: c.amount, types: new Set(), fields: {}, note: c.note, last: c.asof });
+    const r = byDeal.get(c.id); r.types.add(c.type); r.band = c.band; r.amount = c.amount; r.last = c.asof; r.note = c.note || r.note;
+    if (c.fields) for (const k in c.fields) { if (!r.fields[k]) r.fields[k] = [c.fields[k][0], c.fields[k][1]]; else r.fields[k][1] = c.fields[k][1]; }
+  }
+  const rows = [...byDeal.values()].filter(r => { for (const k in r.fields) if (r.fields[k][0] === r.fields[k][1]) delete r.fields[k]; return r.types.has('added') || r.types.has('removed') || Object.keys(r.fields).length; });
+  const fmtField = (k, a, b) => k === 'amount' ? `amount ${gbp(+a)} → ${gbp(+b)}` : `${k} ${ukd(a)} → ${ukd(b)}`;
+  const typeOf = r => r.types.has('removed') ? 'removed' : r.types.has('added') ? 'added' : 'changed';
+  const order = { removed: 0, added: 1, changed: 2 };
+  rows.sort((a, b) => order[typeOf(a)] - order[typeOf(b)] || Math.abs(b.amount) - Math.abs(a.amount));
+  if (!rows.length) { host.innerHTML = '<div class="empty">No deal-level changes in this period for the current selection.</div>'; return; }
+  let L = `<table><thead><tr><th></th><th>Deal</th><th>Client</th><th>Status now</th><th class="n">Value</th><th>What changed</th><th>When</th></tr></thead><tbody>`;
+  for (const r of rows) {
+    const ty = typeOf(r);
+    const what = ty === 'added' ? 'New in the tracked statuses' : ty === 'removed' ? (r.note || 'Left the tracked statuses') : Object.entries(r.fields).map(([k, [a, b]]) => fmtField(k, a, b)).join('; ');
+    L += `<tr><td><span class="chg-type ${ty}">${ty}</span></td><td>${esc(r.name)}</td><td>${esc(r.client)}</td><td class="pill"><span><i style="background:var(--${(BK[r.band] || {}).cls || 'placeholder'})"></i>${esc(r.band)}</span></td><td class="n">${gbpFull(r.amount)}</td><td class="wrap-cell">${esc(what)}</td><td class="num">${esc(fmtAsof(r.last))}</td></tr>`;
+  }
+  L += '</tbody></table>';
+  host.innerHTML = L;
+}
+function sinceLine(client) {
+  const runs = runsSorted(); if (runs.length < 2) return '';
+  const latest = runs[runs.length - 1], prev = runs[runs.length - 2];
+  const chg = (HIST.changes || []).filter(c => c.asof === latest.asof && c.client === client && (state.incBid || c.pipe === 'Sales') && (!c.fy || c.fy.includes(Y().key)));
+  if (!chg.length) return '';
+  const bits = chg.slice(0, 4).map(c => c.type === 'added' ? `${c.name} added (${gbp(c.amount)})` : c.type === 'removed' ? `${c.name} removed (${gbp(c.amount)})` : `${c.name}: ${Object.entries(c.fields).map(([k, [a, b]]) => k === 'amount' ? `${gbp(+a)} → ${gbp(+b)}` : `${k} ${ukd(a)} → ${ukd(b)}`).join(', ')}`);
+  return `<div class="since"><b>Since ${esc(fmtAsof(prev.asof))}:</b> ${esc(bits.join(' · '))}${chg.length > 4 ? ` · +${chg.length - 4} more` : ''}</div>`;
+}
+
+function renderKimble(deals) {
+  const panel = document.getElementById('kimblePanel'); if (!KIM.list.length) { panel.hidden = true; return; } panel.hidden = false;
+  const yr = Y();
+  document.querySelectorAll('#kpGroup button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.kp === state.kp));
+  const kp = { 1: 'P1 (won)', 2: 'P2 (won and committed)', 3: 'P3 (everything forecast)' }[state.kp];
+  document.getElementById('kimbleSub').textContent = `${yr.key}: HubSpot ${state.basis === 'full' ? 'full deal value' : 'pro-rated revenue'} for the current selection against Kantata ${kp} forecast revenue for the same year (assignment forecasts plus fixed-price period revenue). Kantata figures ignore the status chips and Managed Services filter.` + (yr.key === 'FY26' ? ' FY26 here is assignment and period revenue only (closed months carry actuals); the full Kantata ledger outturn for FY26 is £41.5m including milestone revenue.' : '');
+  /* grouped bars per client */
+  const hs = clientRows(deals), hmap = new Map(hs.map(c => [c.name, c.total]));
+  const kmap = new Map(); for (const g of KIM.list) { const c = kimClient(g); kmap.set(c, (kmap.get(c) || 0) + kval(g)); }
+  const names = [...new Set([...hmap.keys(), ...kmap.keys()])].map(n => ({ name: n, h: hmap.get(n) || 0, k: kmap.get(n) || 0 })).filter(r => r.h > 0 || r.k > 1000).sort((a, b) => Math.max(b.h, b.k) - Math.max(a.h, a.k));
+  const top = names.slice(0, 14), rest = names.slice(14);
+  if (rest.length) top.push({ name: `All other clients (${rest.length})`, h: rest.reduce((s, r) => s + r.h, 0), k: rest.reduce((s, r) => s + r.k, 0), other: true });
+  const host = document.getElementById('chartKimble'), narrow = host.clientWidth < 560;
+  const W = Math.max(host.clientWidth, 320), labW = narrow ? 120 : 250, rH = narrow ? 34 : 36, padT = 22, padB = 8, valW = 64;
+  const H = padT + top.length * rH + padB, max = Math.max(...top.map(r => Math.max(r.h, r.k)), 1), step = niceStep(max, 5), axisMax = Math.ceil(max / step) * step;
+  const x0 = labW, x1 = W - valW, sx = v => x0 + (v / axisMax) * (x1 - x0);
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'HubSpot against Kantata by client' });
+  for (let v = 0; v <= axisMax + 1e-6; v += step) { svg.appendChild(el('line', { class: 'grid', x1: sx(v), x2: sx(v), y1: padT - 6, y2: H - padB })); svg.appendChild(el('text', { class: 'tick', x: sx(v), y: padT - 10, 'text-anchor': 'middle' }, gbp(v))); }
+  top.forEach((r, i) => {
+    const y = padT + i * rH, bh = (rH - 12) / 2, g = el('g', { class: 'row' });
+    const nm = r.name.length > (narrow ? 16 : 34) ? r.name.slice(0, narrow ? 15 : 33) + '…' : r.name;
+    g.appendChild(el('text', { class: 'lab', x: x0 - 10, y: y + bh + 4, 'text-anchor': 'end', 'font-weight': r.other ? 400 : 500 }, nm));
+    g.appendChild(el('rect', { class: 'seg', fill: 'var(--commit)', x: sx(0), y, width: Math.max(sx(r.h) - sx(0), r.h > 0 ? 1 : 0), height: bh }));
+    g.appendChild(el('rect', { class: 'seg kbar', x: sx(0), y: y + bh + 2, width: Math.max(sx(r.k) - sx(0), r.k > 0 ? 1 : 0), height: bh }));
+    if (r.h > 0) g.appendChild(el('text', { class: 'val', x: sx(r.h) + 5, y: y + bh - 1 }, gbp(r.h)));
+    if (r.k > 0) g.appendChild(el('text', { class: 'val', x: sx(r.k) + 5, y: y + 2 * bh + 1 }, gbp(r.k)));
+    const hit = el('rect', { class: 'hit', x: 0, y, width: W, height: rH });
+    const engs = r.other ? [] : kimbleFor(r.name).map(g => ({ d: { name: g.name, client: g.account, band: g.status }, v: kval(g) })).filter(x => x.v > 0);
+    hit.addEventListener('mousemove', ev => showTip(ev, `<b>${esc(r.name)}</b><div class="r"><span>HubSpot (${state.basis === 'full' ? 'full' : 'pro-rated'})</span><span>${gbpFull(r.h)}</span></div><div class="r"><span>Kantata P${state.kp}</span><span>${gbpFull(r.k)}</span></div><div class="r"><span>Difference</span><span>${(r.k - r.h >= 0 ? '+' : '−') + gbpFull(Math.abs(r.k - r.h))}</span></div>` + (engs.length ? `<div class="dh">Kantata engagements (${engs.length})</div>` + engs.sort((a, b) => b.v - a.v).slice(0, 8).map(x => `<div class="d"><span>${esc(x.d.name)} · ${esc(x.d.band)}</span><span>${gbp(x.v)}</span></div>`).join('') : '')));
+    hit.addEventListener('mouseleave', hideTip); g.appendChild(hit); svg.appendChild(g);
+  });
+  svg.appendChild(el('line', { class: 'axis', x1: x0, x2: x0, y1: padT - 6, y2: H - padB }));
+  host.innerHTML = ''; host.appendChild(svg);
+  /* reconciliation list */
+  const rec = (DATA.reconciliation || []).filter(x => x.flags.length).sort((a, b) => Math.max(b.h_amount, b.k_contract) - Math.max(a.h_amount, a.k_contract));
+  document.getElementById('reconCount').textContent = `· ${rec.length} of ${(DATA.reconciliation || []).length} engagement codes`;
+  let L = `<table><thead><tr><th>Code</th><th>Client</th><th>HubSpot</th><th class="n">HubSpot value</th><th>Kantata</th><th class="n">Kantata contract</th><th class="n">Kantata ${yr.key} P3</th><th>Flags</th></tr></thead><tbody>`;
+  const shown = state.reconAll ? rec : rec.slice(0, 25);
+  for (const x of shown) { const ks = kimbleStatus(x.key);
+    L += `<tr><td class="num">${esc(x.key)}</td><td>${esc(x.client)}</td><td>${esc(x.h_status.join(', ') || '–')}</td><td class="n">${x.hubspot.length ? gbpFull(x.h_amount) : '–'}</td><td>${esc(x.k_status.join(', ') || '–')}</td><td class="n">${x.kimble.length ? gbpFull(x.k_contract) : '–'}</td><td class="n">${ks ? gbpFull(ks.inyr) : '–'}</td><td>${x.flags.map(f => `<span class="flag">${esc(f)}</span>`).join('')}</td></tr>`; }
+  document.getElementById('reconList').innerHTML = L + '</tbody></table>' + (rec.length > 25 ? `<p style="margin-top:8px"><button type="button" class="linkbtn" id="reconToggle">${state.reconAll ? 'Show the 25 largest only' : `Show all ${rec.length} exceptions`}</button></p>` : '');
+  const tg = document.getElementById('reconToggle'); if (tg) tg.addEventListener('click', () => { state.reconAll = !state.reconAll; renderKimble(deals); });
+}
+function renderAll() {
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', +b.dataset.i === state.year));
+  document.querySelectorAll('#statuses button').forEach(b => b.setAttribute('aria-pressed', state.on[b.dataset.band]));
+  document.getElementById('basisFull').setAttribute('aria-pressed', state.basis === 'full');
+  document.getElementById('basisPro').setAttribute('aria-pressed', state.basis === 'pro');
+  document.querySelectorAll('#msGroup button').forEach(b => b.setAttribute('aria-pressed', b.dataset.ms === state.ms));
+  document.getElementById('incBid').checked = state.incBid;
+  const deals = pool(false);
+  renderChips();
+  document.querySelectorAll('#planGroup button').forEach(b => b.setAttribute('aria-pressed', b.dataset.plan === state.plan));
+  document.getElementById('planW').checked = state.planW;
+  document.getElementById('planBasisGroup').hidden = !apVisible(); document.querySelectorAll('#planBasisGroup button').forEach(b => b.setAttribute('aria-pressed', b.dataset.pb === state.planBasis));
+  renderSummary(deals); drawClients(deals); drawMonths(deals); renderKimble(deals.filter(d => !isPlan(d))); renderChanges(deals.filter(d => !isPlan(d))); renderClients(deals);
+}
+async function boot() {
+  const get = async (f, fallback) => { try { const r = await fetch(f, { cache: 'no-store' }); if (!r.ok) throw new Error(r.status); return await r.json(); } catch (e) { console.warn('could not load', f, e); return fallback; } };
+  DATA = await get('data.json', null);
+  if (!DATA) { document.querySelector('.wrap').insertAdjacentHTML('afterbegin', '<div class="bidnote">Could not load data.json. The dashboard data files have not been published yet.</div>'); return; }
+  const c = await get('commentary.json', {}); COMM = c.comm || {}; READING = c.reading || {};
+  HIST = await get('history.json', HIST);
+  AP = await get('accountplan.json', null); if (AP && !(AP.plans && AP.plans[state.plan])) state.plan = 'off';
+  syncYear(); initKimble(); initControls(); renderAll();
+}
+boot();
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { const d = pool(false); drawClients(d); drawMonths(d); renderKimble(d.filter(x => !isPlan(x))); }, 120); });
+</script>
+
+<script>
+// Dates as dd/Mmm/yyyy everywhere (5 Nov): rewrites ISO (2026-11-09), dd/mm/yyyy and dd/mm text wherever it is rendered, leaving inputs, values and data attributes alone.
+(function () {
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const ok = (d, m) => +m >= 1 && +m <= 12 && +d >= 1 && +d <= 31;
+  const f = t => t
+    .replace(/\b(20\d\d)-(\d\d)-(\d\d)(?:T(\d\d:\d\d)(?::\d\d(?:\.\d+)?)?Z?)?\b/g, (m, y, mo, d, hm) => ok(d, mo) ? `${d}/${MON[+mo - 1]}/${y}${hm ? ' ' + hm : ''}` : m)
+    .replace(/\b(\d{2})\/(\d{2})\/(\d{4})\b/g, (m, d, mo, y) => ok(d, mo) ? `${d}/${MON[+mo - 1]}/${y}` : m)
+    .replace(/(^|[^\d\/])(\d{2})\/(\d{2})(?![\d\/])/g, (m, pre, d, mo) => ok(d, mo) ? `${pre}${d}/${MON[+mo - 1]}` : m);
+  const SKIP = /^(SCRIPT|STYLE|INPUT|TEXTAREA|PRE|CODE)$/;
+  const walk = n => { if (n.nodeType === 3) { const v = f(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; return; } if (n.nodeType !== 1 || SKIP.test(n.tagName)) return; for (const c of n.childNodes) walk(c); };
+  const fixAttr = el => { for (const a of ['title', 'data-tip']) { if (el.nodeType === 1 && el.hasAttribute && el.hasAttribute(a)) { const v = f(el.getAttribute(a)); if (v !== el.getAttribute(a)) el.setAttribute(a, v); } } };
+  const walkAll = n => { walk(n); if (n.nodeType === 1) { fixAttr(n); n.querySelectorAll && n.querySelectorAll('[title],[data-tip]').forEach(fixAttr); } };
+  new MutationObserver(ms => ms.forEach(m => { if (m.type === 'characterData') { const v = f(m.target.nodeValue); if (v !== m.target.nodeValue) m.target.nodeValue = v; } else m.addedNodes.forEach(walkAll); })).observe(document.body, {childList: true, subtree: true, characterData: true});
+  walkAll(document.body);
+})();
+</script>
+<script>
+// Collapsible tables (6 Nov): every table gets a small Hide/Show control above it; the choice is remembered per table in this browser.
+(function () {
+  const KEY = 'ubds-tbl-collapsed'; let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const css = document.createElement('style'); css.textContent = '.tcol-bar{display:flex;justify-content:flex-end;margin:2px 0 4px}.tcol-bar button{font:inherit;font-size:11.5px;color:var(--muted,var(--ink-3,#5b6473));background:none;border:1px solid transparent;border-radius:6px;padding:2px 8px;cursor:pointer}.tcol-bar button:hover{border-color:var(--line,var(--grid,#e3e7ed))}.tcol-bar button:focus-visible{outline:2px solid var(--accent,#0d366b);outline-offset:2px}'; document.head.appendChild(css);
+  const headingOf = t => { let n = t; for (let d = 0; d < 6 && n; d++) { let p = n.previousElementSibling; while (p) { const h = /^H[1-4]$/.test(p.tagName) ? p : p.querySelector && p.querySelector('h1,h2,h3,h4'); if (h) return h.textContent.trim(); p = p.previousElementSibling; } n = n.parentElement; } return ''; };
+  const keyOf = t => (location.pathname.split('/').slice(-2).join('/')) + '|' + (t.id || '') + '|' + headingOf(t).slice(0, 60);
+  const apply = t => {
+    if (t.dataset.tcol || t.closest('td, th, .panel.col, .ndx, .tip, [data-tip]')) return; const rows = t.querySelectorAll('tbody tr, tr').length; if (rows < 2) return;
+    t.dataset.tcol = '1'; const k = keyOf(t); const bar = document.createElement('div'); bar.className = 'tcol-bar'; const b = document.createElement('button'); b.type = 'button'; bar.appendChild(b);
+    const paint = () => { const c = !!st[k]; t.style.display = c ? 'none' : ''; b.textContent = c ? `▸ Show table (${rows} rows)` : '▾ Hide table'; b.setAttribute('aria-expanded', String(!c)); };
+    b.addEventListener('click', e => { e.stopPropagation(); st[k] = !st[k]; save(); paint(); }); paint();
+    const host = t.closest('.wrap, .tbl') || t; host.parentNode.insertBefore(bar, host);
+  };
+  const scan = root => { if (root.nodeType !== 1) return; if (root.tagName === 'TABLE') apply(root); root.querySelectorAll && root.querySelectorAll('table').forEach(apply); };
+  let pend = null; new MutationObserver(ms => { if (pend) return; pend = setTimeout(() => { pend = null; scan(document.body); }, 60); }).observe(document.body, { childList: true, subtree: true });
+  scan(document.body);
+})();
+</script>
+</body></html>

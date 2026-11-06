@@ -1,4 +1,52 @@
-# Stargate · Resource manager — Streamlit app for Databricks Apps
+# Stargate Workspace v2 on Databricks Apps
+
+## What is deployed: the artifact's own pages, served by FastAPI (`server.py`)
+
+`app.yaml` runs `uvicorn server:app`. The server serves the **Stargate Workspace v2** artifact's published files from `web/`
+byte for byte, so the UI is the artifact's UI: all 12 roles, every view, the same HTML, CSS and JavaScript. The only change
+to each page is one `<script src="/_stargate/claude.js">` tag injected into its `<head>` as it is served.
+
+**Data.** The pages fetch their JSON by relative path. The server answers these from the lake (built by
+`stargate_rm/pipeline.py`, cached one hour) and the rest from the snapshot published in the artifact:
+
+| Served from the lake | Still the artifact snapshot (no lake build yet) |
+|---|---|
+| `dash/rm/data.json` (Resource manager: utilisation, margin) | the "gold" data embedded in `web/index.html` |
+| `dash/resourcing/data.json`, `match.json`, `history.json` | `dash/rm/demand.json`, `dash/revenue/*`, `dash/resrev/*`, `dash/pricing/*` |
+
+The live files have exactly the artifact's shapes (the pipeline's builders are the ones that made them), so the pages read them
+unchanged. Moving the snapshot data onto the lake means porting `build_gold.py` and the revenue builders into the pipeline.
+
+**Artifact runtime.** On claude.ai the pages call `claude.use('user' | 'db' | 'sample' | 'downloads')`. `web_runtime/claude.js`
+provides the same calls, backed by the server:
+
+| Call | On Databricks |
+|---|---|
+| `user` | the signed-in user, from the `X-Forwarded-Email` header the Apps proxy adds (`/api/me`) |
+| `db` (approvals, proposals, exception ledger, settings, pricing deals …) | Firestore-style collections in the Delta table `<APP_STATE_SCHEMA>.workspace_db` (`/api/db`); browsers poll every 15 s for other users' changes |
+| `sample` (Explain, Ask) | the model serving endpoint `LLM_ENDPOINT` (`/api/sample`) |
+| `downloads` | a normal browser download |
+
+If `workspace_db` cannot be created or written, shared state is kept in memory (works, but is lost on restart).
+`GET /api/status` shows the build time, any data gaps from the lake build, the number of people in the Utilisation data, and
+whether the store is on Delta or in memory. `POST /api/rebuild` clears the cache and rebuilds from the lake.
+
+**Run locally**
+
+```bash
+pip install -r requirements.txt
+STARGATE_SAMPLE=1 uvicorn server:app --port 8000      # artifact snapshot data, in-memory store, canned Explain text
+python -m pytest tests -q                              # server and Streamlit tests (sample mode)
+```
+
+**Grants needed** are as in *Deploy* below, plus `CREATE TABLE`/`MODIFY` on `APP_STATE_SCHEMA` for `workspace_db`.
+
+---
+
+## The earlier Streamlit port (`app.py`)
+
+Still in this folder and still working (`STARGATE_SAMPLE=1 streamlit run app.py`); `app.yaml` has the command to deploy it
+instead. The rest of this README describes it, and the data pipeline both versions share.
 
 A Python/Streamlit port of the **Resource manager** role of the Stargate Workspace artifact: the four tabs that role can see and
 interact with — **Resourcing exceptions · Utilisation · Demand · Margin** — with the same filters, tiles, charts, tables,
