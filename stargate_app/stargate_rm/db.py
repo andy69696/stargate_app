@@ -2,18 +2,29 @@
 
 Uses databricks-sql-connector with the app's own OAuth credentials (Databricks Apps sets DATABRICKS_HOST,
 DATABRICKS_CLIENT_ID and DATABRICKS_CLIENT_SECRET for the service principal).  Every query is read-only except the
-small app-state writes in state.py.  Results are cached in Streamlit for the lifetime of a daily refresh.
+small app-state writes in state.py.  SELECT results are cached in-process for an hour (works the same under Streamlit and
+under the FastAPI server, which do not share Streamlit's cache); clear_cache() empties it for a rebuild.
 """
 from __future__ import annotations
 
 import decimal
 import os
+import threading
+import time
 from typing import Any
 
 import pandas as pd
-import streamlit as st
 
 from . import config
+
+CACHE_TTL = 3600
+_cache: dict[str, tuple[float, pd.DataFrame]] = {}
+_cache_lock = threading.Lock()
+
+
+def clear_cache() -> None:
+    with _cache_lock:
+        _cache.clear()
 
 
 def _connection():
@@ -38,19 +49,30 @@ def _connection():
     return sql.connect(**kw)
 
 
-@st.cache_data(ttl=3600, show_spinner=False)
-def query(sql_text: str) -> pd.DataFrame:
-    """Run one SELECT and return a DataFrame (cached one hour)."""
+def query(sql_text: str, cached: bool = True, params: dict | None = None) -> pd.DataFrame:
+    """Run one SELECT and return a DataFrame (cached one hour unless cached=False; never cached with params).
+    params are bound as named parameters (:name in the SQL), never pasted into the text."""
+    now = time.time()
+    cached = cached and not params
+    if cached:
+        with _cache_lock:
+            hit = _cache.get(sql_text)
+        if hit and now - hit[0] < CACHE_TTL:
+            return hit[1]
     with _connection() as conn, conn.cursor() as cur:
-        cur.execute(sql_text)
+        cur.execute(sql_text, params) if params else cur.execute(sql_text)
         cols = [c[0] for c in cur.description]
-        return pd.DataFrame(cur.fetchall_arrow().to_pandas() if hasattr(cur, "fetchall_arrow") else cur.fetchall(), columns=cols)
+        df = pd.DataFrame(cur.fetchall_arrow().to_pandas() if hasattr(cur, "fetchall_arrow") else cur.fetchall(), columns=cols)
+    if cached:
+        with _cache_lock:
+            _cache[sql_text] = (now, df)
+    return df
 
 
-def execute(sql_text: str) -> None:
-    """Run a statement with no result set (app-state tables only)."""
+def execute(sql_text: str, params: dict | None = None) -> None:
+    """Run a statement with no result set (app-state tables only); params bind as :name."""
     with _connection() as conn, conn.cursor() as cur:
-        cur.execute(sql_text)
+        cur.execute(sql_text, params) if params else cur.execute(sql_text)
 
 
 def records(sql_text: str) -> list[dict]:

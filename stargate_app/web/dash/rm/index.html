@@ -1,0 +1,442 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}td.ndxcell { vertical-align: top; white-space: normal; } td.ndxcell .ndx { width: 300px; max-width: 300px; white-space: normal; text-align: left; } .ndx { background: var(--panel-2, #f6f7f9); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.45; } .ndx .sw1 { color: var(--bad, #b42318); font-weight: 700; } .ndx .sw2 { color: var(--good, #0a7a2f); font-weight: 700; } .ndx .muted { color: var(--muted, #5b6473); } .ndx .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.panel.col .xhead { cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; } .panel.col .xhead .caret { color: var(--muted, #5b6473); transition: transform .15s; } .panel.col.collapsed .xhead .caret { transform: rotate(-90deg); } .panel.col.collapsed .note { display: none; } .panel.col.collapsed .xhead { margin-bottom: 0; }
+.brandlogo { display: block; height: 44px; width: auto; margin: 0 0 8px; }
+body.embedded .brandlogo { display: none !important; }
+.po { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0 14px; } .pobox { background: var(--surface, #fff); border: 1px solid var(--grid, #e3e7ed); border-left: 4px solid var(--accent, #548ca3); border-radius: 8px; padding: 10px 14px; min-width: 0; } .pol { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3, #8a929e); margin-bottom: 4px; } .pobox p { margin: 0; font-size: 13.5px; line-height: 1.45; max-width: none; } @media (max-width: 800px) { .po { grid-template-columns: 1fr; } }
+</style></head><body><script>try { if (window.parent && window.parent !== window) document.body.classList.add("embedded"); } catch (e) {}</script>
+<title>Utilisation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Resource Management views for the RM team: Margin by Resource (exceptions), Over Utilisation, Bench. Same tokens as the other UBDS pages. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef1f5; --ink: #111418; --ink-2: #4b5563; --ink-3: #8a929e;
+  --grid: #e3e7ed; --ring: rgba(17,20,24,0.10); --accent: #548ca3;
+  --red: #fde2e1; --red-ink: #8c1d18; --amber: #fdf0c7; --amber-ink: #7a4b00; --green: #d7f2e2; --green-ink: #0a5a2f; --grey: #e6e9ee; --grey-ink: #6b7480;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1114; --surface: #181b20; --surface-2: #22262d; --ink: #f3f4f6; --ink-2: #b6bcc6; --ink-3: #7f8792; --grid: #2a2f37; --ring: rgba(255,255,255,0.10); --accent: #7fb3c9;
+  --red: #4a1f1d; --red-ink: #fca5a1; --amber: #42310a; --amber-ink: #f6d27a; --green: #143a26; --green-ink: #86e3ab; --grey: #2a2f37; --grey-ink: #8a929e; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1114; --surface: #181b20; --surface-2: #22262d; --ink: #f3f4f6; --ink-2: #b6bcc6; --ink-3: #7f8792; --grid: #2a2f37; --ring: rgba(255,255,255,0.10); --accent: #7fb3c9;
+  --red: #4a1f1d; --red-ink: #fca5a1; --amber: #42310a; --amber-ink: #f6d27a; --green: #143a26; --green-ink: #86e3ab; --grey: #2a2f37; --grey-ink: #8a929e; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 28px 56px; padding-inline: 20px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 28px; line-height: 1.2; } h2 { font-size: 19px; }
+p { margin: 0; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 500; }
+.sub { color: var(--ink-2); max-width: 80ch; margin-top: 6px; font-size: 14px; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 32px; align-items: flex-end; margin-bottom: 18px; }
+.asof { font-size: 13px; color: var(--ink-3); text-align: right; } .asof a { color: var(--accent); }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; border-bottom: 1px solid var(--grid); margin-bottom: 16px; }
+.tabs button { all: unset; cursor: pointer; font: inherit; font-weight: 500; font-size: 14px; padding: 9px 14px; color: var(--ink-2); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.tabs button .n { display: inline-block; min-width: 22px; text-align: center; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); font-size: 12px; font-family: var(--mono); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 12px; }
+.ctl { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12px; color: var(--ink-3); max-width: 100%; min-width: 0; }
+.ctl .lbl { font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; background: var(--surface); max-width: 100%; }
+.seg button { all: unset; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; padding: 6px 12px; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+.seg button:focus-visible, .chip:focus-visible, .linkbtn:focus-visible, .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.chip { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--ring); background: var(--surface); color: var(--ink-2); font-size: 12px; font-weight: 500; }
+.chip[aria-pressed="false"] { opacity: 0.45; text-decoration: line-through; }
+select, input[type=search] { font: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--ring); border-radius: 6px; padding: 5px 8px; max-width: 100%; }
+input[type=search] { width: 220px; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; padding: 12px 15px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--ink-3); font-weight: 500; } .tile .v { font-size: 22px; font-weight: 600; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; } .tile .s { font-size: 12px; color: var(--ink-2); margin-top: 3px; }
+.panel { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 20px; margin-bottom: 10px; }
+.panel-head p { font-size: 13px; color: var(--ink-2); max-width: 90ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); margin-bottom: 10px; } .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .chip.band { font-size: 12px; } .legend .chip.band[aria-pressed="false"] { opacity: 0.4; text-decoration: line-through; }
+.sw { width: 12px; height: 12px; border-radius: 3px; flex: none; border: 1px solid var(--ring); }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; vertical-align: middle; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); font-weight: 500; position: sticky; top: 0; background: var(--surface); z-index: 1; }
+th.wk, td.wk { text-align: center; min-width: 58px; padding-inline: 4px; } th.wk small { display: block; font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--ink-3); font-family: var(--mono); }
+th.prev, td.prev { border-right: 2px solid var(--grid); }
+td.wk i, td.mo i { display: block; font-style: normal; font-family: var(--mono); font-variant-numeric: tabular-nums; padding: 3px 4px; border-radius: 4px; text-align: center; min-width: 50px; }
+td.c-red i { background: var(--red); color: var(--red-ink); } td.c-amber i { background: var(--amber); color: var(--amber-ink); } td.c-green i { background: var(--green); color: var(--green-ink); } td.c-grey i { background: var(--grey); color: var(--grey-ink); } td.c-none i { background: transparent; color: var(--ink); }
+td.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.name { font-weight: 600; white-space: normal; min-width: 150px; } td.txt { white-space: normal; min-width: 120px; }
+tr.grp td { background: var(--surface-2); font-weight: 600; cursor: pointer; } tr.grp td .cnt { color: var(--ink-3); font-weight: 500; font-family: var(--mono); margin-left: 6px; }
+tr.grp td .tri { display: inline-block; width: 1em; color: var(--ink-3); }
+tr.hid { display: none; }
+.foot { font-size: 12px; color: var(--ink-3); margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.linkbtn { all: unset; cursor: pointer; font-size: 13px; color: var(--accent); text-decoration: underline; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 8px 10px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); max-width: 360px; z-index: 5; display: none; }
+.tip b { font-weight: 600; } .tip .r { display: flex; justify-content: space-between; gap: 14px; } .tip .r span:last-child { font-family: var(--mono); white-space: nowrap; }
+.note { font-size: 13px; color: var(--ink-2); line-height: 1.55; } .note p + p { margin-top: 8px; }
+.empty { padding: 28px; text-align: center; color: var(--ink-3); }
+@media (max-width: 900px) { .tiles { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 480px) { .wrap { padding-inline: 16px; } h1 { font-size: 24px; } input[type=search] { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <img class="brandlogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAF6CAMAAAC9TIK3AAAC91BMVEVHcExSjKNSi6JTjKJYla5TjKJTjKJUjKNTjKJUjKNUjqFTjKJTi6JTjKFTjKJTi6JTi6JViqNSjKJUjKNTi6FTjKJSi6JTi6JSjKNTi6JSi6FTjKJTi6JTi6JTi6JTjKJTnZ9TjKJTjKJTjKFTjKJTiqNTjKJSi6FTi6JShZ9TjKJSjKJUi6JYhp9SjKJSi6JSiqFUi6RQi6VTjKJVjKJTjKJTi6Kuvtx0nrdEg5mtvtutvty6xeSsvt2tvtytvtyuvtysvN6svdtViqGsv9ytvtytvtxTjKKsvtytvtyrvNpTi6JSjqWsvtusvdxTi6KtvtysvdxVjaGtvtytvtytvtxTi6GsvdtTjaJSjKKtvtxTjKJTi6JTi6JSjKJTi6JTjKJSiaJTi6NTjKJTjKJTjKJTi6JTjKJSjaRSi6JTi6FRi6JTjKJSi6JTi6NVjaBUi6JTjKJUjKNUjKJTjKNUiaOvwN5VjKNRiaNSi6JTi6JVi6JVkp51n7ixwuHC0vJenrdeobhcnLNTjKJEbIIfIjQeIjUWFiguQVVgpLxXkqoUKjkfIzYgJTgdIDITCx45V2xVj6YeIzQeIzUZGy4mLUAfIjQeIjUfJDcuOU1MfZRZl64cJDQeIjU0TGEfIzYeIjU+YXYfIjQfIjUfJDceIjYUESNPgpkjIzUfIjUfIzYeIzUoM0ZJd40gIDgeIjVQhZweIjUeIzUfIjUfIzUeIjUeIjUfIjUeIjYeIjUfIjUeIjUeITYYJTUdJDUeIjUeIjYeIjUeIjUeIjYfIzUkJDAeIjUeIjUfIjUeIjUeIjUgIDcfJDQeIjYfIzYeIjYeIjUeIjUfIjYeIjUeIjUfIzUdJDceIjUeIzUeIjUeIjUfIjUeIjUfITUeIjUeIjVPgpgeIzYfIzUdIjaputi0xuTA0vLP4/9yfpcFBxi5y+qltdNGTWMKDR7M4P9teJIAARHJ3Px5hqCWpcE5QFVRWXAEBhfF2PiHlbCdrclgaoOOnLgAAAOA6ahIAAAA/XRSTlMAS+unBCDB//RXDY/XMWbushBAeBe2Tof9yitfPdH5bgGs4keAJlTxnAku1GoHntlEcxmMI2KScf//P9z/GLv//w6NMGTxNnSqgf++IlrnlSzRP04hxlyYNc73fObF99y6HF+vg+iidiiY/0L8OaobYpqw2t8T/zMycVFCFez/l6f////+HJX/////A////////1zv//820/////8Tsv+C+/9X5inO//8OoXpP//8fwf+abGmKrKfc4t/k2C0KIlNkX52DQAbG8+3KcRcxt7t1hX6Rd/i9GkToOkr1jybqe//h/TOY////sq7////////////////////////AA/xJxAAANjtJREFUeAHs3eOCJFkQR/Hompz5j23bbjPato013v/z2t7kvTnn9w6nKhVxLXxNjUOJAaizw0ckHT1mAGrr+An96OQpA1BPp8/oF2fPWf0AOH9Sv3PBANTMxUv6o8ZlA1AjyZWr+gvXrhuAurjR0N84dNwA1MHNW/p7t+/ctdgBOHdP/+z+A4sbgIf6d0ceWbwAPH6i/+TpM4sTgOcv9F89eWkRAvDqtf6PN28tNgDe6f+69N5iAuBBQyk03zUAsWi5pnSetBqAKLxqU3pvblr4ALR3dCqLe8ctbAC6unsyhi49tIAB6O3z/uyh68kxCxSAgUH3XEKXXgxZiAAMj3huoUuvn1loAIx2u+cZujRmQQHQO+6ed+hqNFkwACQTk15A6NLUtIUBwMysezGhS3PHrXoA5hfciwtdt18agIoNjLsXGrp0f9EAVGnCvfDQpUuHDUBVlma9lNClE88MQBWWV7y/rNB1dNUAlC5Z81+UELr0Yt0AlKvd+0sOXTp70QCU/L1r6aHr6hUDUN4wqlcSunTmsgEowd1B98pClzauW9EADG96+aGXeQIrgNEF96pDl7YMQAnDqNWGru23VggArya8P5DQpZ1pA5C/mRF3DyZ06ekrA5Cv0RX3sELXbqsBKPfmvPzQpb2bBiAv7e5Bhi7tHxiAnIZRgw1dakssKwDzK+4hh67GRwYg86aowEOXbt00AOkNT3oEoUsfHxiAdLpm3eMIXfrEAKTbFOXxhK5PjxmAbJuiwg9d2li3/wPAzKZHF7r02TMDkH1TVNihS58bgOybogIPXY3L9q8AJBPuEYcuXfvC/hmApRGPPHTpy8T+GcDJqPGHrq9eWnYA37uGHbq0fd7+AoC77Ztem9ClS+/tLwAMo/bXKXSpObEPEJLjr9abvv7Jg8Xjz47ftR/h7rfs3QdXIs2Xx/Gfov4w/EEHE4iIGRDM4+YcPLt6DhtdPYBh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" alt="UBDS Digital" width="160">
+    <h1>UTILISATION</h1>
+  </div>
+  <div class="asof" id="asof"></div>
+</header>
+<div class="po"><div class="pobox"><div class="pol">Purpose</div><p>A week-by-week view of every billable person over the next twelve weeks, showing who is booked beyond capacity and who has time unfilled.</p></div><div class="pobox"><div class="pol">Objective</div><p>Smooth the load on the over-utilised and find work for the under-utilised before the week arrives, reading the figures on the P1, P2 or P3 basis you choose.</p></div></div>
+
+<div class="tabs" role="tablist" id="tabs">
+  <button hidden role="tab" data-t="margin" aria-selected="false">Margin by resource <span class="n" id="nMargin"></span></button>
+  <button role="tab" data-t="over" aria-selected="true">Over utilisation <span class="n" id="nOver"></span></button>
+  <button role="tab" data-t="bench" aria-selected="false">Under utilisation <span class="n" id="nBench"></span></button>
+  <button hidden role="tab" data-t="demand" aria-selected="false">Demand by capability <span class="n" id="nDemand"></span></button>
+</div>
+
+<div class="controls" id="basisControls">
+  <div class="ctl"><span class="lbl">Basis</span><div class="seg" id="basis"><button data-v="p1">P1 sold</button><button data-v="p2">P2 likely</button><button data-v="p3">P3 full forecast</button></div></div>
+  <div class="ctl"><span class="lbl" id="basisHelp" style="font-weight:400;text-transform:none;letter-spacing:0"></span></div>
+</div>
+<div class="controls" id="demandControls" hidden>
+  <div class="ctl"><span class="lbl">Capability</span><div class="chips" id="fams"></div></div>
+</div>
+<div class="controls" id="resControls">
+  <div class="ctl" id="benchModeCtl" hidden><span class="lbl">Bench view</span><div class="seg" id="benchMode"><button data-v="weekly">Weekly (RM rule)</button><button data-v="engine">Engine view (monthly, 25%)</button></div></div>
+  <div class="ctl"><span class="lbl">Show</span><div class="seg" id="scope"><button data-v="exc">Exceptions only</button><button data-v="all">All billable resources</button></div></div>
+  <div class="ctl"><span class="lbl">Type</span><div class="chips" id="types"></div></div>
+  <div class="ctl"><span class="lbl">SFIA</span><div class="chips" id="lvls"></div></div>
+  <div class="ctl"><span class="lbl">Business unit</span><select id="bu"></select></div>
+  <div class="ctl"><input type="search" id="q" placeholder="Search name, role, engagement…" aria-label="Search"></div>
+</div>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="panel">
+  <div class="panel-head"><div><h2 id="title"></h2><p id="desc"></p></div><div style="display:flex;gap:14px;align-items:center"><button class="linkbtn" id="expandAll">Collapse all</button><button class="linkbtn" id="copyCsv">Copy table as CSV</button></div></div>
+  <div class="legend" id="legend"></div>
+  <div class="tbl"><table id="tbl"></table></div>
+  <div class="foot" id="foot"></div>
+</div>
+
+<div class="panel col collapsed" id="rulesPanel">
+  <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="false" id="rulesHead"><div><h2>Rules applied · Utilisation</h2></div><span class="caret" aria-hidden="true">▾</span></div>
+  <div class="note">
+    <p><strong>Scope.</strong> Employees, suppliers and partners flagged as billable in Kantata (utilisation reporting not suppressed), excluding the Service Delivery and Client Success business units and anyone offboarded. Suppliers and partners are shown up to their contract end date and employees up to their leaving date; later weeks and months are greyed out and never counted as capacity.</p>
+    <p><strong>Weekly availability.</strong> Capacity = 5 days per week (8 hours/day pattern) less UK bank holidays. Planned and unplanned absence, non-working days and shift rest days reduce capacity. Demand = forecast usage on client engagements at the chosen basis (P2, the default, is cumulative and already contains P1); non-billable allocations (internal, training, pre-sales, company time, UBDS-* engagements) are never demand and do not reduce bench capacity. Availability % = (capacity − absence − demand) ÷ capacity. Kantata splits weeks at month ends; those partial periods are merged back into Monday-start weeks. A week in which absence covers 80% or more of capacity is marked A and greyed.</p>
+    <p><strong>Over utilisation.</strong> Included when availability is below 0% in any of the next 12 weeks (W1 is the current week; Prev Wk is shown for trend). Red below 0%, amber 0–10%, green above 10%.</p>
+    <p><strong>Bench.</strong> Included when availability is 25% or more in any of the next 12 weeks. Green below 25% (fully utilised), amber 25–49%, red 50% and above (bench risk). Post-contract weeks are greyed and do not count.</p>
+    <p><strong>Demand by capability.</strong> Forecast revenue by capability family and month from the Kantata forecast on the chosen basis: P1 is sold work, P2 adds Commit and Most Likely (cumulative), P3 is the full forecast including Best Case and Pipeline. Beneath each month is the unfilled demand: generic placeholder hours on the P3 forecast with no named person, shown in days (hours ÷ 8, the working day). A placeholder is work that is sold or forecast but not yet resourced; it is the Matcher's input. "Unmapped" holds people and placeholders whose Kantata business unit is not yet mapped to a capability family.</p>
+    <p><strong>Basis.</strong> Every view can be read on three bases: P1 sold (contracted work only), P2 likely (P1 plus Commit and Most Likely, the basis the RM team agreed and the default) or P3 full forecast (P2 plus Best Case and Pipeline). The weekly views recompute availability from that level of demand; the margin view uses the revenue allocation and cost at that level; the exception counts in the tab headers follow the chosen basis.</p>
+    <p><strong>Margin.</strong> Current month plus the next three. Revenue allocation = the P2 revenue Kantata's forecast ledger attributes to the person (fixed-price element revenue with no person is spread across the people booked on that engagement in that month by cost share); cost = P2 forecast cost on the person's assignments. Margin £ = revenue − cost; margin % = margin ÷ revenue; revenue £0 with cost above £0 shows −100%. Included when margin is below 25% in any live month. Red below 0%, amber 0–25%, no colour 25–40%, green above 40%. Average = total margin ÷ total revenue across the live months. Current project = engagements with P2 days this month; last assignment date = latest forecast end date across the person's client assignments.</p>
+  </div>
+</div>
+
+<div class="tip" id="tip"></div>
+</div>
+
+<script>
+'use strict';
+const $ = (s, el) => (el || document).querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtK = v => { const a = Math.abs(v); return (v < 0 ? '-' : '') + (a >= 1e6 ? '£' + (a/1e6).toFixed(2) + 'm' : a >= 1e3 ? '£' + Math.round(a/1e3) + 'k' : '£' + Math.round(a)); };
+const pct = v => v == null ? '–' : Math.round(v * 100) + '%';
+const dmy = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) + '/' + s.slice(0, 4) : '–';
+const dm = s => s.slice(8, 10) + '/' + s.slice(5, 7);
+const mon = ym => new Date(ym + '-01T00:00:00').toLocaleString('en-GB', { month: 'short', year: '2-digit' });
+const KEY = 'ubds-rm-state';
+let D = null, DM = null;  // DM = demand by capability (demand.json)
+const HOURS_PER_DAY = 8; const days = h => { const d = (h || 0) / HOURS_PER_DAY; return (d >= 10 ? Math.round(d).toLocaleString('en-GB') : d.toFixed(1).replace(/\.0$/, '')) + 'd'; };
+const monthWord = ym => new Date(ym + '-01T00:00:00').toLocaleString('en-GB', { month: 'short', year: '2-digit' });
+const S = { tab: 'over', scope: 'exc', types: {}, lvls: {}, bu: '', q: '', closed: {}, bands: { margin: {}, over: {}, bench: {} }, basis: 'p2', fams: {}, benchMode: 'weekly' };
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+const TCOL = { Employee: 'var(--accent)', Supplier: '#b45309', Partner: '#4a3aa7' };
+
+// ---- basis (5 Nov): every tab can be read on P1 sold, P2 likely (sold + Commit + Most Likely, the agreed RM rule) or P3 full forecast.
+// Weekly availability is recomputed from the week's P1/P2/P3 demand; margin uses the ledger allocation and cost at that level (rev1/cost1,
+// rev3/cost3 in data.json; no suffix = P2). Flags (over, bench, margin exception) and the averages follow the chosen basis.
+const BL = { p1: 'P1 sold', p2: 'P2 likely (sold + Commit + Most Likely)', p3: 'P3 full forecast' };
+const BS = () => S.basis in BL ? S.basis : 'p2';
+const SFX = { p1: '1', p2: '', p3: '3' };
+const _dcache = new Map();
+function derive(r) {
+  const b = BS(); const key = r.rid + '|' + b; const hit = _dcache.get(key); if (hit) return hit;
+  const sfx = SFX[b];
+  const weeks = r.weeks.map(w => { if (w.na) return w; const dem = w[b] ?? w.p2; const avail = w.cap > 0 ? Math.round((w.cap - w.absence - dem) / w.cap * 1000) / 1000 : null; return { ...w, avail, dem }; });
+  const fwd = weeks.slice(1).filter(w => !w.na && w.avail != null);
+  const min_avail = fwd.length ? Math.min(...fwd.map(w => w.avail)) : null, max_avail = fwd.length ? Math.max(...fwd.map(w => w.avail)) : null;
+  const has = sfx === '' || r.months.some(m => !m.na && m['rev' + sfx] != null);
+  const months = r.months.map(m => { if (m.na) return m; if (!has) return { ...m, rev: null, cost: null, margin: null, pct: null, nobasis: true }; const rev = m['rev' + sfx], cost = m['cost' + sfx], pct = m['pct' + sfx]; return { ...m, rev, cost, margin: rev - cost, pct }; });
+  const live = months.filter(m => !m.na && !m.nobasis); const tot_rev = live.reduce((a, m) => a + (m.rev || 0), 0), tot_cost = live.reduce((a, m) => a + (m.cost || 0), 0);
+  const wavg = !has ? null : tot_rev > 0 ? (tot_rev - tot_cost) / tot_rev : tot_cost > 0 ? -1 : null;
+  const pcts = live.map(m => m.pct).filter(v => v != null); const min_margin = pcts.length ? Math.min(...pcts) : null;
+  const d = { ...r, weeks, months, min_avail, max_avail, over: min_avail != null && min_avail < 0, bench: max_avail != null && max_avail >= 0.25, wavg, min_margin, margin_exception: min_margin != null && min_margin < 0.25, tot_rev, tot_cost, nobasis: !has };
+  _dcache.set(key, d); return d;
+}
+function pool() {
+  const q = S.q.trim().toLowerCase();
+  return D.rows.map(derive).filter(r => S.types[r.rt] !== false && S.lvls[r.lvl == null ? 'n/a' : String(r.lvl)] !== false && (!S.bu || r.bu === S.bu)
+    && (!q || (r.name + ' ' + r.role + ' ' + r.bu + ' ' + r.current.join(' ')).toLowerCase().includes(q)));
+}
+const BANDS = {
+  margin: [['red', 'var(--red)', 'Negative margin (< 0%)', m => m.pct != null && m.pct < 0], ['amber', 'var(--amber)', 'Below target (0% – < 25%)', m => m.pct != null && m.pct >= 0 && m.pct < 0.25], ['none', 'transparent', 'Acceptable (25% – 40%)', m => m.pct != null && m.pct >= 0.25 && m.pct <= 0.40], ['green', 'var(--green)', 'Strong margin (> 40%)', m => m.pct != null && m.pct > 0.40]],
+  over: [['red', 'var(--red)', 'Over utilised (< 0%)', w => w.avail < 0], ['amber', 'var(--amber)', 'At or near capacity (0% – 10%)', w => w.avail >= 0 && w.avail <= 0.10], ['green', 'var(--green)', 'Sufficient availability (> 10%)', w => w.avail > 0.10]],
+  bench: [['green', 'var(--green)', 'Low availability (fully utilised, < 25%)', w => w.avail < 0.25], ['amber', 'var(--amber)', 'Moderate availability (25% – 49%)', w => w.avail >= 0.25 && w.avail < 0.50], ['red', 'var(--red)', 'High availability / bench risk (≥ 50%)', w => w.avail >= 0.50]],
+};
+function bandOn(k) { const b = S.bands[S.tab] || {}; return b[k] !== false; }
+function inBands(r) {
+  const defs = BANDS[S.tab]; const on = defs.filter(d => bandOn(d[0]));
+  if (on.length === defs.length) return true;  // nothing deselected
+  const cells = S.tab === 'margin' ? r.months.filter(m => !m.na) : r.weeks.slice(1).filter(w => !w.na && !w.full_absence && w.avail != null);
+  return cells.some(c => on.some(d => d[3](c)));
+}
+function include(r) {
+  if (!inBands(r)) return false;
+  if (S.scope === 'all') return true;
+  return S.tab === 'margin' ? r.margin_exception : S.tab === 'over' ? r.over : r.bench;
+}
+const availCls = (w, mode) => {
+  if (w.na) return 'c-grey'; if (w.full_absence) return 'c-grey'; const v = w.avail; if (v == null) return 'c-grey';
+  if (mode === 'over') return v < 0 ? 'c-red' : v <= 0.10 ? 'c-amber' : 'c-green';
+  return v < 0.25 ? 'c-green' : v < 0.50 ? 'c-amber' : 'c-red';
+};
+const marginCls = m => { if (m.na) return 'c-grey'; if (m.pct == null) return 'c-grey'; return m.pct < 0 ? 'c-red' : m.pct < 0.25 ? 'c-amber' : m.pct <= 0.40 ? 'c-none' : 'c-green'; };
+const wkText = w => w.na ? '–' : w.full_absence ? 'A' : pct(w.avail);
+
+function renderDemand() {
+  const all = pool();
+  $('#nMargin').textContent = all.filter(r => r.margin_exception).length; $('#nOver').textContent = all.filter(r => r.over).length; $('#nBench').textContent = all.filter(r => r.bench).length;
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === S.tab));
+  if (!DM) { $('#tiles').innerHTML = ''; $('#title').textContent = 'Demand by capability'; $('#desc').textContent = ''; $('#legend').innerHTML = ''; $('#tbl').innerHTML = `<tbody><tr><td class="empty">${DM === false ? 'Could not load demand.json.' : 'Loading demand…'}</td></tr></tbody>`; $('#foot').innerHTML = ''; return; }
+  const months = DM.months; const fams = [...new Set(DM.rows.map(r => r.family))].sort().filter(f => S.fams[f] !== false);
+  const cell = (f, m) => DM.rows.find(r => r.family === f && r.month === m) || { p1: 0, p2: 0, p3: 0, unfilled_u: 0 };
+  const bl = { p1: 'P1 sold', p2: 'P2 likely', p3: 'P3 full forecast' }[S.basis];
+  const fy = months.slice(1, 13);
+  const tot = k => fams.reduce((s, f) => s + fy.reduce((a, m) => a + (cell(f, m)[k] || 0), 0), 0);
+  const unf3 = fams.reduce((s, f) => s + months.slice(0, 3).reduce((a, m) => a + (cell(f, m).unfilled_u || 0), 0), 0);
+  const unfAll = fams.reduce((s, f) => s + months.reduce((a, m) => a + (cell(f, m).unfilled_u || 0), 0), 0);
+  $('#nDemand').textContent = days(unf3);
+  $('#tiles').innerHTML = [[`FY27 ${bl}`, fmtK(tot(S.basis)), `Dec 26 to Nov 27, ${fams.length} capabilit${fams.length === 1 ? 'y' : 'ies'}`], (S.basis === 'p1' ? ['FY27 P3 full forecast', fmtK(tot('p3')), `sold is ${tot('p3') ? Math.round(tot('p1') / tot('p3') * 100) : 0}% of it`] : ['FY27 P1 sold', fmtK(tot('p1')), `${tot('p3') ? Math.round(tot('p1') / tot('p3') * 100) : 0}% of the full forecast`]), ['Unfilled, next 3 months', days(unf3), 'P3 placeholder days with no named person'], ['Unfilled, all 13 months', days(unfAll), 'the Matcher\'s work list']].map(([k, v, s]) => `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join('');
+  $('#title').textContent = 'Demand by Capability and Month'; $('#desc').textContent = `${bl} revenue by capability family from the Kantata forecast, with the unfilled P3 demand (generic placeholders, no named person) in days beneath each month. Hover a cell for the hours and the other bases.`;
+  $('#legend').innerHTML = `<span><i class="sw" style="background:var(--surface-2)"></i>Revenue on the ${esc(bl)} basis</span><span><i class="sw" style="background:var(--amber)"></i>Unfilled demand in days (P3 placeholders, hours ÷ ${HOURS_PER_DAY})</span>`;
+  let h = '<thead><tr><th>Capability family</th>' + months.map(m => `<th class="wk">${esc(monthWord(m))}<small>${esc(bl.split(' ')[0])} · unfilled</small></th>`).join('') + '<th class="wk">FY27<small>Dec–Nov</small></th><th class="wk">Unfilled<small>13 months</small></th></tr></thead><tbody>';
+  fams.forEach(f => {
+    h += `<tr class="row"><td class="name">${esc(f)}</td>`;
+    months.forEach(m => { const c = cell(f, m); const v = c[S.basis] || 0; h += `<td class="wk dm" data-f="${esc(f)}" data-m="${esc(m)}"><i style="background:transparent;color:var(--ink)">${v ? fmtK(v) : '–'}</i>${c.unfilled_u ? `<i style="background:var(--amber);color:var(--amber-ink);margin-top:2px">${days(c.unfilled_u)}</i>` : '<i style="background:transparent;color:var(--ink-3)">–</i>'}</td>`; });
+    const fyv = fy.reduce((a, m) => a + (cell(f, m)[S.basis] || 0), 0); const un = months.reduce((a, m) => a + (cell(f, m).unfilled_u || 0), 0);
+    h += `<td class="wk"><i style="background:var(--surface-2)">${fmtK(fyv)}</i></td><td class="wk"><i style="background:var(--amber);color:var(--amber-ink)">${days(un)}</i></td></tr>`;
+  });
+  h += `<tr class="grp"><td>Total</td>` + months.map(m => { const v = fams.reduce((a, f) => a + (cell(f, m)[S.basis] || 0), 0); const u = fams.reduce((a, f) => a + (cell(f, m).unfilled_u || 0), 0); return `<td class="wk"><i style="background:transparent">${fmtK(v)}</i><i style="background:transparent;color:var(--amber-ink);margin-top:2px">${days(u)}</i></td>`; }).join('') + `<td class="wk"><i style="background:transparent">${fmtK(tot(S.basis))}</i></td><td class="wk"><i style="background:transparent;color:var(--amber-ink)">${days(unfAll)}</i></td></tr></tbody>`;
+  $('#tbl').innerHTML = fams.length ? h : `<tbody><tr><td class="empty">No capability selected.</td></tr></tbody>`;
+  $('#foot').innerHTML = `<span>Kantata forecast as pulled ${esc(DM.asof)} (gold build)</span><span>P1 = sold; P2 = sold + Commit + Most Likely; P3 = full forecast</span><span>Unfilled = P3 generic placeholder hours ÷ ${HOURS_PER_DAY}</span><span>Managed-services product groups included</span>`;
+  $('#expandAll').textContent = '';
+}
+
+// Bench, engine view (5 Nov): the Stargate engines' monthly cut (employees, next three months, free = available − P1 hours, 25%+, Service Delivery
+// and Client Success excluded), computed by the workspace page this one is embedded in and read through window.parent.__stargate.benchEngine.
+function engineBench() { try { const h = window.parent !== window && window.parent.__stargate; return h && h.benchEngine ? h.benchEngine() : null; } catch (e) { return null; } }
+function renderEngineBench() {
+  const all = pool(); $('#nMargin').textContent = all.filter(r => r.margin_exception).length; $('#nOver').textContent = all.filter(r => r.over).length; $('#nBench').textContent = all.filter(r => r.bench).length;
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === S.tab));
+  const src = engineBench(); const q = S.q.trim().toLowerCase();
+  $('#title').textContent = 'Under Utilisation Report (engine view)'; $('#desc').textContent = 'The Stargate engines\' cut: employees whose P1 load leaves at least 25% of available hours free over the next three months, monthly, with the cost not recovered at standard cost. No absence or contract cut-off, so it differs from the weekly RM rule above.';
+  $('#legend').innerHTML = ''; $('#expandAll').textContent = '';
+  if (!src) { $('#tiles').innerHTML = ''; $('#tbl').innerHTML = '<tbody><tr><td class="empty">The engine view is available when this page is opened inside the Stargate Workspace.</td></tr></tbody>'; $('#foot').innerHTML = ''; return; }
+  const rows = src.filter(b => (!S.bu || b.bu === S.bu) && (!q || (b.name + ' ' + b.family + ' ' + b.bu).toLowerCase().includes(q)) && S.lvls[(String(b.grade || '').match(/SFIA\s*(\d)/i) || [])[1] || 'n/a'] !== false).sort((a, b) => b.free_days - a.free_days);
+  const fd = rows.reduce((a, b) => a + b.free_days, 0), un = rows.reduce((a, b) => a + (b.unrecovered || 0), 0);
+  $('#tiles').innerHTML = [['Bench resources (engine)', rows.length, '25%+ free over the next three months'], ['Free days', fd.toLocaleString('en-GB'), 'available less P1 hours, 7.5h days'], ['Unrecovered cost', fmtK(un), 'free days × standard cost'], ['Fully free', rows.filter(b => b.free_pct >= 0.8).length, '80%+ free over the three months']].map(([k, v, s]) => `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join('');
+  let h = '<thead><tr><th>Resource</th><th>Family</th><th>Business unit</th><th>Grade</th><th class="wk">Free<small>3 months</small></th><th class="n">Free days</th><th class="n">Unrecovered</th><th>P1 ends</th></tr></thead><tbody>';
+  rows.forEach(b => { const cls = b.free_pct < 0.25 ? 'c-green' : b.free_pct < 0.5 ? 'c-amber' : 'c-red'; h += `<tr class="row"><td class="name">${esc(b.name)}</td><td class="txt">${esc(b.family)}</td><td class="txt">${esc(b.bu)}</td><td class="txt">${esc(b.grade || '')}</td><td class="wk ${cls}"><i>${pct(b.free_pct)}</i></td><td class="n">${b.free_days}</td><td class="n">${b.unrecovered ? fmtK(b.unrecovered) : '–'}</td><td>${esc(b.roll_off ? dmy(b.roll_off) : '–')}</td></tr>`; });
+  $('#tbl').innerHTML = rows.length ? h + '</tbody>' : '<tbody><tr><td class="empty">No resources match.</td></tr></tbody>';
+  $('#foot').innerHTML = `<span>Showing ${rows.length} people</span><span>Engine cut from the gold build (monthly P1 load), not the weekly Kantata periods</span><span>Excludes Service Delivery &amp; Client Success</span>`;
+}
+// ---- AI explanation of an under-utilised person (6 Nov). Uses the workspace's model access when embedded in Stargate.
+const UX = {};
+const uxFmt = t => esc(t).replace(/(^|\n)(So what:)/g, '$1<span class="sw1">$2</span>').replace(/(^|\n)(Recommended action:)/g, '$1<span class="sw2">$2</span>').replace(/\n/g, '<br>');
+async function uxExplain(r) {
+  if (!r) return; const sg = (() => { try { return window.parent && window.parent !== window ? window.parent.__stargate : null; } catch (e) { return null; } })();
+  const st = UX[r.rid] = { state: 'thinking', text: '', err: '' }; render();
+  if (!sg || !sg.explainText) { st.state = 'done'; st.err = 'Explain runs inside the Stargate workspace (it uses the workspace’s model access); open this tab there.'; render(); return; }
+  const bi = { p1: 1, p2: 2, p3: 3 }[BS()]; const fwd = r.weeks.slice(1).filter(w => !w.na && w.avail != null);
+  const freeDays = Math.round(fwd.reduce((a, w) => a + Math.max(0, w.cap - w.absence - w.dem), 0));
+  const first = fwd.find(w => w.avail >= 0.25); const peak = fwd.reduce((a, w) => w.avail > a.avail ? w : a, fwd[0] || { avail: 0 });
+  const bookings = {}; fwd.forEach(w => (w.eng || []).forEach(e => { if (e[bi] > 0) bookings[e[0]] = (bookings[e[0]] || 0) + e[bi]; }));
+  const over = S.tab === 'over'; const worst = fwd.reduce((a, w) => w.avail < a.avail ? w : a, fwd[0] || { avail: 0 }); const overDays = Math.round(fwd.reduce((a, w) => a + Math.max(0, w.dem + w.absence - w.cap), 0));
+  const facts = { person: r.name, resource_type: r.rt, role: r.role, sfia_level: r.lvl, business_unit: r.bu, basis: BL[BS()], window: 'next 12 weeks', ...(over ? { days_over_capacity_in_window: overDays, weeks_over_capacity: fwd.filter(w => w.avail < 0).length, first_week_over_from: (fwd.find(w => w.avail < 0) || {}).ws || null, worst_availability_pct: Math.round((worst.avail || 0) * 100), worst_week: worst.ws || null } : {}), free_days_in_window: freeDays, weeks_at_or_above_25pct_free: fwd.filter(w => w.avail >= 0.25).length, first_week_free_from: first ? first.ws : null, peak_availability_pct: Math.round((peak.avail || 0) * 100), peak_week: peak.ws || null, weekly_availability_pct: fwd.map(w => Math.round(w.avail * 100)), booked_on_days_in_window: Object.entries(bookings).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => ({ engagement: k, days: Math.round(v) })), contract_end: r.cend || null, leaving_date: r.end || null, today: D.asof ? D.asof.slice(0, 10) : null };
+  const prompt = over ? `You are briefing an executive at UBDS Digital (UK IT consultancy, GBP) on one person who is over-utilised: forecast availability below 0% in at least one of the next 12 weeks, meaning booked work plus absence exceeds their capacity. Availability is (capacity minus absence minus booked work) over capacity, per week, on the stated forecast basis. Using ONLY the facts below, write exactly two labelled lines and nothing else, no preamble. Line 1 starts 'So what: ' and is at most 35 words: lead with the days over capacity in the window and when it starts (date), name the engagements that clash and the worst week, and the cause in a few words (double booking, absence on top of full booking, two engagements overlapping). Line 2 starts 'Recommended action: ' and is at most 40 words: one concrete action for the Resource Manager: which engagement to move days from or re-phase, who could pick up the overflow, who to agree it with (delivery principal or account lead) and by when relative to the first week over. Short plain sentences, no lists, no field names or ids, no hedging.` + `\n\nFACTS: ${JSON.stringify(facts)}` : `You are briefing an executive at UBDS Digital (UK IT consultancy, GBP) on one person who is under-utilised: forecast availability of 25% or more in at least one of the next 12 weeks. Availability is (capacity minus absence minus booked work) over capacity, per week, on the stated forecast basis. Using ONLY the facts below, write exactly two labelled lines and nothing else, no preamble. Line 1 starts 'So what: ' and is at most 35 words: lead with the free days in the window and when the gap starts (date), say what the person is booked on and how much, and the cause in a few words (assignment ending, between projects, partial booking, contract ending). Line 2 starts 'Recommended action: ' and is at most 40 words: one concrete action for the Resource Manager: match the person to unfilled demand in their role family and level, extend or top up a current booking, or plan a bench task, with who to raise it with (delivery principal or account lead) and by when relative to the first free week. Short plain sentences, no lists, no field names or ids, no hedging.` + `\n\nFACTS: ${JSON.stringify(facts)}`;
+  try { const text = await sg.explainText(prompt, t => { st.text = t; render(); }); st.text = text || st.text; st.state = 'done'; }
+  catch (e) { st.state = 'done'; st.err = (e && (e.message || e.code)) || 'The model could not be reached.'; }
+  render();
+}
+function render() {
+  $('#benchModeCtl').hidden = S.tab !== 'bench' || !engineBench();
+  if (S.tab === 'bench' && S.benchMode === 'engine' && engineBench()) return renderEngineBench();
+  $('#basisHelp').textContent = { p1: 'Sold work only: availability and margin as if nothing in the pipeline lands.', p2: 'Sold plus Commit and Most Likely: the RM team\'s agreed working basis.', p3: 'Everything forecast, including Best Case and Pipeline: the fullest view of demand.' }[BS()];
+  $('#demandControls').hidden = S.tab !== 'demand'; $('#resControls').hidden = S.tab === 'demand';
+  if (S.tab === 'demand') return renderDemand();
+  const rows = pool().filter(include); const weeks = D.weeks, months = D.months;
+  const all = pool();
+  $('#nMargin').textContent = all.filter(r => r.margin_exception).length; $('#nOver').textContent = all.filter(r => r.over).length; $('#nBench').textContent = all.filter(r => r.bench).length;
+  if (DM) { const u3 = DM.rows.filter(r => DM.months.slice(0, 3).includes(r.month)).reduce((a, r) => a + (r.unfilled_u || 0), 0); $('#nDemand').textContent = days(u3); }
+  document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.t === S.tab));
+  // tiles
+  const t = [];
+  if (S.tab === 'margin') {
+    const live = rows.flatMap(r => r.months.filter(m => !m.na)); const rev = live.reduce((s, m) => s + m.rev, 0), cost = live.reduce((s, m) => s + m.cost, 0);
+    const alive = all.flatMap(r => r.months.filter(m => !m.na && !m.nobasis)); const arev = alive.reduce((s, m) => s + (m.rev || 0), 0), acost = alive.reduce((s, m) => s + (m.cost || 0), 0);
+    t.push(['Resources shown', rows.length, `of ${all.length} billable in scope`], ['Negative margin', rows.filter(r => r.wavg != null && r.wavg < 0).length, 'average over the 4 months'], ['Revenue at risk', fmtK(rev), `${BS().toUpperCase()} revenue on shown resources, ${months.length} months`], ['Blended margin (shown)', rev > 0 ? pct((rev - cost) / rev) : '–', `all billable: ${arev > 0 ? pct((arev - acost) / arev) : '–'}`]);
+  } else if (S.tab === 'over') {
+    const worst = rows.map(r => Math.min(...r.weeks.slice(1).filter(w => !w.na && w.avail != null).map(w => w.avail)));
+    const overDays = rows.reduce((s, r) => s + r.weeks.slice(1).filter(w => !w.na && w.avail != null && w.avail < 0).reduce((a, w) => a + (-(w.avail) * w.cap), 0), 0);
+    t.push(['Over-utilised resources', rows.length, 'availability below 0% in any of the next 12 weeks'], ['Worst week', rows.length ? pct(Math.min(...worst)) : '–', 'lowest availability shown'], ['Over-booked days', Math.round(overDays), 'sum of negative availability × capacity, 12 weeks'], ['This week below 0%', rows.filter(r => r.weeks[1] && !r.weeks[1].na && r.weeks[1].avail < 0).length, `week of ${dm(weeks[1])}`]);
+  } else {
+    const freeDays = rows.reduce((s, r) => s + r.weeks.slice(1).filter(w => !w.na && w.avail != null && w.avail > 0).reduce((a, w) => a + w.avail * w.cap, 0), 0);
+    t.push(['Bench resources', rows.length, 'availability 25%+ in any of the next 12 weeks'], ['Free days, 12 weeks', Math.round(freeDays), 'positive availability × capacity'], ['Fully free this week', rows.filter(r => r.weeks[1] && !r.weeks[1].na && r.weeks[1].avail >= 0.8).length, `80%+ available, week of ${dm(weeks[1])}`], ['Suppliers / partners on bench', rows.filter(r => r.rt !== 'Employee').length, 'displacement candidates']);
+  }
+  $('#tiles').innerHTML = t.map(([k, v, s]) => `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join('');
+  // header text + legend
+  const titles = { margin: ['Margin by Resource – Exceptions', `Resources with margin below 25% in any month in the current month + next 3 months, on the ${BL[BS()]} basis. ${S.scope === 'all' ? 'Showing all billable resources.' : ''}`],
+    over: ['Over Utilisation Report', `Resources forecast to be over utilised (availability < 0%) in the next 12 weeks on the ${BL[BS()]} basis, plus the previous week for trend. Hover a week for what the person is booked on. ${S.scope === 'all' ? 'Showing all billable resources.' : ''}`],
+    bench: ['Under Utilisation Report', `Resources with forecast availability ≥ 25% in any week within the next 12 weeks on the ${BL[BS()]} basis, plus the previous week. Hover a week for what the person is booked on. ${S.scope === 'all' ? 'Showing all billable resources.' : ''}`] };
+  $('#title').textContent = titles[S.tab][0]; $('#desc').textContent = titles[S.tab][1];
+  const greyNote = S.tab === 'margin' ? 'Not applicable (post leaving / contract end)' : 'A = planned absence covers the week · – = after contract end';
+  $('#legend').innerHTML = BANDS[S.tab].map(([k, c, l]) => `<button class="chip band" data-k="${k}" aria-pressed="${bandOn(k)}" title="Click to show only resources with a ${S.tab === 'margin' ? 'month' : 'week'} in this band"><i class="sw" style="background:${c}"></i>${esc(l)}</button>`).join('') + `<span><i class="sw" style="background:var(--grey)"></i>${esc(greyNote)}</span>` + (BANDS[S.tab].some(d => !bandOn(d[0])) ? `<button class="linkbtn" id="bandsReset">Show all bands</button>` : '');
+  $('#legend').querySelectorAll('.band').forEach(b => b.addEventListener('click', () => { const t = S.bands[S.tab] = S.bands[S.tab] || {}; t[b.dataset.k] = t[b.dataset.k] === false; save(); render(); }));
+  const br = $('#bandsReset'); if (br) br.addEventListener('click', () => { S.bands[S.tab] = {}; save(); render(); });
+  // table
+  const byBu = {}; rows.forEach(r => (byBu[r.bu] = byBu[r.bu] || []).push(r));
+  const bus = Object.keys(byBu).sort();
+  let h = '<thead><tr>';
+  if (S.tab === 'margin') {
+    h += '<th>Business unit / resource</th><th>Type</th><th>Role</th><th>SFIA</th><th>Current project</th><th>Last assignment</th><th>Contract end</th>' + months.map(m => `<th class="wk">${esc(mon(m))}<small>margin %</small></th>`).join('') + '<th class="wk">Average<small>weighted</small></th><th class="n">${BS().toUpperCase()} revenue</th></tr></thead><tbody>';
+  } else {
+    h += '<th>Business unit / resource</th><th>Type</th><th>Role</th><th>SFIA</th><th>Contract end</th>' + weeks.map((w, i) => `<th class="wk ${i === 0 ? 'prev' : ''}">${i === 0 ? 'Prev wk' : 'W' + i}<small>${esc(dm(w))}</small></th>`).join('') + (S.tab === 'over' ? '<th class="wk">Worst<small>12 wks</small></th>' : '<th class="wk">Peak<small>12 wks</small></th>') + '<th>Explain</th></tr></thead><tbody>';
+  }
+  const ncol = S.tab === 'margin' ? 9 + months.length : 7 + weeks.length;
+  bus.forEach(bu => {
+    const closed = !!S.closed[bu];
+    h += `<tr class="grp" data-bu="${esc(bu)}"><td colspan="${ncol}"><span class="tri">${closed ? '▸' : '▾'}</span>${esc(bu)}<span class="cnt">(${byBu[bu].length})</span></td></tr>`;
+    byBu[bu].forEach(r => {
+      const base = `<td class="name">${esc(r.name)}</td><td><i class="sw" style="background:${TCOL[r.rt] || '#999'};display:inline-block;margin-right:6px;vertical-align:-1px"></i>${esc(r.rt)}</td><td class="txt">${esc(r.role)}</td><td class="n">${r.lvl ?? '–'}</td>`;
+      if (S.tab === 'margin') {
+        h += `<tr class="row ${closed ? 'hid' : ''}" data-bu="${esc(bu)}">${base}<td class="txt">${esc(r.current.join(', ') || '–')}</td><td>${esc(dmy(r.last_assignment))}</td><td>${esc(r.cend ? dmy(r.cend) : (r.end ? dmy(r.end) + ' (leaving)' : '–'))}</td>`;
+        r.months.forEach((m, i) => { h += `<td class="mo wk ${marginCls(m)}" data-r="${esc(r.rid)}" data-m="${i}"><i>${m.na ? '–' : m.pct == null ? '–' : pct(m.pct)}</i></td>`; });
+        const wc = r.wavg == null ? 'c-grey' : r.wavg < 0 ? 'c-red' : r.wavg < 0.25 ? 'c-amber' : r.wavg <= 0.40 ? 'c-none' : 'c-green';
+        h += `<td class="mo wk ${wc}"><i>${pct(r.wavg)}</i></td><td class="n">${r.nobasis ? '–' : fmtK(r.tot_rev)}</td></tr>`;
+      } else {
+        h += `<tr class="row ${closed ? 'hid' : ''}" data-bu="${esc(bu)}">${base}<td>${esc(r.cend ? dmy(r.cend) : (r.end ? dmy(r.end) + ' (leaving)' : '–'))}</td>`;
+        r.weeks.forEach((w, i) => { h += `<td class="wk ${i === 0 ? 'prev' : ''} ${availCls(w, S.tab)}" data-r="${esc(r.rid)}" data-w="${i}"><i>${wkText(w)}</i></td>`; });
+        const v = S.tab === 'over' ? r.min_avail : r.max_avail; const cls = S.tab === 'over' ? (v < 0 ? 'c-red' : v <= 0.1 ? 'c-amber' : 'c-green') : (v < 0.25 ? 'c-green' : v < 0.5 ? 'c-amber' : 'c-red');
+        h += `<td class="wk ${v == null ? 'c-grey' : cls}"><i>${pct(v)}</i></td>`;
+        { const x = UX[r.rid]; h += `<td class="ndxcell">${x ? `<div class="ndx"><div class="hd"><span class="muted">AI explanation</span><button class="linkbtn" data-ux="${esc(r.rid)}">Close</button></div>${x.state === 'thinking' && !x.text ? '<span class="muted">Thinking…</span>' : ''}${uxFmt(x.text || '')}${x.err ? `<div class="muted" style="color:var(--bad, #b42318)">${esc(x.err)}</div>` : ''}</div>` : `<button class="linkbtn" data-ux="${esc(r.rid)}">Explain</button>`}</td>`; }
+        h += '</tr>';
+      }
+    });
+  });
+  h += '</tbody>';
+  $('#tbl').innerHTML = rows.length ? h : `<tbody><tr><td class="empty">${S.tab === 'margin' && all.length && all.every(r => r.nobasis) ? 'Margin on the ' + esc(BL[BS()]) + ' basis arrives with the next data refresh; P2 is available now.' : 'No resources match.'}</td></tr></tbody>`;
+  $('#tbl').querySelectorAll('tr.grp').forEach(tr => tr.addEventListener('click', () => { const b = tr.dataset.bu; S.closed[b] = !S.closed[b]; save(); render(); }));
+  $('#tbl').querySelectorAll('button[data-ux]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const k = b.dataset.ux; if (UX[k]) { delete UX[k]; render(); } else uxExplain(rows.find(r => r.rid === k)); }));
+  const scopeTxt = S.tab === 'margin' ? 'Filtered to margin below 25% in any month' : S.tab === 'over' ? 'Filtered to availability < 0% in any week' : 'Filtered to availability ≥ 25% in any week';
+  $('#foot').innerHTML = `<span>Showing ${rows.length} of ${all.length} resources${S.scope === 'all' ? '' : ' (exceptions only)'}</span><span>${S.scope === 'all' ? 'All billable resources' : scopeTxt}</span><span>Basis: ${esc(BL[BS()])}</span><span>Excludes Service Delivery &amp; Client Success</span><span>Excludes offboarded and non-billable resources</span><span>Greyed after leaving / contract end date</span>${BANDS[S.tab].some(d => !bandOn(d[0])) ? `<span><strong>Band filter on:</strong> ${BANDS[S.tab].filter(d => bandOn(d[0])).map(d => d[2].split(' (')[0]).join(', ')}</span>` : ''}`;
+  $('#expandAll').textContent = bus.some(b => S.closed[b]) ? 'Expand all' : 'Collapse all';
+}
+
+// tooltips
+const tip = $('#tip');
+document.addEventListener('mousemove', e => {
+  const tdm = e.target.closest('td.dm'); const td = e.target.closest('td[data-r]'); if (!td && !tdm) { tip.style.display = 'none'; return; }
+  let html = '';
+  if (tdm && DM) { const c = DM.rows.find(r => r.family === tdm.dataset.f && r.month === tdm.dataset.m) || {}; html = `<b>${esc(tdm.dataset.f)}</b> · ${esc(monthWord(tdm.dataset.m))}<div class="r"><span>P1 sold</span><span>${fmtK(c.p1 || 0)}</span></div><div class="r"><span>P2 likely</span><span>${fmtK(c.p2 || 0)}</span></div><div class="r"><span>P3 full forecast</span><span>${fmtK(c.p3 || 0)}</span></div><div class="r"><span>Unfilled (P3 placeholders)</span><span>${Math.round(c.unfilled_u || 0)} h · ${days(c.unfilled_u)}</span></div><div class="r"><span>P3 forecast hours</span><span>${Math.round(c.p3u || 0)} h</span></div>`; }
+  const r0 = td ? D.rows.find(x => x.rid === td.dataset.r) : null; if (td && !r0) return; const r = r0 ? derive(r0) : null;
+  if (r) html = `<b>${esc(r.name)}</b> · ${esc(r.bu)}<br>`;
+  if (!r) {} else if (td.dataset.w != null) {
+    const w = r.weeks[+td.dataset.w]; html += `Week of ${esc(dm(w.ws))} · ${esc(BL[BS()].split(' (')[0])}`;
+    if (w.na) html += '<br>After leaving / contract end — not counted'; else { html += `<div class="r"><span>Capacity</span><span>${w.cap} d</span></div><div class="r"><span>Absence</span><span>${w.absence} d</span></div><div class="r"><span>P1 demand</span><span>${w.p1} d</span></div><div class="r"><span>P2 demand (incl. P1)</span><span>${w.p2} d</span></div><div class="r"><span>P3 (all statuses)</span><span>${w.p3} d</span></div><div class="r"><span>Availability (${esc(BS().toUpperCase())})</span><span>${pct(w.avail)}</span></div>`; Object.entries(w.abs_detail || {}).forEach(([k, v]) => { html += `<div class="r"><span>${esc(k)}</span><span>${v} d</span></div>`; });
+      const bi = { p1: 1, p2: 2, p3: 3 }[BS()]; const eng = (w.eng || []).filter(e => e[bi] > 0).sort((a, b) => b[bi] - a[bi]);
+      html += `<div class="r" style="margin-top:6px"><span><b>Booked on (${esc(BS().toUpperCase())} days)</b></span><span></span></div>`;
+      if (!w.eng) html += `<div class="r"><span class="muted">Engagement detail arrives with the next data refresh</span><span></span></div>`;
+      else if (!eng.length) html += `<div class="r"><span>Nothing booked on client engagements this week</span><span></span></div>`;
+      else eng.forEach(e => { html += `<div class="r"><span>${esc(e[0])}</span><span>${e[bi]} d${e[1] !== e[2] || e[2] !== e[3] ? ` <span style="opacity:.6">(P1 ${e[1]} · P2 ${e[2]} · P3 ${e[3]})</span>` : ''}</span></div>`; }); }
+  } else {
+    const m = r.months[+td.dataset.m]; html += `${esc(mon(m.ym))}`;
+    if (m.na) html += '<br>After leaving / contract end — not counted'; else { html += m.nobasis ? '<br>Not in this data file for this basis yet' : `<div class="r"><span>${esc(BS().toUpperCase())} revenue allocation</span><span>${fmtK(m.rev)}</span></div><div class="r"><span>${esc(BS().toUpperCase())} cost</span><span>${fmtK(m.cost)}</span></div><div class="r"><span>Margin</span><span>${fmtK(m.margin)} (${pct(m.pct)})</span></div><div class="r"><span>P2 days</span><span>${m.days}</span></div>`; (m.engagements || []).forEach(([k, v]) => { html += `<div class="r"><span>${esc(k)}</span><span>${fmtK(v)}</span></div>`; }); }
+  }
+  tip.innerHTML = html; tip.style.display = 'block';
+  const x = e.clientX + 14, y = e.clientY + 14; const rect = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x, window.innerWidth - rect.width - 8) + window.scrollX + 'px'; tip.style.top = Math.min(y, window.innerHeight - rect.height - 8) + window.scrollY + 'px';
+});
+
+function csv() {
+  const rows = pool().filter(include); const lines = [];
+  if (S.tab === 'demand' && DM) { const fams = [...new Set(DM.rows.map(r => r.family))].sort().filter(f => S.fams[f] !== false); lines.push(['Capability family'].concat(DM.months.flatMap(m => [monthWord(m) + ' ' + S.basis.toUpperCase() + ' revenue', monthWord(m) + ' unfilled days'])).join(',')); fams.forEach(f => lines.push([f].concat(DM.months.flatMap(m => { const c = DM.rows.find(r => r.family === f && r.month === m) || {}; return [Math.round(c[S.basis] || 0), ((c.unfilled_u || 0) / HOURS_PER_DAY).toFixed(1)]; })).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))); return lines.join('\n'); }
+  if (S.tab === 'margin') { lines.push(['Business unit', 'Resource', 'Type', 'Role', 'SFIA', 'Current project', 'Last assignment', 'Contract end'].concat(D.months.map(m => mon(m) + ' margin %'), ['Average margin %', 'P2 revenue', 'P2 cost']).join(',')); rows.forEach(r => lines.push([r.bu, r.name, r.rt, r.role, r.lvl ?? '', r.current.join('; '), r.last_assignment || '', r.cend || r.end || ''].concat(r.months.map(m => m.na ? '' : m.pct == null ? '' : (m.pct * 100).toFixed(1)), [r.wavg == null ? '' : (r.wavg * 100).toFixed(1), r.tot_rev, r.tot_cost]).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))); }
+  else { lines.push(['Business unit', 'Resource', 'Type', 'Role', 'SFIA', 'Contract end'].concat(D.weeks.map((w, i) => (i ? 'W' + i : 'Prev') + ' ' + dm(w) + ' avail %')).join(',')); rows.forEach(r => lines.push([r.bu, r.name, r.rt, r.role, r.lvl ?? '', r.cend || r.end || ''].concat(r.weeks.map(w => w.na ? '' : w.full_absence ? 'A' : (w.avail * 100).toFixed(0))).map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))); }
+  return lines.join('\n');
+}
+function seg(el, key) { el.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S[key])); el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S[key] = b.dataset.v; el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); save(); render(); }); }
+function chips(el, keys, state, colors) { el.innerHTML = keys.map(k => `<button class="chip" data-k="${esc(k)}" aria-pressed="${state[k] !== false}">${colors ? `<i class="sw" style="background:${colors[k] || '#999'}"></i>` : ''}${esc(k === 'n/a' ? 'No grade' : (colors ? k : 'SFIA ' + k))}</button>`).join(''); el.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; state[b.dataset.k] = state[b.dataset.k] === false; b.setAttribute('aria-pressed', state[b.dataset.k] !== false); save(); render(); }); }
+
+function boot() {
+  const live = D.rows.flatMap(r => r.months.filter(m => !m.na)); const rev = live.reduce((s, m) => s + m.rev, 0), cost = live.reduce((s, m) => s + m.cost, 0); D.blended = rev > 0 ? (rev - cost) / rev : null;
+  $('#asof').innerHTML = `Kantata pulled ${esc(new Date(D.asof).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dubai' }))} Dubai · refreshed each weekday morning by the scheduled task (to be re-pointed at the lake)<br>Current week ${esc(dm(D.weeks[1]))} · months ${esc(mon(D.months[0]))} – ${esc(mon(D.months[D.months.length - 1]))}`;
+  if (S.tab === 'margin' || S.tab === 'demand') S.tab = 'over'; // margin by resource and demand by capability sub-tabs removed 6 Nov (code kept)
+  { const pn = document.getElementById('rulesPanel'), h = document.getElementById('rulesHead'); let c = true; try { c = localStorage.getItem('ubds-rm-rules') !== 'open'; } catch (e) {} const apply = () => { pn.classList.toggle('collapsed', c); h.setAttribute('aria-expanded', String(!c)); }; apply(); const tog = () => { c = !c; try { localStorage.setItem('ubds-rm-rules', c ? 'closed' : 'open'); } catch (e) {} apply(); }; h.addEventListener('click', tog); h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } }); }
+  $('#tabs').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.tab = b.dataset.t; save(); render(); });
+  seg($('#scope'), 'scope'); seg($('#basis'), 'basis'); $('#basis').addEventListener('click', () => _dcache.clear()); seg($('#benchMode'), 'benchMode');
+  fetch('demand.json').then(r => r.json()).then(d => { DM = d; const fams = [...new Set(d.rows.map(r => r.family))].sort(); chips($('#fams'), fams, S.fams, Object.fromEntries(fams.map(f => [f, 'var(--accent)']))); $('#fams').querySelectorAll('.chip .sw').forEach(i => i.remove()); render(); }).catch(() => { DM = false; render(); });
+  chips($('#types'), D.types, S.types, TCOL);
+  const lv = [...new Set(D.rows.map(r => r.lvl == null ? 'n/a' : String(r.lvl)))].sort(); chips($('#lvls'), lv, S.lvls, null);
+  $('#bu').innerHTML = '<option value="">All</option>' + D.bus.map(b => `<option${S.bu === b ? ' selected' : ''}>${esc(b)}</option>`).join('');
+  $('#bu').addEventListener('change', e => { S.bu = e.target.value; save(); render(); });
+  $('#q').value = S.q; $('#q').addEventListener('input', e => { S.q = e.target.value; save(); render(); });
+  $('#expandAll').addEventListener('click', () => { const bus = [...new Set(pool().filter(include).map(r => r.bu))]; const anyClosed = bus.some(b => S.closed[b]); bus.forEach(b => S.closed[b] = !anyClosed); save(); render(); });
+  function fallback(text, done) { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} document.body.removeChild(ta); }
+  $('#copyCsv').addEventListener('click', () => { const text = csv(); const done = () => { $('#copyCsv').textContent = 'Copied'; setTimeout(() => $('#copyCsv').textContent = 'Copy table as CSV', 1800); }; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(() => fallback(text, done)); else fallback(text, done); });
+  render();
+}
+fetch('data.json').then(r => r.json()).then(d => { D = d; boot(); }).catch(err => { $('#tiles').innerHTML = `<div class="empty">Could not load data.json (${esc(err.message)}).</div>`; });
+</script>
+
+<script>
+// Dates as dd/Mmm/yyyy everywhere (5 Nov): rewrites ISO (2026-11-09), dd/mm/yyyy and dd/mm text wherever it is rendered, leaving inputs, values and data attributes alone.
+(function () {
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const ok = (d, m) => +m >= 1 && +m <= 12 && +d >= 1 && +d <= 31;
+  const f = t => t
+    .replace(/\b(20\d\d)-(\d\d)-(\d\d)(?:T(\d\d:\d\d)(?::\d\d(?:\.\d+)?)?Z?)?\b/g, (m, y, mo, d, hm) => ok(d, mo) ? `${d}/${MON[+mo - 1]}/${y}${hm ? ' ' + hm : ''}` : m)
+    .replace(/\b(\d{2})\/(\d{2})\/(\d{4})\b/g, (m, d, mo, y) => ok(d, mo) ? `${d}/${MON[+mo - 1]}/${y}` : m)
+    .replace(/(^|[^\d\/])(\d{2})\/(\d{2})(?![\d\/])/g, (m, pre, d, mo) => ok(d, mo) ? `${pre}${d}/${MON[+mo - 1]}` : m);
+  const SKIP = /^(SCRIPT|STYLE|INPUT|TEXTAREA|PRE|CODE)$/;
+  const walk = n => { if (n.nodeType === 3) { const v = f(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; return; } if (n.nodeType !== 1 || SKIP.test(n.tagName)) return; for (const c of n.childNodes) walk(c); };
+  const fixAttr = el => { for (const a of ['title', 'data-tip']) { if (el.nodeType === 1 && el.hasAttribute && el.hasAttribute(a)) { const v = f(el.getAttribute(a)); if (v !== el.getAttribute(a)) el.setAttribute(a, v); } } };
+  const walkAll = n => { walk(n); if (n.nodeType === 1) { fixAttr(n); n.querySelectorAll && n.querySelectorAll('[title],[data-tip]').forEach(fixAttr); } };
+  new MutationObserver(ms => ms.forEach(m => { if (m.type === 'characterData') { const v = f(m.target.nodeValue); if (v !== m.target.nodeValue) m.target.nodeValue = v; } else m.addedNodes.forEach(walkAll); })).observe(document.body, {childList: true, subtree: true, characterData: true});
+  walkAll(document.body);
+})();
+</script>
+<script>
+// Collapsible tables (6 Nov): every table gets a small Hide/Show control above it; the choice is remembered per table in this browser.
+(function () {
+  const KEY = 'ubds-tbl-collapsed'; let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const css = document.createElement('style'); css.textContent = '.tcol-bar{display:flex;justify-content:flex-end;margin:2px 0 4px}.tcol-bar button{font:inherit;font-size:11.5px;color:var(--muted,var(--ink-3,#5b6473));background:none;border:1px solid transparent;border-radius:6px;padding:2px 8px;cursor:pointer}.tcol-bar button:hover{border-color:var(--line,var(--grid,#e3e7ed))}.tcol-bar button:focus-visible{outline:2px solid var(--accent,#0d366b);outline-offset:2px}'; document.head.appendChild(css);
+  const headingOf = t => { let n = t; for (let d = 0; d < 6 && n; d++) { let p = n.previousElementSibling; while (p) { const h = /^H[1-4]$/.test(p.tagName) ? p : p.querySelector && p.querySelector('h1,h2,h3,h4'); if (h) return h.textContent.trim(); p = p.previousElementSibling; } n = n.parentElement; } return ''; };
+  const keyOf = t => (location.pathname.split('/').slice(-2).join('/')) + '|' + (t.id || '') + '|' + headingOf(t).slice(0, 60);
+  const apply = t => {
+    if (t.dataset.tcol || t.closest('td, th, .panel.col, .ndx, .tip, [data-tip]')) return; const rows = t.querySelectorAll('tbody tr, tr').length; if (rows < 2) return;
+    t.dataset.tcol = '1'; const k = keyOf(t); const bar = document.createElement('div'); bar.className = 'tcol-bar'; const b = document.createElement('button'); b.type = 'button'; bar.appendChild(b);
+    const paint = () => { const c = !!st[k]; t.style.display = c ? 'none' : ''; b.textContent = c ? `▸ Show table (${rows} rows)` : '▾ Hide table'; b.setAttribute('aria-expanded', String(!c)); };
+    b.addEventListener('click', e => { e.stopPropagation(); st[k] = !st[k]; save(); paint(); }); paint();
+    const host = t.closest('.wrap, .tbl') || t; host.parentNode.insertBefore(bar, host);
+  };
+  const scan = root => { if (root.nodeType !== 1) return; if (root.tagName === 'TABLE') apply(root); root.querySelectorAll && root.querySelectorAll('table').forEach(apply); };
+  let pend = null; new MutationObserver(ms => { if (pend) return; pend = setTimeout(() => { pend = null; scan(document.body); }, 60); }).observe(document.body, { childList: true, subtree: true });
+  scan(document.body);
+})();
+</script>
+</body></html>

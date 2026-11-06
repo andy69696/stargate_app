@@ -1,0 +1,205 @@
+{
+ "comm": {
+  "FY27": {
+   "Department for Environment, Food & Rural Affairs": {
+    "tag": "Renewal-dependent",
+    "text": "Largest account in the book. £8.3m is contracted: the CASA engagement (£4.3m) with its three change notices (£2.3m), i10-DDDC (£298k, a short data piece fronted by i-10 running October 2026 to mid-January 2027, revised up from £251k on 7 October, moved from Commit to Contracted on 13 October and to Closed Won on 16 October), plus a run of smaller pieces, all of which end on or before 31 March 2027. Almost all of the rest is one deal: DEFR-CASC, £7m in Commit, the year-two renewal of CASA running April 2027 to March 2028, not due to close until 26 February. CASD and CASE (£7m each) are already logged as Commit for FY28 and FY29, a strong continuity signal, but none of the three is signed, and CASC is still in the Qualifying stage despite its Commit status. DEFR-CMDE (£299k, mid-December 2026 to March 2027, revised up from £120k on 28 October and promoted to Most Likely on 30 October) was closed lost later the same day, so Most Likely is now DEFR-BCSE (£239k, January to June 2027) and HOTS (£95k, mid-December to February, promoted from Best Case on 30 October), £334k together. Best Case is £451k: i10-DDDE (£360k, Defra Data Driven Innovation, fronted by i-10, 30 November 2026 to 4 January 2027, closing 21 November) was added on 4 November and sits here under Defra as the end client, alongside NCCF and CCRE (£63k together, December starts), three £4–7k January pieces (TRAP, IPAF, BTMS) added on 28 October and two £4k pieces (APHA, AIMS) added on 4 November. A fourth CASA change notice, CAN005 (£51k, Commit), was re-dated on 30 October from a single day in October 2026 to January–March 2027 and so now sits in FY27. Three of the CASA change notices had no company attached in HubSpot. Below the bands, DEFR-ITPT (£250k, Pipeline, cyber, December 2026 to March 2028) was added on 13 October and i10-DDDS (£200k, Pipeline, the Data Driven Cortex extension via i-10, late January to March 2027) on 4 November.",
+    "watch": "DEFR-CASC closing by 26 Feb 2027 for a 1 April start"
+   },
+   "National Crime Agency": {
+    "tag": "Balanced",
+    "text": "The best-balanced account. £6.7m is contracted across the current-year programme (DEVA £3.25m, DRBA £1.2m, NCCA £853k, IFUB, OCAI, TRFM), running to March 2027. The year-two renewals are already in the forecast and all start 1 April: DEVB (£2.0m) in Commit, DRBB (£1.22m, revised up from £977k on 19 October and extended a month to April 2028) and the new OCAE (£435k) in Most Likely. NCCB was restructured on 13 October: the single £2.1m Commit record is now four Commit deals, NCCB (£700k), CYBA (£550k, managed services) and CYBB (£550k) from April plus CYBC (£300k) from September, all closing 12 March 2027 and together still £2.1m. The structure mirrors the current year closely, so the question is timing rather than whether the work exists. LATS (£260k) has moved from January to an April-to-June window; it, the new ATSE (£262k, December 2026 to March 2027, added to Best Case on 26 October), BQSA (£104k, November to March, cut from £380k on 26 October after being revised up from £93k on 19 October) and a run of small ITHC-style pieces (ITHC, APSM, DRBU, SMAN, INAC, EPDF) make up Best Case. Forecast bands still total £13.2m: ATSE arriving offsets the BQSA reduction.",
+    "watch": "DEVB, NCCB, CYBA and CYBB (£3.8m) closing in mid-March for April mobilisation"
+   },
+   "Department for Education": {
+    "tag": "Framework cadence",
+    "text": "The DEV framework is behaving as a multi-year annuity: ADEV (won, £2.15m) runs to March, BDEV (Commit) picks up on 1 April 2027 as the year-two renewal, and CDEV is already logged for FY28. BDEV was cut from £2.0m to £767k on 19 October, the single largest movement in the book this week; whether that is a re-scoping of year two or a split of the renewal into several records is not yet clear from HubSpot. BDEV dropped out of the profile on 12 October when its end date was mis-keyed to 2 June 2026; the date has since been corrected to 31 March 2028 and the deal is back in FY27. The INF strand follows the same pattern, with INFB (£571k) won to March and INFE (£1.1m, Most Likely) plus INFC (£550k, Best Case) covering April onward. NCTE (Most Likely, April 2027 to March 2028) is the only NCT piece in the year and was revised up from £162k to £592k on 19 October, recovering part of what left when NCTB (now £580k, Commit) was re-dated on 15 October from April 2027 to April 2028–March 2029 and moved out of FY27 altogether. Net of the BDEV cut, DfE's forecast-band total is down from £8.1m to £7.4m. ENVB (£203k, Best Case, January to March, revised up from £160k) is a new follow-on to ENVA. £4.0m of the forecast-band value is contracted. One Pipeline record, DFE-ADMR (£8.45m, June 2025 to June 2029), looks like a framework placeholder rather than a live deal and inflates the Pipeline band if left in.",
+    "watch": "BDEV (now £767k, closing 28 Feb) and INFE (£1.1m) remain the two swing deals for April; confirm what the BDEV cut represents"
+   },
+   "Department for Work and Pensions": {
+    "tag": "Front-loaded, H2 empty",
+    "text": "£4.0m won, led by DPOT (£1.47m, data platforms, to May 2027), CDMI (£689k, to February), HHTS (£528k, to March) and two change notices. The ISBC change notice (£106k) closed won on 9 October but its end date was then brought forward to 30 October 2026, so it has dropped out of FY27 altogether. A new ISBC change notice, CAN005 (November 2026 to March 2027), appeared in Commit on 17 October, moved to Contracted on 26 October and closed won on 27 October at £568k, revised up from £554k. LARA closed won on 2 November at £396k (it had moved from Most Likely to Commit on 30 October, cut from £525k to £400k and re-dated to finish 31 March 2027 rather than July), taking the won total to about £4.5m. After that the account depends on IOPS (now £1.04m, revised up from £830k, trimmed slightly on 23 October, and re-phased to start 1 April 2027; its close date slipped on 19 October from 23 October to 19 March 2027, so it has joined the unsigned 1 April starts); and DPOE (£475k, revised up from £453k on 15 October and back down from £537k on 19 October) and HHTE (£350k), both promoted from Best Case to Most Likely on 30 October. AFTE (£335k, revised up from £200k on 23 October) is the only Best Case item left. The Softcat-fronted UPPE (£197k, Most Likely, November 2026 to April 2027) was closed lost on 30 October. HDSE (£1.16m, Pipeline) would fill some of the second half if it firms up; ISCT has dropped out of the pipeline. Two new Pipeline records appeared on 12 October, DWP-PQCD (£250k, cyber) and DWP-ARAS (£100k, data), both February to April 2027 with an 18 January close; they are part of a batch of ten identical PQCD/ARAS records logged across the major accounts that day and look like campaign placeholders rather than qualified deals. The figure rolls up six DWP company records in HubSpot plus change notices that had no company attached.",
+    "watch": "IOPS (£1.04m) now closing 19 March 2027; converting DPOE (£475k) and HHTE, and promoting HDSE out of Pipeline"
+   },
+   "British Library": {
+    "tag": "One swing deal",
+    "text": "£2.9m contracted, dominated by TRSF (£1.95m, to March 2027) and a run of smaller Azure, extraction and tower pieces. The second half of the year is almost entirely TRSG (£1.12m, April to October, revised down from £1.2m on 23 October), the follow-on to TRSF, which is held at Most Likely rather than Commit. LEXT (£316k, revised up from £300k on 26 October and promoted from Best Case to Most Likely on 30 October) starts late March. Four Most Likely items (AMPT, PGTR, EARC, PPMS) worth £320k are due to close by early January 2027; EARC (£62k) was re-phased on 26 October from a late-November start to 11 January to 9 April 2027. TDAR (£400k, January to December 2027, closing 11 December, additional roles under the Tech Delivery Partnership) moved from Forecast Placeholder to Most Likely on 30 October, taking the Most Likely band to £2.1m. Below the bands sit OPMS (£2m managed service, Pipeline, from March 2027), AMSS (£200k) and MSOC (£200k).",
+    "watch": "TRSG moving from Most Likely to Commit; TDAR closing by 11 December"
+   },
+   "Evelyn Partners Limited": {
+    "tag": "Contract lost",
+    "text": "EUCS, the £2.1m three-year EUC managed service that was the backbone of this account, was moved from Closed Won to Closed Lost on the morning of 6 October 2026, twenty-one months into delivery. That removes about £695k of FY27 revenue at a stroke. What remains is two smaller contracted agreements, FWSP (£252k, to March 2028) and PAMG (£150k, to October 2027). If the status change was a mistake it needs reversing quickly; if it reflects an early termination, the resourcing plan in Kantata needs to catch up.",
+    "watch": "Confirm whether EUCS was terminated or mis-keyed"
+   },
+   "Ministry of Housing, Communities and Local Government": {
+    "tag": "Cliff edge",
+    "text": "FY26 saw £3.0m booked across 31 deals. In the forecast bands FY27 is £861k, of which £566k is seven current contracts (TARE, PWPE, CDFT, INFF, SDLS, TDEF) that all end on 11 December 2026, plus CDPD (£194k, closed won on 19 October) ending the same day. The only forecast item beyond that is LACS (£100k, Best Case) to March. There is, however, £3.05m of Pipeline-status work logged for 2027 (LATS £700k, BSRT, HCLC, CAFS, AISP, CSRI and others), so the account is being worked; it has not yet been promoted into a forecast band.",
+    "watch": "Q1 2027 pipeline being moved into forecast bands"
+   },
+   "Ministry of Justice": {
+    "tag": "Cliff edge",
+    "text": "A sharp contrast with the £5.3m booked in FY26, though the picture improved on 30 October. In the forecast bands £1.9m is now visible, up from £0.9m: CIDP (£334k) and DVCS (£154k) are won and finish by mid-December; IBAP (£800k, 25 January to November 2027, revised down from £1m on 16 October) was promoted from Forecast Placeholder to Most Likely on 30 October, the biggest single move in the account; AIPB (£150k, December to February) and MCMP (£182k, 16 November 2026 to 26 February 2027, closing 6 November; moved up from Pipeline on 16 October, cut from £171k to £121k on 26 October and then extended and revised up to £182k on 2 November) moved from Best Case to Most Likely the same day, joining UEPT (£59k, cut from £148k on 30 October). CIDE (£200k, January to July 2027) is the only Best Case item. Below the bands sit £690k of Pipeline items (TCIP, MACR, MFAM, AIGP, PQCD and HRCD, a £150k HR casework discovery added on 30 October; EIAC has dropped out). IBAP is a future-pipeline estimate for the Innovation Bench rather than a scoped piece of work, so the year still rests on it closing by 15 January.",
+    "watch": "IBAP (£800k, Most Likely) closing by 15 January for a 25 January start; MCMP (£182k) closing by 6 November for a 16 November start; the Pipeline items converting to Best Case or better by January"
+   },
+   "S&W": {
+    "tag": "Annuity",
+    "text": "Two managed service contracts (MGSV £419k, PSMG £236k) contracted from April 2025 to March 2028. Flat, low risk, no action needed in FY27.",
+    "watch": ""
+   },
+   "Ordnance Survey": {
+    "tag": "Annuity",
+    "text": "Three SOC contracts (MSOC £302k, NSOC £117k, FSOC £100k) all contracted through to January 2028. No action needed in FY27.",
+    "watch": ""
+   },
+   "TTPP Construction Consultants": {
+    "tag": "Annuity",
+    "text": "Three contracted managed service lines (AZST £204k, MSMS £100k, MSLI £58k) running into 2028, plus two small Best Case pieces (COPI, DGAM) in December.",
+    "watch": ""
+   },
+   "High Speed Two (HS2)": {
+    "tag": "Renewal",
+    "text": "SLWR (£263k, won) delivers to July 2027, then SLWE (£121k, Most Likely) picks up for the following twelve months. MXRE (£14k) in Commit.",
+    "watch": "SLWE renewal for August"
+   },
+   "MS Amlin": {
+    "tag": "Thin",
+    "text": "CTIE (£180k, running to October 2027) closed on 2 October, moved from Commit to Contracted and is now Closed Won, so the backbone of the account is signed. The rest is three Best Case items worth £124k that close out by April, and two FY26 contracts that tail off in December. A long way below the £880k booked with Amlin in FY26.",
+    "watch": "Converting the three Best Case items (£124k) before they lapse in April"
+   },
+   "KPMG International Limited": {
+    "tag": "Unconverted",
+    "text": "Nothing contracted. CTMR (£100k) was closed as a duplicate on 3 November and its value folded into CKTL, which rose from £117k to £200k (Most Likely, 16 November to 14 May 2027, closing 6 November); SERV (£98k, now Most Likely, a service-design lead to define a GC3 service framework, November to May) was added on 19 October. The forecast bands stand at £298k. GCRA (£350k, Pipeline, December to March) sits below the bands. KPMG also fronts the Cabinet Office PMOC work, which is counted under the Cabinet Office.",
+    "watch": "CKTL closing 6 November"
+   },
+   "ScotRail Trains Limited": {
+    "tag": "New",
+    "text": "New on 15 October: STL-SBST (Commit, digital advisory, business systems transformation). It was cut from £288k to £168k on 19 October, restored to £288k on 30 October with the probability raised to 80%, then cut back to £168k again on 2 November. It runs 2 November 2026 to 1 March 2027, so the FY27 share is about £128k (£41k in FY26). Its close date of 30 October has now passed without the deal moving to Contracted or Closed Won. The Bid-pipeline copy of the same deal (£168k, Pipeline) still sits alongside it and is not counted.",
+    "watch": "STL-SBST (£168k, Commit) is past its 30 October close date against a 2 November start; it needs either to close or to be re-dated"
+   },
+   "Surrey and Sussex Police": {
+    "tag": "New",
+    "text": "SSP-SDWA (£346k, Cloud, SD-WAN) is the only deal for this client in the book. It was added on 28 October at Commit and moved to Closed Won on 30 October (close date 29 October). It runs 2 November 2026 to 30 November 2027, so about £321k of it falls in FY27 and £25k in FY26; nothing is logged beyond it.",
+    "watch": "Follow-on work after the SD-WAN rollout; nothing in Pipeline yet"
+   },
+   "The Met Office": {
+    "tag": "Placeholder",
+    "text": "METO-FRAM (£1.5m, December 2026 to November 2027) was promoted from Forecast Placeholder to Most Likely on 30 October, putting the Met Office into the forecast bands for the first time, and was moved back to Forecast Placeholder on 4 November, so the Met Office is out of the forecast bands again; its close date of 1 December 2026 is the day it starts. The deal summary describes it as UBDS's expected share of the Met Office Lot 4 framework (£47m over four years across five suppliers), with £1.5m a year judged a reasonable estimate because not every call-off will be bid, so it is a planning figure rather than a scoped statement of work. FRAN (£2m, FY28) and FRAO (£2.5m, FY29) are placeholders too. Nothing is won or contracted.",
+    "watch": "FRAM returning to a forecast band before 1 December; a first Lot 4 call-off to anchor the £1.5m"
+   },
+   "Department for Science, Innovation and Technology": {
+    "tag": "Placeholder promoted",
+    "text": "GCUT (£973k, 4 January 2027 to 7 January 2028, closing 18 December), the forecast for the first five-person GCU capability team, was promoted from Forecast Placeholder to Most Likely on 30 October, taking DSIT's forecast-band total from £132k to £1.1m; because its end date just crosses into December 2027 the full £973k also shows in FY28. MOBL (£132k, the mobilisation SOW, 16 November to 29 December 2026, closing 10 November) moved from Best Case to Most Likely the same day. GCUU (£438k, the second squad, April to November 2027) remains a Forecast Placeholder. Nothing is won or contracted yet.",
+    "watch": "MOBL closing by 10 November; GCUT closing by 18 December for a 4 January start"
+   },
+   "i-10": {
+    "tag": "Forecast estimate",
+    "text": "ADMS (£360k, January to March 2027, closing 18 December), an ADMS managed-service revenue forecast, was promoted from Forecast Placeholder to Most Likely on 30 October; ADME (£600k, April to November 2027) is its continuation and stays a Forecast Placeholder. Both are forecast engagements rather than scoped deals. The four account-plan rows under i-10 (£2.2m) are the Defra opportunities i-10 would front, kept under i-10 rather than Defra. Nothing is won or contracted.",
+    "watch": "ADMS closing by 18 December; ADME moving out of placeholder"
+   }
+  },
+  "FY28": {
+   "Department for Environment, Food & Rural Affairs": {
+    "tag": "Renewal-dependent",
+    "text": "Entirely CASC (year two, £7m, to March 2028) and CASD (year three, £7m, from April 2028), both in Commit and neither signed. Defra is 27% of FY28 on this basis and 100% of it rests on two renewals. Nothing is logged for Defra outside the CASA programme.",
+    "watch": "CASD closing by Feb 2028; CASC first"
+   },
+   "Department for Education": {
+    "tag": "Framework cadence",
+    "text": "Year three of the DEV framework: CDEV (£1.9m) and NCTB (£580k, Commit, re-dated on 15 October to April 2028–March 2029 and trimmed from £608k on 19 October) in Commit from April 2028, with the tails of BDEV (cut to £767k on 19 October), INFE and NCTE (£592k) running to March 2028. NCTC (£608k, Commit) was moved on 22 October from April 2028–March 2029 to April 2029–March 2030, so it has left FY28 and NCTB and NCTC now read as consecutive annual renewals rather than one renewal logged twice; the forecast-band total for the year is £5.7m. INFF (£1.3m) is the April 2028 INF renewal but is still only Pipeline. ADMR (£8.45m, Pipeline) continues to distort the picture and should be reviewed.",
+    "watch": "INFF promoted from Pipeline; CDEV closing Feb 2028; NCTB signed for April 2028"
+   },
+   "National Crime Agency": {
+    "tag": "Balanced",
+    "text": "Year-three renewals already logged in Commit: DEVC (£2m), NCCC (£800k) and DRBC (£800k) from April 2028, plus the tails of NCCB, CYBA, CYBB, CYBC, DEVB and DRBB to March. All of them are the same programme rolling forward; none is signed. NCA is the only major account with FY28 fully mapped out two years ahead.",
+    "watch": "Whether year-two (NCCB, DEVB) closes cleanly in March 2027, which sets the pattern for year three"
+   },
+   "Ministry of Housing, Communities and Local Government": {
+    "tag": "Placeholder",
+    "text": "A single Pipeline record, HCLG-NEWG (£3m, Dec 2027 to Nov 2028), with a round value and a close date on the first day of the year. This is a planning placeholder, not a deal, and should be treated as a target rather than forecast.",
+    "watch": ""
+   },
+   "Ministry of Defence": {
+    "tag": "Placeholder",
+    "text": "MOD-DIPT (£2m, Pipeline, Dec 2027 to Nov 2028) is a round-number placeholder like the MHCLG and Met Office records. DTES (£600k, Forecast Placeholder, three-year managed service) is the only item with a specific shape.",
+    "watch": ""
+   },
+   "The Met Office": {
+    "tag": "Placeholder",
+    "text": "METO-FRAN (£2m, Forecast Placeholder) covers the whole of FY28, following FRAM (£1.5m, promoted to Most Likely on 30 October and back to Forecast Placeholder on 4 November) in FY27 and ahead of FRAO (£2.5m) in FY29. A growth-shaped framework assumption, not yet a deal.",
+    "watch": ""
+   },
+   "British Library": {
+    "tag": "Unforecast",
+    "text": "Only TDAR (£400k, promoted from Forecast Placeholder to Most Likely on 30 October) reaches into FY28, and only because it runs to 31 December 2027; TRSG and LEXT (£316k) both finish in FY27. OPMS (£2m managed service, Pipeline, March 2027 to March 2029) and MSOC (£200k, Pipeline) are the other FY28 items. The British Library goes from £5.1m in FY27 to almost nothing unless the current year's work rolls forward.",
+    "watch": "A successor to TRSG/TRSF needs to appear in the forecast"
+   },
+   "TTPP Construction Consultants": {
+    "tag": "Annuity",
+    "text": "Three contracted managed service lines running to late 2028. The only closed-won revenue in FY28 outside the long-tail annuities.",
+    "watch": ""
+   }
+  },
+  "FY29": {
+   "Department for Environment, Food & Rural Affairs": {
+    "tag": "Renewal-dependent",
+    "text": "CASD (to March 2029) and CASE (year four, £7m, from April 2029), both Commit. Defra is a third of everything logged for FY29, and the entire figure is one programme's renewals three years out.",
+    "watch": ""
+   },
+   "Ministry of Housing, Communities and Local Government": {
+    "tag": "Placeholder",
+    "text": "HCLG-NEWH (£4m, Pipeline, Dec 2028 to Nov 2029) is a round-number placeholder following NEWG in FY28. Treat as a target. HCLG-AZEN (£750k, Account Plan, Azure engineering services) was re-dated on 30 October from January 2027–June 2028 to July 2027–June 2029, so about £218k of it now falls in FY29, with £378k in FY28 and £154k in FY27.",
+    "watch": ""
+   },
+   "Department for Education": {
+    "tag": "Framework cadence",
+    "text": "Tail of CDEV and NCTB to March 2029 (NCTB's move on 15 October lifted DfE's FY29 figure from £3.0m to £3.6m), then NCTC (£608k, Commit), re-dated on 22 October to April 2029–March 2030 so it now follows NCTB as the next NCT year, alongside DDEV (£349k) and NCTD (£157k) in Commit for April to June 2029, which looks like a framework end date. INFF (Pipeline) and the ADMR placeholder make up the rest.",
+    "watch": ""
+   },
+   "Ministry of Defence": {
+    "tag": "Placeholder",
+    "text": "MOD-DIPU (£2.5m, Pipeline) is the third annual placeholder in the DIP series; DTES tails off in February 2030.",
+    "watch": ""
+   },
+   "The Met Office": {
+    "tag": "Placeholder",
+    "text": "METO-FRAO (£2.5m, Forecast Placeholder) is the third step in the FRAM/FRAN/FRAO series.",
+    "watch": ""
+   },
+   "National Crime Agency": {
+    "tag": "Balanced",
+    "text": "Tail of the year-three contracts (DEVC, NCCC, DRBC) to March 2029. Nothing is logged for April 2029 onward yet.",
+    "watch": ""
+   }
+  },
+  "FY30": {
+   "Department for Environment, Food & Rural Affairs": {
+    "tag": "Renewal-dependent",
+    "text": "CASE runs to March 2030, the end of the current four-year CASA programme as logged. Nothing beyond it.",
+    "watch": ""
+   },
+   "Department for Education": {
+    "tag": "Framework cadence",
+    "text": "NCTC (£608k, Commit) now runs April 2029 to March 2030 after its re-dating on 22 October, so it is DfE's only forecast-band item in the year (£608k); ADCE (£1.8m, Account Plan, July 2029 to June 2030) is the other entry. Nothing else is logged beyond March 2030.",
+    "watch": "NCTC confirmed as the April 2029 renewal rather than a second copy of NCTB"
+   }
+  }
+ },
+ "reading": {
+  "FY27": {
+   "full": "<p><strong>Most of the book is carried over, not new.</strong> Of the forecast-band deals, 125 started before 1 December 2026 and are worth £34.8m, of which £30.8m is contracted. The deals that start inside FY27 are almost entirely unsigned. Pipeline and Forecast Placeholder records add a further £25.2m at full value if switched on, but much of that is round-number placeholders (Met Office, MoD, MHCLG, i-10) and the DFE-ADMR framework record.</p>\n<p><strong>The 1 April renewals decide the year.</strong> Thirteen forecast-band deals start on 1 April 2027, none signed, worth £17.3m: Defra CASC (£7m), NCA's DEVB, NCCB, CYBA, CYBB, DRBB, OCAE and LATS (£5.5m), DfE's BDEV, INFE and NCTE (£3.3m; NCTB moved to April 2028 on 15 October), British Library TRSG (£1.2m) and DWP HHTE (£350k). All but LATS close in late February or March.</p>\n<p><strong>Concentration is high.</strong> The top five clients, all public sector, are over 80% of the forecast bands. MoJ and MHCLG were multi-million in FY26 and have little in the bands for FY27, though both carry Pipeline items.</p>\n<p><strong>Managed Services.</strong> 37 deals carry Managed Services as primary offering, worth £16.1m at full value in the forecast bands; the toggle above removes them to show the project and consulting book on its own.</p>\n<p><strong>Kantata sees less.</strong> Kantata's own FY27 forecast is £18.0m at P3 (£8.9m P1 won), against the £29.8m pro-rated here. Almost all of the gap is renewals that HubSpot carries at full value but that have no contract revenue or resourcing in Kantata yet: Defra CASC, DfE BDEV, INFE and NCTB, NCA DEVC and NCCC. Where both systems hold the deal, Kantata tends to be higher (NCA-DEVB £3.4m against £2m, BLIB-TRSG £1.7m against £1.2m, DWP-DPOE £1.4m against £537k), which suggests HubSpot amounts are not being updated once the SOW is scoped.</p>",
+   "pro": "<p><strong>Two different years sit inside FY27.</strong> From December to March, 78% of forecast-band revenue is already contracted. From April to November, only 8% is. The second eight months rest almost entirely on deals that have not closed.</p>\n<p><strong>The 1 April renewals decide the year.</strong> Thirteen forecast-band deals start on 1 April 2027, none signed, carrying £12.3m of in-year revenue: Defra CASC (£4.7m in-year), NCA (DEVB, NCCB, CYBA, CYBB, DRBB, OCAE, LATS), DfE (BDEV, INFE, NCTE), British Library (TRSG) and DWP (HHTE).</p>\n<p><strong>Below the bands.</strong> Pipeline and Forecast Placeholder records add about £16.7m of in-year value when switched on, led by MHCLG (£3.05m), DfE (£2.5m, mostly ADMR), DWP (£1.9m), British Library (£1.8m), MoJ (£1.5m) and the Met Office placeholder (£1.5m).</p>\n<p><strong>Managed Services.</strong> Roughly £6.7m of the pro-rated forecast-band figure is Managed Services; the toggle removes it.</p>\n<p><strong>Kantata sees less.</strong> Kantata's own FY27 forecast is £18.0m at P3 (£8.9m P1 won), against the £29.8m pro-rated here. Almost all of the gap is renewals that HubSpot carries at full value but that have no contract revenue or resourcing in Kantata yet: Defra CASC, DfE BDEV, INFE and NCTB, NCA DEVC and NCCC. Where both systems hold the deal, Kantata tends to be higher (NCA-DEVB £3.4m against £2m, BLIB-TRSG £1.7m against £1.2m, DWP-DPOE £1.4m against £537k), which suggests HubSpot amounts are not being updated once the SOW is scoped.</p>"
+  },
+  "FY28": {
+   "any": "<p><strong>FY28 is a renewal book.</strong> In the forecast bands there is no closed-won revenue of note beyond the long-tail annuities (TTPP, Ordnance Survey, S&W, Evelyn's FWSP). Everything else is Commit renewals of current programmes: Defra CASC/CASD (£14m full value), NCA year three (DEVC, NCCC, DRBC) and DfE year three (CDEV, NCTB). None is signed; most close in February or March 2028.</p>\n<p><strong>Placeholders dominate the rest.</strong> MHCLG NEWG (£3m), MoD DIPT (£2m), Met Office FRAN (£2m) and British Library OPMS (£2m) are round-number Pipeline or Placeholder records with first-of-month dates. They are targets, not deals, and should be read as management's growth assumption.</p>\n<p><strong>Accounts that disappear.</strong> DWP, the British Library (bar OPMS), MoJ, the Cabinet Office and KPMG have nothing in the forecast bands for FY28. That is a forecasting horizon issue as much as a commercial one, but it means FY28 visibility outside Defra, NCA and DfE is close to zero.</p>"
+  },
+  "FY29": {
+   "any": "<p><strong>Three programmes and some placeholders.</strong> Defra CASE (£7m), the DfE DEV/NCT framework to its June 2029 end, and the tail of NCA year three are the only forecast-band items. MHCLG NEWH (£4m), MoD DIPU (£2.5m) and Met Office FRAO (£2.5m) are the third annual step of the placeholder series.</p>\n<p><strong>Nothing is signed for FY29</strong> other than the last months of Samworth Brothers' Softcat-fronted managed service and a few small annuities.</p>"
+  },
+  "FY30": {
+   "any": "<p><strong>Only Defra CASE</strong> reaches into FY30 (to March 2030), plus the tail of MoD DTES and Arriva, and DfE NCTC (£608k, Commit) now dated April 2029 to March 2030. The forecast horizon in HubSpot effectively ends in March 2030.</p>"
+  },
+  "FY26": {
+   "any": "<p><strong>FY26 is the actuals year.</strong> Won and contracted deals pro-rated into 1 December 2025 to 30 November 2026 come to £42.9m in HubSpot, against a Kantata revenue-ledger outturn of £41.5m (actual to September plus the October and November forecast), so the two systems agree within 3%. The top five accounts — DWP £7.4m, Defra £6.7m, NCA £6.6m, DfE £5.2m, British Library £4.8m — are 72% of the won total. Use this tab as the baseline for the FY26 → FY27 growth ladder shown on each client card in the FY27 view.</p><p>Deals here are mostly closed and complete, so the status chips matter less than on FY27; Best Case and Pipeline items still open with FY26 dates are late-year pieces that have not been updated.</p>"
+  }
+ }
+}

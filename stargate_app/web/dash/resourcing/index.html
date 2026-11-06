@@ -1,0 +1,1074 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}.brandlogo { display: block; height: 44px; width: auto; margin: 0 0 8px; }
+body.embedded .brandlogo { display: none !important; }
+.po { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0 14px; } .pobox { background: var(--surface, #fff); border: 1px solid var(--grid, #e3e7ed); border-left: 4px solid var(--accent, #548ca3); border-radius: 8px; padding: 10px 14px; min-width: 0; } .pol { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3, #8a929e); margin-bottom: 4px; } .pobox p { margin: 0; font-size: 13.5px; line-height: 1.45; max-width: none; } @media (max-width: 800px) { .po { grid-template-columns: 1fr; } }
+</style></head><body><script>try { if (window.parent && window.parent !== window) document.body.classList.add("embedded"); } catch (e) {}</script>
+<title>Demand</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: operations dashboard, sibling of the UBDS Revenue Profile page (same tokens). Two tabs, each: filter row, tiles, charts, table, history. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --surface-2: #eef1f5; --ink: #111418; --ink-2: #4b5563; --ink-3: #8a929e;
+  --grid: #e3e7ed; --axis: #c4cad3; --ring: rgba(17,20,24,0.10); --accent: #548ca3;
+  --won: #1f2336; --commit: #548ca3; --likely: #7fa9bb; --best: #adbedc; --pipeline: #eb6834;
+  --cloud: #1f2336; --con: #548ca3; --data: #7fa9bb; --man: #adbedc; --p3m: #4a3aa7; --net: #8c7ae6; --cyber: #b45309; --other: #9aa3ad;
+  --good: #0a7a2f; --warn: #b45309; --warn-bg: #fdf3e4; --bad: #b42318; --bad-bg: #fbe9e7;
+  --actual: #0d366b; --forecast: #86b6ef;
+  --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1114; --surface: #181b20; --surface-2: #22262d; --ink: #f3f4f6; --ink-2: #b6bcc6; --ink-3: #7f8792;
+  --grid: #2a2f37; --axis: #3b414b; --ring: rgba(255,255,255,0.10); --accent: #7fb3c9;
+  --won: #256abf; --commit: #6da7ec; --likely: #9ec5f4; --best: #cde2fb; --pipeline: #d95926;
+  --cloud: #3987e5; --con: #6da7ec; --data: #9ec5f4; --man: #cde2fb; --p3m: #9085e9; --net: #b3a9f0; --cyber: #f4b36a; --other: #6b7480;
+  --good: #4ade80; --warn: #f4b36a; --warn-bg: #2b2114; --bad: #f87171; --bad-bg: #2d1715;
+  --actual: #6da7ec; --forecast: #3b5c85; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1114; --surface: #181b20; --surface-2: #22262d; --ink: #f3f4f6; --ink-2: #b6bcc6; --ink-3: #7f8792;
+  --grid: #2a2f37; --axis: #3b414b; --ring: rgba(255,255,255,0.10); --accent: #7fb3c9;
+  --won: #256abf; --commit: #6da7ec; --likely: #9ec5f4; --best: #cde2fb; --pipeline: #d95926;
+  --cloud: #3987e5; --con: #6da7ec; --data: #9ec5f4; --man: #cde2fb; --p3m: #9085e9; --net: #b3a9f0; --cyber: #f4b36a; --other: #6b7480;
+  --good: #4ade80; --warn: #f4b36a; --warn-bg: #2b2114; --bad: #f87171; --bad-bg: #2d1715;
+  --actual: #6da7ec; --forecast: #3b5c85; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 56px; padding-inline: 20px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; font-weight: 600; letter-spacing: -0.01em; }
+h1 { font-size: 28px; line-height: 1.2; } h2 { font-size: 19px; } h3 { font-size: 15px; }
+p { margin: 0; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); font-weight: 500; }
+.sub { color: var(--ink-2); max-width: 72ch; margin-top: 6px; font-size: 14px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px 32px; align-items: flex-end; margin-bottom: 18px; }
+.asof { font-size: 13px; color: var(--ink-3); text-align: right; }
+.asof a { color: var(--accent); }
+
+/* tabs & controls */
+.tabs { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.tabs button, .seg button { all: unset; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; padding: 7px 14px; color: var(--ink-2); }
+.tabs button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--accent); color: var(--bg); }
+.tabs button:focus-visible, .seg button:focus-visible, .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.maintabs { margin-bottom: 18px; } .maintabs button { font-size: 14px; padding: 9px 18px; }
+.seg { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin-bottom: 12px; }
+.ctl { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; font-size: 12px; color: var(--ink-3); max-width: 100%; min-width: 0; }
+.seg { flex-wrap: wrap; max-width: 100%; } .ctl select { max-width: 100%; min-width: 0; }
+.ctl .lbl { font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.chips { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.chip { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px; border: 1px solid var(--ring); background: var(--surface); color: var(--ink-2); font-size: 12px; font-weight: 500; }
+.chip[aria-pressed="false"] { opacity: 0.45; text-decoration: line-through; }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+select, input[type=range] { font: inherit; font-size: 13px; color: var(--ink); background: var(--surface); border: 1px solid var(--ring); border-radius: 6px; padding: 5px 8px; }
+input[type=range] { padding: 0; width: 140px; accent-color: var(--accent); border: none; background: none; }
+.thr { font-family: var(--mono); font-size: 13px; color: var(--ink); min-width: 3ch; }
+.filters2 { margin-bottom: 20px; }
+.hint { font-size: 12px; color: var(--ink-3); margin-bottom: 18px; }
+
+/* tiles */
+.tiles { display: grid; grid-template-columns: repeat(6, minmax(0,1fr)); gap: 12px; margin-bottom: 24px; }
+.tiles.five { grid-template-columns: repeat(5, minmax(0,1fr)); }
+.tile { background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; padding: 13px 15px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--ink-3); font-weight: 500; }
+.tile .v { font-size: 23px; font-weight: 600; line-height: 1.15; margin-top: 5px; font-variant-numeric: tabular-nums; }
+.tile .s { font-size: 12px; color: var(--ink-2); margin-top: 4px; }
+.tile.total { border-color: var(--accent); }
+.tile.alert { border-color: var(--warn); } .tile.alert .v { color: var(--warn); }
+.tile.bad { border-color: var(--bad); } .tile.bad .v { color: var(--bad); }
+
+/* panels */
+.panel { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 20px 22px; margin-bottom: 20px; min-width: 0; }
+.panel.col .xhead { cursor: pointer; user-select: none; } .panel.col .xhead .caret { font-size: 14px; color: var(--ink-3); margin-left: auto; transition: transform .15s; } .panel.col.collapsed .xhead .caret { transform: rotate(-90deg); } .panel.col.collapsed .xhead p { display: none; } .panel.col.collapsed .tbl { display: none; } .panel.col .tbl.note p { margin: 6px 0; } .panel.col.collapsed .xhead { margin-bottom: 0; }
+.panel-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px 20px; margin-bottom: 12px; }
+.panel-head p { font-size: 13px; color: var(--ink-2); max-width: 72ch; }
+.two { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; }
+.two > * { min-width: 0; } .two > .panel { margin-bottom: 20px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i.line { width: 18px; border-top: 2.5px solid var(--actual); } .legend i.dash { width: 18px; border-top: 2.5px dashed var(--forecast); }
+.chart { position: relative; width: 100%; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; } .thrlab { font-weight: 600; fill: var(--bad) !important; paint-order: stroke; stroke: var(--surface, #fff); stroke-width: 4px; stroke-linejoin: round; }
+.chart text { font-family: var(--font); fill: var(--ink-2); font-size: 12px; }
+.chart text.tick { font-family: var(--mono); fill: var(--ink-3); font-size: 11px; }
+.chart text.lab { fill: var(--ink); }
+.chart text.val { font-family: var(--mono); fill: var(--ink-2); font-size: 11px; }
+.chart line.grid { stroke: var(--grid); stroke-width: 1; }
+.chart line.axis { stroke: var(--axis); stroke-width: 1; }
+.chart .window { fill: var(--accent); opacity: 0.07; }
+.chart .seg { stroke: var(--surface); stroke-width: 1.5; }
+.chart .hit { fill: transparent; }
+.chart .row:hover .seg, .chart .col:hover .seg { filter: brightness(1.08); }
+.chart .mline { fill: none; stroke: var(--actual); stroke-width: 2.2; } .chart .fline { fill: none; stroke: var(--forecast); stroke-width: 2.2; stroke-dasharray: 5 3; }
+.chart .mdot { fill: var(--actual); stroke: var(--surface); stroke-width: 1.5; } .chart .fdot { fill: var(--forecast); stroke: var(--surface); stroke-width: 1.5; }
+.chart .thr { stroke: var(--bad); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart .revbar { fill: var(--surface-2); }
+.chart .trendline { fill: none; stroke: var(--accent); stroke-width: 2; } .chart .trendarea { fill: var(--accent); opacity: 0.08; } .chart .trenddot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.4; padding: 8px 10px; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.18); max-width: 340px; z-index: 5; display: none; }
+.tip b { font-weight: 600; } .tip .r { display: flex; justify-content: space-between; gap: 14px; }
+.tip .r span:last-child { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tip .d { display: flex; justify-content: space-between; gap: 12px; opacity: 0.85; } .tip .d span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tip .dh { margin-top: 6px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,.25); font-size: 11px; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+.empty { padding: 28px 0; text-align: center; color: var(--ink-3); font-size: 14px; }
+
+/* tables */
+.tbl { overflow-x: auto; }
+:root { --cmp-gap: #f8d7d3; --cmp-var: #fde8c4; --cmp-ok: #d9efdc; }
+.panel.bleed { margin-left: calc(50% - 50vw + 12px); margin-right: calc(50% - 50vw + 12px); } .panel.bleed .tbl { overflow-x: visible; }
+table.cmp { table-layout: auto; font-size: 12px; } table.cmp th, table.cmp td { white-space: normal; padding: 5px 6px; } table.cmp td.num, table.cmp td.n { white-space: nowrap; } table.cmp td.txt { min-width: 0; max-width: 130px; } table.cmp .d2 { display: block; font-family: var(--mono); font-size: 11.5px; line-height: 1.3; } table.cmp .pill { white-space: nowrap; }
+table.cmp th.grp { text-align: center; font-weight: 600; letter-spacing: .04em; border-bottom: 1px solid var(--grid); } table.cmp th.grp.hs { background: #eef3fb; } table.cmp th.grp.kt { background: #f3f1fa; }
+table.cmp td.c-gap { background: var(--cmp-gap); } table.cmp td.c-var { background: var(--cmp-var); } /* aligned cells are left uncoloured (6 Nov) */
+td.ndxcell { vertical-align: top; } td.ndxcell .ndx { width: 300px; max-width: 300px; white-space: normal; }
+.ndx { background: var(--surface-2, #f6f7f9); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; line-height: 1.45; } .ndx .sw1 { color: var(--bad); font-weight: 700; } .ndx .sw2 { color: var(--good, #0a7a2f); font-weight: 700; } .ndx .muted { color: var(--ink-3); } .ndx .hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+table.cmp td.vdiff { font-family: var(--mono); } table.cmp td.vdiff.neg { color: var(--bad); } table.cmp td.vdiff.pos { color: var(--good, #0a7a2f); }
+body.embed-charts { padding: 0 !important; margin: 0 !important; } body.embed-charts > *:not(#aCharts) { display: none !important; } body.embed-charts > #aCharts { display: grid; margin: 0; padding: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); font-weight: 500; }
+th.sort { cursor: pointer; user-select: none; } th.sort[aria-sort]:not([aria-sort="none"]) { color: var(--ink); }
+td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+td.txt { white-space: normal; min-width: 120px; }
+tr.sum td { font-weight: 600; border-bottom: none; }
+#aBenchTable tr.sum td { border-top: 2px solid var(--grid); border-bottom: 1px solid var(--grid); background: var(--surface-2); padding-top: 8px; }
+tr.exp { cursor: pointer; } tr.exp:hover td { background: var(--surface-2); }
+tr.sub td { background: var(--surface-2); font-size: 12px; color: var(--ink-2); }
+.pill { display: inline-flex; align-items: center; gap: 6px; } .pill i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.flag { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--warn-bg); color: var(--warn); white-space: nowrap; }
+.flag.bad { background: var(--bad-bg); color: var(--bad); }
+.flag.good { background: #d7f2e2; color: var(--good); } .flag.acc { background: var(--surface-2); color: var(--won); }
+.btn { all: unset; cursor: pointer; font: inherit; font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--ring); background: var(--surface); color: var(--ink); } .btn.primary { background: var(--won); border-color: var(--won); color: #fff; } .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#lvTable { table-layout: fixed; } #lvTable th, #lvTable td { white-space: normal; overflow-wrap: anywhere; } #lvTable th:nth-child(1) { width: 14%; } #lvTable th:nth-child(2) { width: 9%; } #lvTable th:nth-child(3) { width: 12%; } #lvTable th:nth-child(4) { width: 7%; } #lvTable th:nth-child(5) { width: 5%; } #lvTable th:nth-child(6) { width: 8%; } #lvTable th:nth-child(7) { width: 13%; } #lvTable th:nth-child(8) { width: 14%; } #lvTable th:nth-child(9) { width: 10%; } #lvTable th:nth-child(10) { width: 8%; } #lvTable .flag { white-space: normal; }
+.rbtn { all: unset; cursor: pointer; } .rbtn .flag { cursor: pointer; } tr.lv[aria-expanded="true"] td { background: var(--surface-2); } .flag.good { background: var(--surface-2); color: var(--good); }
+.mg { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; }
+.mg.bad { color: var(--bad); } .mg.warn { color: var(--warn); } .mg.good { color: var(--good); }
+.linkbtn { all: unset; cursor: pointer; font-size: 13px; color: var(--accent); text-decoration: underline; } .linkbtn:focus-visible { outline: 2px solid var(--accent); }
+.chg-type { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500; padding: 2px 7px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+.chg-type.added { color: var(--bad); } .chg-type.removed { color: var(--good); }
+.note { font-size: 13px; color: var(--ink-2); max-width: 78ch; } .note p + p { margin-top: 8px; } .note strong { color: var(--ink); font-weight: 600; }
+.note code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; }
+.stat { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+.stat > div { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; } .stat .k { font-size: 12px; color: var(--ink-3); } .stat .v { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) { .tiles, .tiles.five { grid-template-columns: repeat(3, minmax(0,1fr)); } .two { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .tiles, .tiles.five { grid-template-columns: repeat(2, minmax(0,1fr)); } .stat { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .wrap { padding-inline: 16px; } h1 { font-size: 24px; } .tile .v { font-size: 20px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.actcell { white-space: nowrap; min-width: 196px; width: 196px; vertical-align: top; } .actcell select { font: inherit; font-size: 12px; color: var(--ink); background: var(--surface); border: 1px solid var(--ring); border-radius: 6px; padding: 4px 6px; width: 100%; max-width: 186px; box-sizing: border-box; } .actcell .pick { display: block; width: 100%; max-width: 186px; box-sizing: border-box; margin-top: 4px; font: inherit; font-size: 12px; padding: 4px 6px; border: 1px solid var(--accent, #2563eb); border-radius: 6px; background: var(--surface); color: var(--ink); } .actcell .why { display: block; font-size: 11px; color: var(--ink-3); margin-top: 4px; max-width: 186px; white-space: normal; line-height: 1.35; }
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <img class="brandlogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAF6CAMAAAC9TIK3AAAC91BMVEVHcExSjKNSi6JTjKJYla5TjKJTjKJUjKNTjKJUjKNUjqFTjKJTi6JTjKFTjKJTi6JTi6JViqNSjKJUjKNTi6FTjKJSi6JTi6JSjKNTi6JSi6FTjKJTi6JTi6JTi6JTjKJTnZ9TjKJTjKJTjKFTjKJTiqNTjKJSi6FTi6JShZ9TjKJSjKJUi6JYhp9SjKJSi6JSiqFUi6RQi6VTjKJVjKJTjKJTi6Kuvtx0nrdEg5mtvtutvty6xeSsvt2tvtytvtyuvtysvN6svdtViqGsv9ytvtytvtxTjKKsvtytvtyrvNpTi6JSjqWsvtusvdxTi6KtvtysvdxVjaGtvtytvtytvtxTi6GsvdtTjaJSjKKtvtxTjKJTi6JTi6JSjKJTi6JTjKJSiaJTi6NTjKJTjKJTjKJTi6JTjKJSjaRSi6JTi6FRi6JTjKJSi6JTi6NVjaBUi6JTjKJUjKNUjKJTjKNUiaOvwN5VjKNRiaNSi6JTi6JVi6JVkp51n7ixwuHC0vJenrdeobhcnLNTjKJEbIIfIjQeIjUWFiguQVVgpLxXkqoUKjkfIzYgJTgdIDITCx45V2xVj6YeIzQeIzUZGy4mLUAfIjQeIjUfJDcuOU1MfZRZl64cJDQeIjU0TGEfIzYeIjU+YXYfIjQfIjUfJDceIjYUESNPgpkjIzUfIjUfIzYeIzUoM0ZJd40gIDgeIjVQhZweIjUeIzUfIjUfIzUeIjUeIjUfIjUeIjYeIjUfIjUeIjUeITYYJTUdJDUeIjUeIjYeIjUeIjUeIjYfIzUkJDAeIjUeIjUfIjUeIjUeIjUgIDcfJDQeIjYfIzYeIjYeIjUeIjUfIjYeIjUeIjUfIzUdJDceIjUeIzUeIjUeIjUfIjUeIjUfITUeIjUeIjVPgpgeIzYfIzUdIjaputi0xuTA0vLP4/9yfpcFBxi5y+qltdNGTWMKDR7M4P9teJIAARHJ3Px5hqCWpcE5QFVRWXAEBhfF2PiHlbCdrclgaoOOnLgAAAOA6ahIAAAA/XRSTlMAS+unBCDB//RXDY/XMWbushBAeBe2Tof9yitfPdH5bgGs4keAJlTxnAku1GoHntlEcxmMI2KScf//P9z/GLv//w6NMGTxNnSqgf++IlrnlSzRP04hxlyYNc73fObF99y6HF+vg+iidiiY/0L8OaobYpqw2t8T/zMycVFCFez/l6f////+HJX/////A////////1zv//820/////8Tsv+C+/9X5inO//8OoXpP//8fwf+abGmKrKfc4t/k2C0KIlNkX52DQAbG8+3KcRcxt7t1hX6Rd/i9GkToOkr1jybqe//h/TOY////sq7////////////////////////AA/xJxAAANjtJREFUeAHs3eOCJFkQR/Hompz5j23bbjPato013v/z2t7kvTnn9w6nKhVxLXxNjUOJAaizw0ckHT1mAGrr+An96OQpA1BPp8/oF2fPWf0AOH9Sv3PBANTMxUv6o8ZlA1AjyZWr+gvXrhuAurjR0N84dNwA1MHNW/p7t+/ctdgBOHdP/+z+A4sbgIf6d0ceWbwAPH6i/+TpM4sTgOcv9F89eWkRAvDqtf6PN28tNgDe6f+69N5iAuBBQyk03zUAsWi5pnSetBqAKLxqU3pvblr4ALR3dCqLe8ctbAC6unsyhi49tIAB6O3z/uyh68kxCxSAgUH3XEKXXgxZiAAMj3huoUuvn1loAIx2u+cZujRmQQHQO+6ed+hqNFkwACQTk15A6NLUtIUBwMysezGhS3PHrXoA5hfciwtdt18agIoNjLsXGrp0f9EAVGnCvfDQpUuHDUBVlma9lNClE88MQBWWV7y/rNB1dNUAlC5Z81+UELr0Yt0AlKvd+0sOXTp70QCU/L1r6aHr6hUDUN4wqlcSunTmsgEowd1B98pClzauW9EADG96+aGXeQIrgNEF96pDl7YMQAnDqNWGru23VggArya8P5DQpZ1pA5C/mRF3DyZ06ekrA5Cv0RX3sELXbqsBKPfmvPzQpb2bBiAv7e5Bhi7tHxiAnIZRgw1dakssKwDzK+4hh67GRwYg86aowEOXbt00AOkNT3oEoUsfHxiAdLpm3eMIXfrEAKTbFOXxhK5PjxmAbJuiwg9d2li3/wPAzKZHF7r02TMDkH1TVNihS58bgOybogIPXY3L9q8AJBPuEYcuXfvC/hmApRGPPHTpy8T+GcDJqPGHrq9eWnYA37uGHbq0fd7+AoC77Ztem9ClS+/tLwAMo/bXKXSpObEPEJLjr9abvv7Jg8Xjz47ftR/h7rfs3QdXIs2Xx/Gfov4w/EEHE4iIGRDM4+YcPLt6DhtdPYBh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" alt="UBDS Digital" width="160">
+    <h1>DEMAND</h1>
+  </div>
+  <div class="asof" id="asof"></div>
+</header>
+<div class="po"><div class="pobox"><div class="pol">Purpose</div><p id="poPurpose">A view of unnamed demand on engagements, who could fill it, and the engagements HubSpot says are coming that have no plan in Kantata yet.</p></div><div class="pobox"><div class="pol">Objective</div><p id="poObjective">Put a name against every generic role in the window, choose the right route where no employee fits, and close the gaps between HubSpot and Kantata before work starts.</p></div></div>
+
+<div class="controls" style="margin-bottom:10px"><div class="ctl"><span class="lbl">Managed services</span><div class="seg" id="gMs"><button data-v="ex" aria-pressed="true">Excluded</button><button data-v="in" aria-pressed="false">Included</button></div><span id="gMsNote" style="font-size:12px;color:var(--ink-3)"></span></div></div>
+<div class="tabs maintabs" role="tablist" id="mainTabs">
+  <button role="tab" data-tab="demand" aria-selected="true">Demand overview</button>
+  <button role="tab" data-tab="margin" aria-selected="false">Margin watch</button>
+  <button role="tab" data-tab="alloc" aria-selected="false">Allocation options</button>
+  <button role="tab" data-tab="nd" aria-selected="false">Not detailed</button>
+  <button role="tab" data-tab="margin2" aria-selected="false">Margin improvement actions</button>
+</div>
+
+<!-- ===================== DEMAND ===================== -->
+<section id="tab-demand">
+  <div class="controls">
+    <div class="ctl"><span class="lbl">Window</span><div class="seg" id="dWin"></div></div>
+    <div class="ctl"><span class="lbl">Client</span><select id="dClient"><option value="">All clients</option></select></div>
+  </div>
+  <div class="controls filters2">
+    <div class="ctl"><span class="lbl">Status</span><div class="chips" id="dStatus"></div></div>
+    <div class="ctl"><span class="lbl">Practice</span><div class="chips" id="dCap"></div></div>
+  </div>
+  <div class="tiles" id="dTiles"></div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h2>Unallocated days by month</h2><p>Role days phased evenly over each assignment's working days; stacked by engagement status. Shaded band is the selected window.</p></div><div class="legend" id="dLegendStatus"></div></div>
+    <div class="chart" id="dMonths"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h2>By engagement</h2><p>Days in window, stacked by status. Hover for the roles.</p></div><div class="legend" id="dLegendEng"></div></div>
+    <div class="chart" id="dEng"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><div><h2>By capability</h2><p>Days in window by practice, stacked by SFIA grade.</p></div><div class="legend" id="dLegendCap"></div></div>
+    <div class="chart" id="dCapChart"></div>
+  </div>
+
+  <div class="panel" id="dTablePanel" hidden><!-- generic roles table: removed from this tab 6 Nov; code kept -->
+    <div class="panel-head"><div><h2>Generic roles in window</h2><p id="dTableNote"></p></div><button class="linkbtn" id="dMore" hidden>Show all</button></div>
+    <div class="tbl"><table id="dTable"></table></div>
+  </div>
+
+  <div class="panel" id="dHistPanel" hidden><!-- history: removed from this tab 6 Nov; code kept -->
+    <div class="panel-head"><div><h2>History</h2><p>Kantata zeroes out unfilled roles once their dates pass, so history here is built from each refresh. Trend of total unallocated days per run, and what moved since the last weekly snapshot.</p></div>
+      <div class="ctl"><span class="lbl">Period</span><div class="seg" id="dHistWin"></div></div></div>
+    <div class="two" style="margin-top:4px">
+      <div><div class="chart" id="dTrend"></div><p class="hint" id="dTrendNote" style="margin-top:8px"></p></div>
+      <div><div class="tbl"><table id="dChanges"></table></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MARGIN ===================== -->
+<section id="tab-margin" hidden>
+  <div class="controls">
+    <div class="ctl"><span class="lbl">Basis</span><div class="seg" id="mBasis"><button data-v="fwd" aria-pressed="true">Forward (forecast)</button><button data-v="hist" aria-pressed="false">Historic (actuals)</button></div></div>
+    <div class="ctl"><span class="lbl">Window</span><div class="seg" id="mWin"></div></div>
+    <div class="ctl"><span class="lbl">Below</span><input type="range" id="mThr" min="0" max="60" step="1" value="40"><span class="thr" id="mThrV">40%</span></div>
+  </div>
+  <div class="controls filters2">
+    <div class="ctl"><span class="lbl">Resource type</span><div class="chips" id="mType"></div></div>
+    <div class="ctl"><span class="lbl">Client</span><select id="mClient"><option value="">All clients</option></select></div>
+    <div class="ctl"><span class="lbl">Engagement</span><select id="mEng"><option value="">All engagements</option></select></div>
+  </div>
+  <div class="tiles five" id="mTiles"></div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h2>Blended margin by month</h2><p>Billable assignment revenue and cost per month from Kantata period data. Solid line is actuals (closed months), dashed is forecast. Bars are revenue. Shaded band is the selected window; dotted line is the threshold.</p></div><div class="legend"><span><i class="line"></i>Actual</span><span><i class="dash"></i>Forecast</span></div></div>
+    <div class="chart" id="mTrend"></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h2>By engagement</h2><p>Assignments in window. Column is revenue, label is blended margin. Red below threshold, blue at or above it.</p></div></div>
+    <div class="chart" id="mEngChart"></div>
+  </div>
+  <div id="mTypePanel" hidden><!-- by resource type: removed from this tab 6 Nov; code kept -->
+    <div class="panel">
+      <div class="panel-head"><div><h2>By resource type</h2><p>Where the sub-threshold revenue sits.</p></div></div>
+      <div class="chart" id="mTypeChart"></div>
+      <div class="note" id="mTypeNote" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="panel col" data-x="mTable">
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>Individuals below threshold</h2><p id="mTableNote"></p></div><button class="linkbtn" id="mMore" hidden>Show all</button><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="mTable"></table></div>
+  </div>
+
+  <div class="panel" id="mDrillPanel" hidden><!-- engagement drill-down: removed from this tab 6 Nov; code kept -->
+    <div class="panel-head"><div><h2>Engagement drill-down</h2><p>Pick an engagement above to see its monthly revenue, cost and margin by resource type, actual and forecast.</p></div></div>
+    <div id="mDrill"></div>
+  </div>
+</section>
+
+<!-- ===================== ALLOCATION ===================== -->
+<section id="tab-alloc" hidden>
+  <div class="controls">
+    <div class="ctl"><span class="lbl">Outcome</span><div class="chips" id="aStatus"></div></div>
+    <div class="ctl"><span class="lbl">Practice</span><div class="chips" id="aCap"></div></div>
+    <div class="ctl"><span class="lbl">Client</span><select id="aClient"><option value="">All clients</option></select></div>
+    <label class="chk" style="font-size:13px"><input type="checkbox" id="aProv"> Include starts after the availability horizon</label>
+  </div>
+  <p class="hint" id="aHint"></p>
+  <div class="tiles five" id="aTiles"></div>
+
+  <div class="two" id="aCharts" hidden><!-- moved to the workspace Overview tab (5 Nov): shown only in ?embed=charts mode -->
+    <div class="panel">
+      <div class="panel-head"><div><h2>Coverage by role family</h2><p>Placeholder days after a one-person-per-placeholder pass that never over-books anyone.</p></div><div class="legend"><span><i class="sw" style="background:var(--won)"></i>Filled</span><span><i class="sw" style="background:var(--best)"></i>Stretch</span><span><i class="sw" style="background:var(--cyber)"></i>Contingent</span><span><i class="sw" style="background:var(--bad)"></i>Gap</span></div></div>
+      <div class="chart" id="aFam"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Available people, next 3 months</h2><p>Named employees, suppliers and partners with free capacity, and how many placeholders they match.</p></div><div class="ctl"><span class="lbl">At least</span><input type="range" id="aFree" min="20" max="100" step="10" value="50"><span class="thr" id="aFreeV">50%</span></div></div>
+      <div class="chart" id="aBench"></div>
+    </div>
+  </div>
+
+  <div class="panel col" data-x="aTable">
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>Generic demand and actions</h2><p id="aTableNote"></p></div><button class="linkbtn" id="aMore" hidden>Show all</button><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="aTable"></table></div>
+  </div>
+
+  <div class="panel" id="livePanel" hidden><!-- live role cards: removed from this tab 5 Nov (the same cards are on the Overview tab); code kept -->
+    <div class="panel-head"><div><h2>Placeholders and options: live role cards</h2><p id="lvNote">Role cards from the Stargate pricing app (every save) and from open HubSpot deals, scored live against named people. Click a row, or its route, to open the options and propose; a proposal goes to the Stargate approvals queue and is cross-checked there.</p></div></div>
+    <div class="controls" id="lvControls">
+      <div class="ctl"><span class="lbl">Source</span><div class="seg" id="lvSrc"><button data-v="all">All</button><button data-v="priced">Priced deals</button><button data-v="derived">Derived from HubSpot</button></div></div>
+      <div class="ctl"><span class="lbl">Deal stage</span><div class="seg" id="lvTier"><button data-v="1">Focus: Contracted, Commit, Most Likely</button><button data-v="2">Then: Best Case, Pipeline</button><button data-v="3">Not linked to HubSpot</button><button data-v="all">All</button></div></div>
+    </div>
+    <div class="tiles" id="lvTiles"></div>
+    <div class="tbl"><table id="lvTable"></table></div>
+    <div class="foot" id="lvFoot"></div>
+  </div>
+
+  <div class="panel" id="benchPanel" hidden><!-- bench list: removed from this tab 5 Nov; the bench lives on the Utilisation & bench tab; code kept -->
+    <div class="panel-head"><div><h2>Bench list</h2><p id="aBenchNote"></p></div><div class="ctl"><span class="lbl">Sort</span><div class="seg" id="aSort"><button data-v="bu" aria-pressed="true">Business unit, then free %</button><button data-v="avail" aria-pressed="false">Free % only</button></div></div></div>
+    <div class="tbl"><table id="aBenchTable"></table></div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-head"><div><h2>How the matching works</h2></div></div>
+    <div class="note">
+      <p><strong>Profile.</strong> Each placeholder is read as a role family (from its role name, else its practice tag), a SFIA level, an AWS or Azure lean where the role says so, and its client. Named people are profiled from their Kantata roles, grade, business unit, skills ratings and sector experience.</p>
+      <p><strong>Score.</strong> Role family match 40 (practice-only 15) · SFIA level: same 20, one above 12, one below 8 · skills evidence up to 20 (average of the top five ratings in the relevant capability group) · availability over the placeholder's months: 60%+ free 20, 30%+ 10 · knows the account +6 · cost above the planned day rate −8. Employees, suppliers and partners are scored alike.</p>
+      <p><strong>Policy.</strong> Employees first, always: the capacity pass takes placeholders in start-date order and tries employees (right role and level, then stretch) before it will consider a supplier or partner. <strong>Filled</strong> is an employee with the right role family, same level or one above; <strong>Stretch</strong> an employee a level below or practice-only; <strong>Contingent</strong> a supplier or partner because no employee could be found; <strong>Gap</strong> nobody. <strong>Recruit FTE</strong> is recommended only where no employee could fill, the work is long term (120+ days or a 6-month engagement) and the role is strategic (cloud, architecture, security, data, development, delivery) on Won or Commit work. Everything else is contingent by exception.</p>
+      <p><strong>Stacking rule (9 Oct 2026).</strong> Someone on a T&amp;M engagement, even at 100%, can still be allocated to an outcome-based engagement. For placeholders on a Fixed Price, Annuity or BU-delivered managed-service engagement (Kantata product group), a person's T&amp;M bookings are ignored when testing availability; absence, internal time and other outcome-based bookings still count. Because UBDS forecasts everyone at 90% of working days, a "full" T&amp;M booking is ~90% and the other ~10% is the leave allowance, not spare capacity — so stacking is capped: a person's total planned load (T&amp;M + outcome + absence) may not exceed <b>110%</b> of working days (the 10% fixed-price efficiency assumed in the FY27 plan; the cap is a parameter in match.py). People with real free capacity are used before anyone is stacked on top of T&amp;M, and a pick that takes someone above 100% is marked <span class="flag">stacked</span> with the T&amp;M load it sits on. Placeholders on T&amp;M engagements keep the full availability test. The Over-utilisation view on the RM dashboard will still show the combined load, by design.</p>
+      <p><strong>Availability</strong> is working days minus everything booked in Kantata (client work, absence, internal) for <span id="aHorizon"></span>. Placeholders starting later than that get a provisional pick on profile only. Capacity on a Kantata placeholder is not a commitment: the proposed names are a starting list for the resourcing conversation, not an allocation.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== NOT DETAILED ===================== -->
+<section id="tab-nd" hidden>
+  <p class="sub" style="margin-bottom:14px">Engagements whose Kantata forecast is held at engagement level (Forecast at this level = Y) rather than built out in detail: no delivery elements, assignments or period phasing behind the number. Cross-referenced to the HubSpot deals with the same code.</p>
+  <div class="controls">
+    <div class="ctl"><span class="lbl">Financial year</span><div class="seg" id="ndFy"></div></div>
+  </div>
+  <div class="controls filters2">
+    <div class="ctl"><span class="lbl">Status</span><div class="chips" id="ndStatus"></div></div>
+    <div class="ctl"><span class="lbl">Client</span><select id="ndClient"><option value="">All clients</option></select></div>
+    <label class="chk" style="font-size:13px"><input type="checkbox" id="ndHsOnly"> Only those with a HubSpot deal</label>
+  </div>
+  <div class="tiles five" id="ndTiles"></div>
+  <div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>Client engagements not at detailed forecast</h2><p>Matching HubSpot deal value by client: full value for All years, pro-rated by day for a single financial year.</p></div></div>
+      <div class="chart" id="ndClientChart"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><div><h2>By client engagement start month</h2><p>When the work is due to begin according to HubSpot. The nearer the start, the more urgent the Kantata build-out.</p></div></div>
+      <div class="chart" id="ndMonths"></div>
+    </div>
+  </div>
+  <div class="panel col" data-x="ndTable">
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>Engagements not yet detailed</h2><p id="ndNote"></p></div><div class="legend"><span><i class="sw" style="background:var(--cmp-gap)"></i>Gap: in one system only</span><span><i class="sw" style="background:var(--cmp-var)"></i>Variance: value differs &gt;10%, start differs &gt;14 days, or stage ≠ status</span><span class="muted">Uncoloured = aligned</span></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="ndTable" class="cmp"></table></div><!-- panel is given the bleed class at render time -->
+  </div>
+</section>
+
+<!-- ===================== MARGIN ACTIONS ===================== -->
+<section id="tab-margin2" hidden>
+  <p class="sub" style="margin-bottom:14px">Levers to lift margin, quantified from Kantata's forward data and the employee-first policy. Each list is the action queue; nothing here changes Kantata until you say so.</p>
+  <div class="tiles five" id="xTiles"></div>
+  <div class="panel col" data-x="xDisp">
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>1 · Displace suppliers and partners</h2><p>Live supplier and partner assignments where an employee with the same role family, within one SFIA level, has the capacity left after the placeholder pass. Saving is the cost-rate difference on the remaining days; margin is at the assignment's billing rate.</p></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="xDisp"></table></div>
+  </div>
+  <div class="panel col" data-x="xLeak" hidden><!-- below rate card: removed from this tab 6 Nov; code kept -->
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>2 · Below rate card</h2><p>Employee assignments billed under 85% of the person's standard rate. Much of this is framework pricing (DWP in particular), so treat the uplift as the ceiling for rate negotiations, not a forecast.</p></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="xLeak"></table></div>
+  </div>
+  <div class="panel col" data-x="xOver" hidden><!-- over-graded: removed from this tab 6 Nov; code kept -->
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>2 · Over-graded on the role</h2><p>SFIA 6 employees on assignments earning under 30%: either the role is priced a grade low or the person should be swapped for a SFIA 5.</p></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="xOver"></table></div>
+  </div>
+  <div class="panel col" data-x="xBench" hidden><!-- bench cost: removed from this tab 6 Nov; code kept -->
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>3 · Bench cost, next 3 months</h2><p>Employees at least 30% free; unrecovered cost is free days at standard cost. The names here are the supply for levers 1 and 4.</p></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="xBench"></table></div>
+  </div>
+  <div class="panel col" data-x="xEnd">
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="true"><div><h2>2 · Supplier and partner contracts ending</h2><p>Within 120 days and still assigned: the natural moment to exit, replace with an employee, or renegotiate the rate.</p></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl"><table id="xEnd"></table></div>
+  </div>
+</section>
+
+<div id="rulesWrap">
+  <div class="panel col" data-x="rulesDemand" data-rules="demand">
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="false"><div><h2>Rules applied · Demand</h2></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl note">
+      <p><strong>Scope.</strong> Kantata engagements that are not Lost. Managed-service product groups (IoC Managed Services, SoC Managed Services, Annuities) are hidden unless switched to Included; Pipeline engagements are excluded from Not detailed. Basis is the Kantata P3 forecast (Won Closed, Contracted, Commit, Most Likely, Best Case) unless narrowed by the status chips.</p>
+      <p><strong>Generic roles.</strong> A generic role is an unnamed resource line on an engagement (for example #Cloud SFIA5 - Employee). Days = Kantata forecast hours ÷ 8, phased evenly across the line's dates and counted inside the chosen window. <em>Started</em> = the start date has passed with nobody named. <em>Recruit</em> / <em>recruit TBC</em> is Kantata's own recruitment flag on the line.</p>
+      <p><strong>Capacity pass (Allocation options).</strong> Employees first: generic roles are taken in start-date order and matched to employees before any supplier or partner is considered. <em>Filled</em> = an employee with the right role family at the same level or one above; <em>Stretch</em> = one level below or practice-only; <em>Contingent</em> = a supplier or partner where no employee could fill; <em>Gap</em> = nobody with the capacity and profile. Availability is working days less everything booked in Kantata. Stacking: someone on a T&amp;M engagement can still take outcome-based work, capped at 110% total load. Recruit FTE is recommended only where no employee could fill, the work is long term (120+ days or a six-month engagement) and the role is strategic on Won or Commit work. The Action dropdown records the Resource manager's choice in this browser only; it does not change Kantata.</p>
+      <p><strong>Not detailed.</strong> Engagements with no resource assignments, matched to their HubSpot deal by engagement code. Red = the figure exists in one system only; amber = the two disagree (value more than 10% apart, start dates more than 14 days apart, or Kantata status ≠ HubSpot stage); plain = aligned. Variance £ = Kantata minus HubSpot. For a single financial year, values are pro-rated by calendar day across the deal's or engagement's dates. Rows are ordered by earliest start date. Explain narratives use the row's own facts only.</p>
+    </div>
+  </div>
+  <div class="panel col" data-x="rulesMargin" data-rules="margin">
+    <div class="panel-head xhead" role="button" tabindex="0" aria-expanded="false"><div><h2>Rules applied · Margin</h2></div><span class="caret" aria-hidden="true">▾</span></div>
+    <div class="tbl note">
+      <p><strong>Margin watch.</strong> Margin = (revenue − cost) ÷ revenue on named assignments in the chosen window, where revenue is the billed day rate and cost is the employee's internal cost rate or the supplier/partner rate; the Actual / Forecast switch picks the months. The threshold defaults to 40% (the target GPM) and can be moved with the slider: red below the threshold, green or blue at or above it. By engagement shows the top 18 engagements by revenue with their blended margin; Individuals below threshold lists people whose blended margin across their assignments is under the threshold, with their lowest single assignment.</p>
+      <p><strong>Margin improvement actions.</strong> <em>Displace suppliers and partners</em>: live supplier or partner assignments where an employee with the same role family, within one SFIA level, has capacity left after the generic-role pass; saving = (supplier cost rate − employee cost rate) × days left, with the new margin recomputed; sorted lowest margin first. <em>Supplier and partner contracts ending</em>: contracts ending within 120 days while still assigned, the natural moment to exit, replace with an employee or renegotiate. Colour bands on this tab are fixed: 40% and above green, below 40% red.</p>
+      <p><strong>Explain.</strong> Each Explain narrative is generated from that row's own figures only (rates, costs, days, dates, the threshold) and is written as a So what and a Recommended action for an executive reader.</p>
+    </div>
+  </div>
+</div>
+
+<div class="tip" id="tip"></div>
+</div>
+
+<script>
+(function () {
+'use strict';
+const $ = (s, el) => (el || document).querySelector(s);
+const fmtK = v => { const a = Math.abs(v); return (v < 0 ? '-' : '') + (a >= 1e6 ? '£' + (a/1e6).toFixed(2) + 'm' : a >= 1e3 ? '£' + Math.round(a/1e3) + 'k' : '£' + Math.round(a)); };
+const fmtN = v => Math.round(v).toLocaleString('en-GB');
+const fmtD = s => { if (!s) return '—'; const d = new Date(s + 'T00:00:00'); if (isNaN(d)) return String(s); const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return String(d.getDate()).padStart(2, '0') + '/' + M[d.getMonth()] + '/' + d.getFullYear(); };
+const fmtM = m => { const d = new Date(m + '-01T00:00:00'); return d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }); };
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const STATUS = ['Won Closed', 'Commit', 'Most Likely', 'Best Case'];
+const SCOL = { 'Won Closed': 'var(--won)', 'Commit': 'var(--commit)', 'Most Likely': 'var(--likely)', 'Best Case': 'var(--best)', 'Pipeline': 'var(--pipeline)', 'Contracted': 'var(--commit)', 'Forecast Placeholder': 'var(--pipeline)' };
+const CAPS = ['CLOUD', 'CON', 'DATA', 'MAN', 'P3M', 'NET', 'CYBER', 'OTHER'];
+const CCOL = { CLOUD: 'var(--cloud)', CON: 'var(--con)', DATA: 'var(--data)', MAN: 'var(--man)', P3M: 'var(--p3m)', NET: 'var(--net)', CYBER: 'var(--cyber)', OTHER: 'var(--other)' };
+const CAPNAME = { CLOUD: 'Cloud', CON: 'Consulting', DATA: 'Data', MAN: 'Managed service', P3M: 'P3M', NET: 'Network', CYBER: 'Cyber', OTHER: 'Other' };
+const TYPES = ['Employee', 'Supplier', 'Partner'];
+const SHORT = { 'Department for Work and Pensions': 'DWP', 'Department for Environment, Food & Rural Affairs': 'Defra', 'Ministry of Housing, Communities and Local Government': 'MHCLG', 'Ministry of Justice': 'MoJ', 'Department for Education': 'DfE', 'National Crime Agency': 'NCA', 'British Library': 'British Library', 'Competition and Markets Authority': 'CMA', 'Financial Conduct Authority': 'FCA', 'Government Property Agency': 'GPA', 'The Pensions Regulator': 'TPR', 'Greater Manchester Combined Authority': 'GMCA', 'Veterinary Medicines Directorate': 'VMD', 'High Speed Two (HS2)': 'HS2', 'KPMG International Limited': 'KPMG', 'Evelyn Partners Limited': 'Evelyn Partners', 'TTPP Construction Consultants': 'TTPP' };
+const short = a => SHORT[a] || a;
+const TCOL = { Employee: 'var(--won)', Supplier: 'var(--cyber)', Partner: 'var(--p3m)' };
+
+let D = null, H = null, A = null, TODAY = '';
+const EMBED = new URLSearchParams(location.search).get('embed'); const TABS = (new URLSearchParams(location.search).get('tabs') || '').split(',').filter(Boolean); // restrict the sub-tabs shown (6 Nov) if (EMBED === 'charts') { document.body.classList.add('embed-charts'); const ac = document.getElementById('aCharts'); if (ac) { ac.hidden = false; document.body.appendChild(ac); } }
+const S = { aAction: {}, aIgnored: {}, aPicked: {}, aShowIgn: false, aPick: null, xCollapsed: {}, ndFy: 'all', ndStatus: {}, ndClient: '', ndHsOnly: false, ms: 'ex', aStatus: { filled: true, stretch: true, contingent: true, gap: true }, aCap: Object.fromEntries(CAPS.map(c => [c, true])), aClient: '', aProv: false, aAll: false, aFree: 50, aSort: 'bu', tab: 'demand', dWin: 'n90', dClient: '', dStatus: Object.fromEntries(STATUS.map(s => [s, true])), dCap: Object.fromEntries(CAPS.map(c => [c, true])), dAll: false, dHist: 30,
+            mBasis: 'fwd', mWin: 'live', mThr: 40, mType: Object.fromEntries(TYPES.map(t => [t, true])), mClient: '', mEng: '', mAll: false };
+try { Object.assign(S, JSON.parse(localStorage.getItem('ubds-res-state') || '{}')); } catch (e) {}
+const save = () => { if (EMBED) return; try { localStorage.setItem('ubds-res-state', JSON.stringify({ ...S, aPick: null })); } catch (e) {} };
+
+function capOf(r) { return CAPS.includes(r.cap) ? r.cap : 'OTHER'; }
+function fy(iso) { const y = +iso.slice(0, 4), m = +iso.slice(5, 7); return m >= 12 ? y + 1 : y; }
+function fyRange(f) { return [`${f - 1}-12-01`, `${f}-11-30`]; }
+function winRange(key, basis) {
+  const t = TODAY, fyNow = fy(t);
+  const map = {
+    live: [t, t], n30: [t, addDays(t, 30)], n90: [t, addDays(t, 90)], n180: [t, addDays(t, 180)], fwd: [t, '2099-12-31'],
+    fy27: fyRange(2027), fy28: fyRange(2028), fyc: fyRange(fyNow),
+    l3: [addDays(t, -91), addDays(t, -1)], l6: [addDays(t, -182), addDays(t, -1)], l12: [addDays(t, -365), addDays(t, -1)], fyp: fyRange(fyNow - 1), all: ['2025-12-01', '2099-12-31'],
+  };
+  const r = map[key] || map.n90;
+  if (basis === 'fwd' && r[0] < t) r[0] = t;
+  return r;
+}
+const DWINS = [['n30', 'Next 30 days'], ['n90', 'Next 90 days'], ['n180', 'Next 6 months'], ['fy27', 'FY27'], ['fy28', 'FY28'], ['fwd', 'All forward']];
+const MWINS_F = [['live', 'Live now'], ['n90', 'Next 90 days'], ['n180', 'Next 6 months'], ['fy27', 'FY27'], ['fwd', 'All forward']];
+const MWINS_H = [['l3', 'Last 3 months'], ['l6', 'Last 6 months'], ['l12', 'Last 12 months'], ['fyp', 'FY26'], ['all', 'Everything']];
+
+/* ---------- tooltip ---------- */
+const tip = $('#tip');
+function showTip(ev, html) { tip.innerHTML = html; tip.style.display = 'block'; moveTip(ev); }
+function moveTip(ev) { const w = $('.wrap').getBoundingClientRect(); let x = ev.clientX - w.left + 14, y = ev.clientY - w.top + 14; const tw = tip.offsetWidth, th = tip.offsetHeight; if (x + tw > w.width - 8) x = ev.clientX - w.left - tw - 14; if (y + th > w.height) y = ev.clientY - w.top - th - 10; tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function hideTip() { tip.style.display = 'none'; }
+function bindTips(root) { root.querySelectorAll('[data-tip]').forEach(el => { el.addEventListener('mouseenter', e => showTip(e, el.dataset.tip)); el.addEventListener('mousemove', moveTip); el.addEventListener('mouseleave', hideTip); }); }
+
+/* ---------- generic chart helpers ---------- */
+function hbars(el, rows, opts) {
+  // rows: [{label, sub, total, segs:[{v,color,name}], tip}] ; opts.fmt for values
+  if (!rows.length) { el.innerHTML = '<div class="empty">Nothing in this window with the current filters.</div>'; return; }
+  const W = 560, L = 190, R = 70, rh = 24, gap = 6, H = rows.length * (rh + gap) + 24;
+  const max = Math.max(...rows.map(r => r.total)) || 1, iw = W - L - R, x = v => L + v / max * iw;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria || 'bar chart')}">`;
+  const ticks = niceTicks(0, max, 4);
+  ticks.forEach(t => { s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="0" y2="${H - 20}"/><text class="tick" x="${x(t)}" y="${H - 6}" text-anchor="middle">${opts.fmt(t)}</text>`; });
+  rows.forEach((r, i) => {
+    const y = i * (rh + gap); let cx = L;
+    s += `<g class="row" data-tip="${esc(r.tip)}"><rect class="hit" x="0" y="${y}" width="${W}" height="${rh}"/>`;
+    s += `<text class="lab" x="${L - 8}" y="${y + rh / 2 + 4}" text-anchor="end">${esc(trunc(r.label, 26))}</text>`;
+    r.segs.forEach(sg => { if (sg.v <= 0) return; const w = sg.v / max * iw; s += `<rect class="seg" x="${cx}" y="${y + 2}" width="${w}" height="${rh - 4}" fill="${sg.color}"/>`; cx += w; });
+    s += `<text class="val" x="${cx + 6}" y="${y + rh / 2 + 4}">${opts.fmt(r.total)}${r.suffix ? ' ' + esc(r.suffix) : ''}</text></g>`;
+  });
+  s += '</svg>'; el.innerHTML = s; bindTips(el);
+}
+function vbars(el, rows, opts) {
+  // landscape version of hbars: one column per row, segments stacked bottom-up, labels angled under the axis
+  if (!rows.length) { el.innerHTML = '<div class="empty">Nothing in this window with the current filters.</div>'; return; }
+  const W = 1100, L = 54, R = 12, T = 30, B = 86, H = 340, n = rows.length, iw = W - L - R, ih = H - T - B, slot = iw / n, bw = Math.min(44, slot * 0.68);
+  const max = Math.max(...rows.map(r => r.total)) || 1, y = v => T + ih - v / max * ih;
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria || 'column chart')}">`;
+  niceTicks(0, max, 4).forEach(t => { s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="tick" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${opts.fmt(t)}</text>`; });
+  rows.forEach((r, i) => {
+    const cx = L + slot * i + slot / 2, x0 = cx - bw / 2; let acc = 0;
+    s += `<g class="row" data-tip="${esc(r.tip)}"><rect class="hit" x="${L + slot * i}" y="${T}" width="${slot}" height="${ih + B}"/>`;
+    r.segs.forEach(sg => { if (sg.v <= 0) return; const y1 = y(acc + sg.v), h = y(acc) - y1; s += `<rect class="seg" x="${x0}" y="${y1}" width="${bw}" height="${h}" fill="${sg.color}"/>`; acc += sg.v; });
+    const two = r.suffix && n > 12; s += two ? `<text class="val" x="${cx}" y="${y(acc) - 15}" text-anchor="middle" font-size="10">${esc(r.suffix.replace(/^·\s*/, ''))}</text><text class="val" x="${cx}" y="${y(acc) - 4}" text-anchor="middle" font-size="10">${opts.fmt(r.total)}</text>` : `<text class="val" x="${cx}" y="${y(acc) - 4}" text-anchor="middle">${opts.fmt(r.total)}${r.suffix ? ' ' + esc(r.suffix) : ''}</text>`;
+    s += `<text class="lab" x="${cx}" y="${T + ih + 10}" text-anchor="end" transform="rotate(-40 ${cx} ${T + ih + 10})">${esc(trunc(r.label, 22))}</text></g>`;
+  });
+  s += '</svg>'; el.innerHTML = s; bindTips(el);
+}
+function trunc(s, n) { s = String(s || ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+function niceTicks(min, max, n) { const span = max - min || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw / mag; const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag; const out = []; for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(+v.toFixed(6)); return out; }
+function monthsBetween(a, b) { const out = []; let y = +a.slice(0, 4), m = +a.slice(5, 7); const ey = +b.slice(0, 4), em = +b.slice(5, 7); while (y < ey || (y === ey && m <= em)) { out.push(`${y}-${String(m).padStart(2, '0')}`); m++; if (m > 12) { m = 1; y++; } } return out; }
+
+/* ================= DEMAND ================= */
+const msOk = r => S.ms === 'in' || !r.ms;
+function dPool() {
+  const [a, b] = winRange(S.dWin, 'fwd');
+  return D.generic.filter(r => msOk(r) && r.rem > 0 && r.end >= TODAY && S.dStatus[r.st] !== false && S.dCap[capOf(r)] !== false && (!S.dClient || r.acc === S.dClient))
+    .map(r => Object.assign({}, r, { wdays: daysInWindow(r, a, b) }))
+    .filter(r => r.wdays > 0.05);
+}
+function daysInWindow(r, a, b) {
+  // phase is per month; at the window edges take the working-day share of that month's active span
+  let tot = 0;
+  for (const [m, v] of Object.entries(r.phase)) {
+    const ms = m + '-01', me = lastDay(m);
+    if (me < a || ms > b) continue;
+    const s = ms < a ? a : ms, e = me > b ? b : me;
+    if (s === ms && e === me) { tot += v; continue; }
+    const as = [ms, r.start, TODAY].sort().pop(), ae = me < r.end ? me : r.end;
+    const share = wd(s < as ? as : s, e > ae ? ae : e) / Math.max(wd(as, ae), 1);
+    tot += v * Math.min(share, 1);
+  }
+  return tot;
+}
+function lastDay(m) { const d = new Date(Date.UTC(+m.slice(0, 4), +m.slice(5, 7), 0)); return d.toISOString().slice(0, 10); }
+function wd(a, b) { if (b < a) return 0; let n = 0; const d = new Date(a + 'T00:00:00'), e = new Date(b + 'T00:00:00'); while (d <= e) { const k = d.getDay(); if (k > 0 && k < 6) n++; d.setDate(d.getDate() + 1); } return n; }
+
+function renderDemand() {
+  const pool = dPool(); const [a, b] = winRange(S.dWin, 'fwd');
+  const days = pool.reduce((s, r) => s + r.wdays, 0), rev = pool.reduce((s, r) => s + r.rev, 0);
+  const started = pool.filter(r => r.start <= TODAY), soon = pool.filter(r => r.start > TODAY && r.start <= addDays(TODAY, 30));
+  const won = pool.filter(r => r.st === 'Won Closed' || r.st === 'Commit');
+  $('#dTiles').innerHTML = [
+    tile('Roles', fmtN(pool.length), `${new Set(pool.map(r => r.eng)).size} engagements`, 'total'),
+    tile('Days unallocated', fmtN(days), 'in window'),
+    tile('On sold work', fmtN(won.reduce((s, r) => s + r.wdays, 0)) + ' d', `${won.length} roles, Won or Commit`),
+    tile('Revenue on them', fmtK(rev), 'assignment forecast, where rated'),
+    tile('Already started', fmtN(started.length), `${fmtN(started.reduce((s, r) => s + r.wdays, 0))} days with nobody named`, started.length ? 'bad' : ''),
+    tile('Start ≤ 30 days', fmtN(soon.length), `${fmtN(soon.reduce((s, r) => s + r.wdays, 0))} days; ${pool.filter(r => r.recr === 'Yes').length} flagged for recruitment`, soon.length ? 'alert' : ''),
+  ].join('');
+
+  // months chart (always full horizon, window shaded)
+  const all = D.generic.filter(r => msOk(r) && r.rem > 0 && r.end >= TODAY && S.dStatus[r.st] !== false && S.dCap[capOf(r)] !== false && (!S.dClient || r.acc === S.dClient));
+  const months = monthsBetween(TODAY.slice(0, 7), addDays(TODAY, 540).slice(0, 7));
+  const byM = months.map(m => { const o = { m, tot: 0, segs: {} , engs: {} }; all.forEach(r => { const v = r.phase[m] || 0; if (!v) return; o.tot += v; o.segs[r.st] = (o.segs[r.st] || 0) + v; o.engs[r.key] = (o.engs[r.key] || 0) + v; }); return o; });
+  colChart($('#dMonths'), byM, { a, b, fmt: v => fmtN(v) + ' d', order: STATUS, col: SCOL, unit: 'days' });
+  $('#dLegendStatus').innerHTML = STATUS.map(s => `<span><i class="sw" style="background:${SCOL[s]}"></i>${s}</span>`).join('');
+
+  // by engagement
+  const eg = {}; pool.forEach(r => { const e = eg[r.key] || (eg[r.key] = { label: r.key, acc: r.acc, st: r.st, total: 0, sts: {}, items: [] }); e.total += r.wdays; e.sts[r.st] = (e.sts[r.st] || 0) + r.wdays; e.items.push(r); });
+  const erows = Object.values(eg).sort((x, y) => y.total - x.total).slice(0, 24).map(e => ({ label: e.label, total: e.total, suffix: '', segs: STATUS.map(st => ({ v: e.sts[st] || 0, color: SCOL[st], name: st })),
+    tip: `<b>${esc(e.label)}</b> · ${esc(e.acc)}<div class="d"><span>${esc(e.st)}</span><span>${fmtN(e.total)} days</span></div><div class="dh">Roles</div>` + e.items.sort((x, y) => y.wdays - x.wdays).slice(0, 10).map(i => `<div class="d"><span>${esc(i.res.replace(/ - Employee$/, ''))} · ${esc(i.role || '—')}</span><span>${fmtN(i.wdays)} d · ${fmtD(i.start)}</span></div>`).join('') + (e.items.length > 10 ? `<div class="d"><span>+${e.items.length - 10} more</span><span></span></div>` : '') }));
+  vbars($('#dEng'), erows, { fmt: v => fmtN(v), aria: 'Unallocated days by engagement' });
+  $('#dLegendEng').innerHTML = STATUS.filter(st => erows.some(r => r.segs.some(g => g.name === st && g.v > 0))).map(st => `<span><i class="sw" style="background:${SCOL[st]}"></i>${st}</span>`).join('');
+
+  // by capability
+  const cg = {}; pool.forEach(r => { const k = CAPNAME[capOf(r)]; const c = cg[k] || (cg[k] = { label: k, cap: capOf(r), total: 0, n: 0, lvls: {}, engs: {} }); c.total += r.wdays; c.n++; c.lvls[r.lvl] = (c.lvls[r.lvl] || 0) + r.wdays; c.engs[r.key] = (c.engs[r.key] || 0) + r.wdays; });
+  const LVLS = [...new Set(pool.map(r => r.lvl))].sort((a, b) => a - b); const LCOL = { 1: '#dde5f0', 2: '#c5d2e6', 3: '#adbedc', 4: '#7fa9bb', 5: '#548ca3', 6: '#3a5f74', 7: '#1f2336' }; const lcol = l => LCOL[l] || 'var(--other)';
+  const crows = Object.values(cg).sort((x, y) => y.total - x.total).slice(0, 24).map(c => ({ label: c.label, total: c.total, suffix: `· ${c.n}`, segs: LVLS.map(l => ({ v: c.lvls[l] || 0, color: lcol(l), name: 'SFIA ' + l })),
+    tip: `<b>${esc(c.label)}</b><div class="d"><span>${c.n} roles</span><span>${fmtN(c.total)} days</span></div><div class="dh">By SFIA grade</div>` + LVLS.filter(l => c.lvls[l]).map(l => `<div class="d"><span>SFIA ${l}</span><span>${fmtN(c.lvls[l])} d</span></div>`).join('') + `<div class="dh">Engagements</div>` + Object.entries(c.engs).sort((x, y) => y[1] - x[1]).slice(0, 8).map(([k, v]) => `<div class="d"><span>${esc(k)}</span><span>${fmtN(v)} d</span></div>`).join('') }));
+  vbars($('#dCapChart'), crows, { fmt: v => fmtN(v), aria: 'Unallocated days by capability' });
+  $('#dLegendCap').innerHTML = LVLS.map(l => `<span><i class="sw" style="background:${lcol(l)}"></i>SFIA ${l}</span>`).join('');
+
+  // table
+  const sorted = pool.slice().sort((x, y) => x.start < y.start ? -1 : x.start > y.start ? 1 : y.wdays - x.wdays);
+  const show = S.dAll ? sorted : sorted.slice(0, 40);
+  $('#dTableNote').textContent = `${pool.length} roles, ${fmtN(days)} days, ${fmtD(a)} to ${b > '2090' ? 'end of plan' : fmtD(b)}. Sorted by start date.`;
+  $('#dMore').hidden = sorted.length <= 40; $('#dMore').textContent = S.dAll ? 'Show first 40' : `Show all ${sorted.length}`;
+  $('#dTable').innerHTML = `<thead><tr><th>Engagement</th><th>Client</th><th>Status</th><th>Generic role</th><th>Role title</th><th>Start</th><th>End</th><th class="n">Days in window</th><th class="n">Revenue</th><th>Flags</th></tr></thead><tbody>` +
+    show.map(r => `<tr><td><b>${esc(r.key)}</b></td><td class="txt">${esc(short(r.acc))}</td><td><span class="pill"><i style="background:${SCOL[r.st] || 'var(--other)'}"></i>${esc(r.st)}</span></td><td>${esc(r.res.replace(/\s+-\s+Employee$/, ''))}</td><td class="txt">${esc(r.role || '—')}</td><td class="num">${fmtD(r.start)}</td><td class="num">${fmtD(r.end)}</td><td class="n">${fmtN(r.wdays)}</td><td class="n">${r.rev ? fmtK(r.rev) : '—'}</td><td>${r.start <= TODAY ? '<span class="flag bad">started</span> ' : ''}${r.recr === 'Yes' ? '<span class="flag">recruit</span>' : r.recr === 'TBC' ? '<span class="flag">recruit TBC</span>' : ''}</td></tr>`).join('') +
+    `<tr class="sum"><td colspan="7">Total in window</td><td class="n">${fmtN(days)}</td><td class="n">${fmtK(rev)}</td><td></td></tr></tbody>`;
+  renderDemandHistory();
+}
+function tile(k, v, s, cls) { return `<div class="tile ${cls || ''}"><div class="k">${esc(k)}</div><div class="v">${v}</div><div class="s">${esc(s)}</div></div>`; }
+
+function colChart(el, cols, o) {
+  // vertical stacked columns, cols: [{m, tot, segs:{name:v}, engs}]
+  const W = 900, Hh = 236, L = 46, Rr = 8, T = 16, B = 30, iw = W - L - Rr, ih = Hh - T - B; const lab = o.label || (v => fmtN(v));
+  const max = Math.max(...cols.map(c => c.tot), 1), cw = iw / cols.length, y = v => T + ih - v / max * ih;
+  let s = `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(o.unit)} by month">`;
+  // window shade
+  const ai = cols.findIndex(c => c.m + '-31' >= o.a), bi = cols.map(c => c.m + '-01' <= o.b).lastIndexOf(true);
+  if (ai >= 0 && bi >= ai) s += `<rect class="window" x="${L + ai * cw}" y="${T}" width="${(bi - ai + 1) * cw}" height="${ih}"/>`;
+  niceTicks(0, max, 4).forEach(t => { s += `<line class="grid" x1="${L}" x2="${W - Rr}" y1="${y(t)}" y2="${y(t)}"/><text class="tick" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${fmtN(t)}</text>`; });
+  cols.forEach((c, i) => {
+    const x = L + i * cw + cw * 0.15, w = cw * 0.7; let cy = T + ih;
+    const tipHtml = `<b>${fmtM(c.m)}</b><div class="r"><span>Unallocated</span><span>${fmtN(c.tot)} days</span></div>` + o.order.filter(k => c.segs[k]).map(k => `<div class="d"><span>${esc(k)}</span><span>${fmtN(c.segs[k])} d</span></div>`).join('') + `<div class="dh">Top engagements</div>` + Object.entries(c.engs).sort((p, q) => q[1] - p[1]).slice(0, 6).map(([k, v]) => `<div class="d"><span>${esc(k)}</span><span>${fmtN(v)} d</span></div>`).join('');
+    s += `<g class="col" data-tip="${esc(tipHtml)}"><rect class="hit" x="${L + i * cw}" y="${T}" width="${cw}" height="${ih}"/>`;
+    o.order.forEach(k => { const v = c.segs[k] || 0; if (!v) return; const h = v / max * ih; cy -= h; s += `<rect class="seg" x="${x}" y="${cy}" width="${w}" height="${h}" fill="${o.col[k]}"/>`; });
+    if (c.tot > 0) s += `<text class="val" x="${L + i * cw + cw / 2}" y="${cy - 3}" text-anchor="middle" font-size="10">${lab(c.tot)}</text>`;
+    if (i % 2 === 0 || cols.length <= 12) s += `<text class="tick" x="${L + i * cw + cw / 2}" y="${Hh - 10}" text-anchor="middle">${fmtM(c.m)}</text>`;
+    s += '</g>';
+  });
+  s += `<line class="axis" x1="${L}" x2="${W - Rr}" y1="${T + ih}" y2="${T + ih}"/></svg>`;
+  el.innerHTML = s; bindTips(el);
+}
+
+function renderDemandHistory() {
+  $('#dHistWin').innerHTML = [[7, '7 days'], [30, '30 days'], [90, '90 days'], [180, '6 months']].map(([v, l]) => `<button data-v="${v}" aria-pressed="${S.dHist === v}">${l}</button>`).join('');
+  const since = addDays(TODAY, -S.dHist);
+  const runs = (H.runs || []).filter(r => r.asof.slice(0, 10) >= since);
+  const el = $('#dTrend');
+  if (runs.length < 2) { el.innerHTML = `<div class="empty">${runs.length ? 'One run so far. The trend builds up with each weekday refresh.' : 'No runs in this period.'}</div>`; }
+  else {
+    const W = 440, Hh = 150, L = 44, R = 10, T = 12, B = 26, iw = W - L - R, ih = Hh - T - B;
+    const vals = runs.map(r => r.generic.days), mx = Math.max(...vals) * 1.05 || 1, mn = Math.min(...vals) * 0.9;
+    const x = i => L + i / Math.max(runs.length - 1, 1) * iw, y = v => T + ih - (v - mn) / (mx - mn || 1) * ih;
+    let s = `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Unallocated days per run">`;
+    niceTicks(mn, mx, 3).forEach(t => { s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="tick" x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${fmtN(t)}</text>`; });
+    const pts = runs.map((r, i) => `${x(i)},${y(r.generic.days)}`);
+    s += `<path class="trendarea" d="M${x(0)},${T + ih} L${pts.join(' L')} L${x(runs.length - 1)},${T + ih} Z"/><polyline class="trendline" points="${pts.join(' ')}"/>`;
+    runs.forEach((r, i) => { s += `<circle class="trenddot" cx="${x(i)}" cy="${y(r.generic.days)}" r="3.5" data-tip="<b>${esc(fmtD(r.asof.slice(0, 10)))}</b> ${esc(r.label || '')}<div class='r'><span>Days unallocated</span><span>${fmtN(r.generic.days)}</span></div><div class='r'><span>Placeholders</span><span>${r.generic.n}</span></div><div class='r'><span>Already started</span><span>${r.generic.started}</span></div>"/>`; });
+    s += `<text class="tick" x="${L}" y="${Hh - 8}">${fmtD(runs[0].asof.slice(0, 10))}</text><text class="tick" x="${W - R}" y="${Hh - 8}" text-anchor="end">${fmtD(runs[runs.length - 1].asof.slice(0, 10))}</text></svg>`;
+    el.innerHTML = s; bindTips(el);
+  }
+  const first = runs[0], last = runs[runs.length - 1];
+  $('#dTrendNote').textContent = runs.length >= 2 ? `${fmtN(first.generic.days)} → ${fmtN(last.generic.days)} days unallocated (${last.generic.days - first.generic.days >= 0 ? '+' : ''}${fmtN(last.generic.days - first.generic.days)}) across ${runs.length} runs.` : (last ? `Last run ${fmtD(last.asof.slice(0, 10))}: ${fmtN(last.generic.days)} days unallocated across ${last.generic.n} placeholders.` : '');
+  const items = []; (H.changes || []).filter(c => c.asof.slice(0, 10) >= since).forEach(c => c.items.forEach(i => items.push(Object.assign({ asof: c.asof }, i))));
+  const tb = $('#dChanges');
+  if (!items.length) { tb.innerHTML = `<tbody><tr><td class="empty">No placeholder changes recorded in this period. Changes are logged against the last weekly snapshot from the next refresh on.</td></tr></tbody>`; return; }
+  tb.innerHTML = `<thead><tr><th>When</th><th>Change</th><th>Engagement</th><th>Placeholder</th><th class="n">Days</th></tr></thead><tbody>` + items.slice(0, 40).map(i => `<tr><td class="num">${fmtD(i.asof.slice(0, 10))}</td><td><span class="chg-type ${i.type}">${i.type === 'removed' ? 'filled / gone' : i.type}</span></td><td><b>${esc(i.eng.split(' (')[0])}</b></td><td class="txt">${esc((i.res || '').replace(/\s+-\s+Employee$/, ''))} · ${esc(i.role || '—')}</td><td class="n">${i.type === 'changed' ? `${fmtN(i.days_was || 0)} → ${fmtN(i.days)}` : fmtN(i.days || 0)}</td></tr>`).join('') + '</tbody>';
+}
+
+/* ================= MARGIN ================= */
+function mPool() {
+  const [a, b] = winRange(S.mWin, S.mBasis);
+  return D.named.filter(r => msOk(r) && S.mType[r.typ] !== false && (!S.mClient || r.acc === S.mClient) && (!S.mEng || r.key === S.mEng) && r.start <= b && r.end >= a)
+    .map(r => {
+      if (S.mBasis === 'hist') { if (!r.arev) return null; return Object.assign({}, r, { mrev: r.arev, mcost: r.acost, mm: (r.arev - r.acost) / r.arev * 100 }); }
+      if (r.end < TODAY) return null;
+      return Object.assign({}, r, { mrev: r.rev, mcost: r.cost, mm: r.m });
+    }).filter(Boolean);
+}
+function mgClass(m, thr) { return m < thr ? 'bad' : 'good'; } // amber band removed (6 Nov): below threshold is red, at or above is green
+
+function renderMargin() {
+  $('#mWin').innerHTML = (S.mBasis === 'fwd' ? MWINS_F : MWINS_H).map(([v, l]) => `<button data-v="${v}" aria-pressed="${S.mWin === v}">${l}</button>`).join('');
+  if (S.mThr === 30 && !S.mThrSet) { S.mThr = 40; } $('#mThr').value = S.mThr; $('#mThrV').textContent = S.mThr + '%';
+  const thr = S.mThr, pool = mPool(), [a, b] = winRange(S.mWin, S.mBasis);
+  const under = pool.filter(r => r.mm < thr);
+  const rev = pool.reduce((s, r) => s + r.mrev, 0), cost = pool.reduce((s, r) => s + r.mcost, 0), urev = under.reduce((s, r) => s + r.mrev, 0), ucost = under.reduce((s, r) => s + r.mcost, 0);
+  const basisWord = S.mBasis === 'fwd' ? 'forecast' : 'actual';
+  $('#mTiles').innerHTML = [
+    tile(`Assignments below ${thr}%`, fmtN(under.length), `of ${pool.length} ${basisWord} assignments`, under.length ? 'bad' : ''),
+    tile('People', fmtN(new Set(under.map(r => r.res)).size), `${new Set(under.map(r => r.key)).size} engagements`),
+    tile('Revenue below threshold', fmtK(urev), rev ? `${(urev / rev * 100).toFixed(0)}% of ${fmtK(rev)}` : ''),
+    tile('Margin on that slice', urev ? ((urev - ucost) / urev * 100).toFixed(1) + '%' : '—', `cost ${fmtK(ucost)}`, 'alert'),
+    tile('Blended margin, all in window', rev ? ((rev - cost) / rev * 100).toFixed(1) + '%' : '—', `${fmtK(rev)} revenue, ${fmtK(cost)} cost`, 'total'),
+  ].join('');
+
+  // monthly trend from eng_months
+  const em = D.eng_months.filter(r => msOk(r) && S.mType[r.rt] !== false && (!S.mClient || r.acc === S.mClient) && (!S.mEng || r.key === S.mEng));
+  const months = monthsBetween('2025-12', '2027-11');
+  const closed = D.today.slice(0, 7); // months before this are actuals
+  const series = months.map(m => { const rs = em.filter(r => r.m === m); const act = m < closed; const rv = rs.reduce((s, r) => s + (act ? r.arev : r.rev), 0), cs = rs.reduce((s, r) => s + (act ? r.acost : r.cost), 0); return { m, act, rev: rv, cost: cs, mg: rv ? (rv - cs) / rv * 100 : null, rt: TYPES.map(t => { const x = rs.filter(r => r.rt === t); const v = x.reduce((s, r) => s + (act ? r.arev : r.rev), 0), c = x.reduce((s, r) => s + (act ? r.acost : r.cost), 0); return { t, v, mg: v ? (v - c) / v * 100 : null }; }) }; });
+  trendChart($('#mTrend'), series, { a, b, thr });
+
+  // by engagement
+  const eg = {}; pool.forEach(r => { const e = eg[r.key] || (eg[r.key] = { label: r.key, acc: r.acc, st: r.st, rev: 0, cost: 0, n: 0, people: {} }); e.rev += r.mrev; e.cost += r.mcost; e.n++; const p = e.people[r.res] || (e.people[r.res] = { rev: 0, cost: 0, typ: r.typ }); p.rev += r.mrev; p.cost += r.mcost; });
+  const erows = Object.values(eg).map(e => Object.assign(e, { mg: e.rev ? (e.rev - e.cost) / e.rev * 100 : 0 })).sort((x, y) => y.rev - x.rev).slice(0, 18).map(e => ({ label: e.label, total: e.rev, suffix: `· ${e.mg.toFixed(0)}%`, segs: [{ v: e.rev, color: e.mg < thr ? 'var(--bad)' : 'var(--won)' }],
+    tip: `<b>${esc(e.label)}</b> · ${esc(e.acc)}<div class="d"><span>${esc(e.st)} · ${e.n} assignments</span><span>${fmtK(e.rev)} @ ${e.mg.toFixed(1)}%</span></div><div class="dh">Lowest-margin people</div>` + Object.entries(e.people).map(([k, p]) => [k, p, p.rev ? (p.rev - p.cost) / p.rev * 100 : 0]).sort((x, y) => x[2] - y[2]).slice(0, 8).map(([k, p, m]) => `<div class="d"><span>${esc(k)} · ${esc(p.typ)}</span><span>${fmtK(p.rev)} @ ${m.toFixed(0)}%</span></div>`).join('') }));
+  vbars($('#mEngChart'), erows, { fmt: fmtK, aria: 'Revenue and margin by engagement' });
+
+  // by resource type
+  const tg = TYPES.map(t => { const rs = pool.filter(r => r.typ === t), us = rs.filter(r => r.mm < thr); const v = rs.reduce((s, r) => s + r.mrev, 0), c = rs.reduce((s, r) => s + r.mcost, 0), uv = us.reduce((s, r) => s + r.mrev, 0); return { t, n: rs.length, un: us.length, v, c, uv, mg: v ? (v - c) / v * 100 : 0 }; }).filter(x => x.n);
+  hbars($('#mTypeChart'), tg.map(x => ({ label: x.t, total: x.v, suffix: `· ${x.mg.toFixed(0)}%`, segs: [{ v: x.uv, color: 'var(--bad)' }, { v: x.v - x.uv, color: TCOL[x.t] }], tip: `<b>${esc(x.t)}</b><div class="r"><span>Assignments</span><span>${x.n} (${x.un} below ${thr}%)</span></div><div class="r"><span>Revenue</span><span>${fmtK(x.v)}</span></div><div class="r"><span>Below threshold</span><span>${fmtK(x.uv)}</span></div><div class="r"><span>Blended margin</span><span>${x.mg.toFixed(1)}%</span></div>` })), { fmt: fmtK, aria: 'Revenue by resource type' });
+  $('#mTypeNote').innerHTML = tg.map(x => `<p><strong>${esc(x.t)}</strong>: ${x.un} of ${x.n} assignments below ${thr}%, ${fmtK(x.uv)} of ${fmtK(x.v)} revenue. Blended ${x.mg.toFixed(1)}%.</p>`).join('') || '';
+
+  // people table
+  const pg = {}; under.forEach(r => { const p = pg[r.res] || (pg[r.res] = { res: r.res, typ: r.typ, n: 0, rev: 0, cost: 0, lo: 999, items: [] }); p.n++; p.rev += r.mrev; p.cost += r.mcost; p.lo = Math.min(p.lo, r.mm); p.items.push(r); });
+  const people = Object.values(pg).map(p => Object.assign(p, { mg: p.rev ? (p.rev - p.cost) / p.rev * 100 : 0 })).sort((x, y) => x.mg - y.mg);
+  const showP = S.mAll ? people : people.slice(0, 30);
+  $('#mTableNote').textContent = `${people.length} people with at least one ${basisWord} assignment below ${thr}% in the window (${S.mBasis === 'fwd' ? 'live or future assignments overlapping' : 'assignments with actuals overlapping'} ${fmtD(a)} to ${b > '2090' ? 'end of plan' : fmtD(b)}). Click a row for the assignments.`;
+  $('#mMore').hidden = people.length <= 30; $('#mMore').textContent = S.mAll ? 'Show first 30' : `Show all ${people.length}`;
+  $('#mTable').innerHTML = `<thead><tr><th>Person</th><th>Type</th><th class="n">Assignments</th><th class="n">Revenue</th><th class="n">Cost</th><th class="n">Margin</th><th class="n">Lowest</th><th>Engagements</th><th>Explain</th></tr></thead><tbody>` +
+    showP.map((p, i) => `<tr class="exp" data-i="${i}"><td><b>${esc(p.res)}</b></td><td><span class="pill"><i style="background:${TCOL[p.typ] || 'var(--other)'}"></i>${esc(p.typ)}</span></td><td class="n">${p.n}</td><td class="n">${fmtK(p.rev)}</td><td class="n">${fmtK(p.cost)}</td><td class="n"><span class="mg ${mgClass(p.mg, thr)}">${p.mg.toFixed(1)}%</span></td><td class="n"><span class="mg ${mgClass(p.lo, thr)}">${p.lo.toFixed(1)}%</span></td><td class="txt">${[...new Set(p.items.map(x => x.key))].join(', ')}</td><td class="ndxcell">${MX[p.res] ? `<div class="ndx"><div class="hd"><span class="muted">AI explanation</span><button class="linkbtn" data-mx="${esc(p.res)}">Close</button></div>${MX[p.res].state === 'thinking' && !MX[p.res].text ? '<span class="muted">Thinking…</span>' : ''}${ndxFmt(MX[p.res].text || '')}${MX[p.res].err ? `<div class="muted" style="color:var(--bad)">${esc(MX[p.res].err)}</div>` : ''}</div>` : `<button class="linkbtn" data-mx="${esc(p.res)}">Explain</button>`}</td></tr>` +
+      p.items.sort((x, y) => x.mm - y.mm).map(x => `<tr class="sub" data-p="${i}" hidden><td></td><td colspan="2">${esc(x.key)} · ${esc(x.role || '—')}</td><td class="n">${fmtK(x.mrev)}</td><td class="n">${fmtK(x.mcost)}</td><td class="n"><span class="mg ${mgClass(x.mm, thr)}">${x.mm.toFixed(1)}%</span></td><td class="n">${fmtD(x.start)} – ${fmtD(x.end)}</td><td class="txt">${esc(short(x.acc))} · ${esc(x.st)}${S.mBasis === 'fwd' && x.arev ? ` · actual so far ${fmtK(x.arev)} @ ${((x.arev - x.acost) / x.arev * 100).toFixed(0)}%` : ''}</td><td></td></tr>`).join('')).join('') +
+    `<tr class="sum"><td colspan="3">Total below threshold</td><td class="n">${fmtK(urev)}</td><td class="n">${fmtK(ucost)}</td><td class="n">${urev ? ((urev - ucost) / urev * 100).toFixed(1) : '—'}%</td><td></td><td></td><td></td></tr></tbody>`;
+  $('#mTable').querySelectorAll('tr.exp').forEach(tr => tr.addEventListener('click', e => { if (e.target.closest('button, .ndx')) return; const i = tr.dataset.i; $('#mTable').querySelectorAll(`tr.sub[data-p="${i}"]`).forEach(s => s.hidden = !s.hidden); }));
+  $('#mTable').querySelectorAll('button[data-mx]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const k = b.dataset.mx; if (MX[k]) { delete MX[k]; renderMargin(); } else mExplain(showP.find(p => p.res === k), thr); }));
+
+  renderDrill(em);
+}
+
+function trendChart(el, series, o) {
+  const W = 900, Hh = 250, L = 46, R = 46, T = 12, B = 30, iw = W - L - R, ih = Hh - T - B, cw = iw / series.length;
+  const rmax = Math.max(...series.map(s => s.rev), 1) / 0.82, ys = v => T + ih - v / rmax * ih;
+  const mgs = series.filter(s => s.mg !== null).map(s => s.mg); const mmin = Math.min(0, ...mgs, o.thr - 5), mmax = Math.max(50, ...mgs) ; const ym = v => T + ih - (v - mmin) / (mmax - mmin) * ih;
+  let s = `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Blended margin by month">`;
+  const ai = series.findIndex(c => c.m + '-31' >= o.a), bi = series.map(c => c.m + '-01' <= o.b).lastIndexOf(true);
+  if (ai >= 0 && bi >= ai) s += `<rect class="window" x="${L + ai * cw}" y="${T}" width="${(bi - ai + 1) * cw}" height="${ih}"/>`;
+  niceTicks(mmin, mmax, 4).forEach(t => { s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${ym(t)}" y2="${ym(t)}"/><text class="tick" x="${L - 6}" y="${ym(t) + 4}" text-anchor="end">${t}%</text>`; });
+  s += `<text class="tick" x="${W - R + 6}" y="${ys(rmax * 0.82) + 4}">${fmtK(rmax * 0.82)}</text><text class="tick" x="${W - R + 6}" y="${ys(0) + 4}">£0</text>`;
+  series.forEach((c, i) => { const x = L + i * cw + cw * 0.2; s += `<rect class="revbar" x="${x}" y="${ys(c.rev)}" width="${cw * 0.6}" height="${T + ih - ys(c.rev)}"/>`; });
+  s += `<line class="thr" x1="${L}" x2="${W - R}" y1="${ym(o.thr)}" y2="${ym(o.thr)}"/>`;
+  const pt = series.map((c, i) => c.mg === null ? null : [L + i * cw + cw / 2, ym(c.mg), c]);
+  const act = pt.filter(p => p && p[2].act), fc = pt.filter(p => p && !p[2].act);
+  if (act.length) s += `<polyline class="mline" points="${act.map(p => p[0] + ',' + p[1]).join(' ')}"/>`;
+  if (fc.length) { const join = act.length ? [act[act.length - 1]] : []; s += `<polyline class="fline" points="${join.concat(fc).map(p => p[0] + ',' + p[1]).join(' ')}"/>`; }
+  pt.forEach((p, i) => { if (!p) return; const c = p[2]; const tipHtml = `<b>${fmtM(c.m)}</b> · ${c.act ? 'actual' : 'forecast'}<div class="r"><span>Margin</span><span>${c.mg.toFixed(1)}%</span></div><div class="r"><span>Revenue</span><span>${fmtK(c.rev)}</span></div><div class="r"><span>Cost</span><span>${fmtK(c.cost)}</span></div><div class="dh">By type</div>` + c.rt.filter(t => t.v).map(t => `<div class="d"><span>${esc(t.t)}</span><span>${fmtK(t.v)} @ ${t.mg.toFixed(0)}%</span></div>`).join('');
+    s += `<g data-tip="${esc(tipHtml)}"><rect class="hit" x="${L + i * cw}" y="${T}" width="${cw}" height="${ih}"/><circle class="${c.act ? 'mdot' : 'fdot'}" cx="${p[0]}" cy="${p[1]}" r="3.5"/></g>`; });
+  series.forEach((c, i) => { if (i % 2 === 0) s += `<text class="tick" x="${L + i * cw + cw / 2}" y="${Hh - 10}" text-anchor="middle">${fmtM(c.m)}</text>`; });
+  { // threshold label: drawn last so it sits on top, at the left edge, above or below the line depending on where the margin line runs there
+    const ty = ym(o.thr); const near = pt.filter(Boolean).slice(0, 4); const lineAbove = near.length && near.reduce((a, q) => a + q[1], 0) / near.length < ty;
+    const ly = lineAbove ? Math.min(ty + 14, T + ih - 4) : Math.max(ty - 6, T + 10);
+    s += `<text class="tick thrlab" x="${L + 6}" y="${ly}" text-anchor="start" fill="var(--bad)">${o.thr}% threshold</text>`;
+  }
+  s += `<line class="axis" x1="${L}" x2="${W - R}" y1="${T + ih}" y2="${T + ih}"/></svg>`;
+  el.innerHTML = s; bindTips(el);
+}
+
+function renderDrill(em) {
+  const el = $('#mDrill');
+  if (!S.mEng) { el.innerHTML = '<div class="empty">No engagement selected.</div>'; return; }
+  const rows = em.filter(r => r.key === S.mEng);
+  if (!rows.length) { el.innerHTML = '<div class="empty">No monthly billable data for this engagement in Dec 2025 – Nov 2027.</div>'; return; }
+  const months = [...new Set(rows.map(r => r.m))].sort(); const closed = D.today.slice(0, 7);
+  const acc = rows[0].acc, st = rows[0].st, name = rows[0].eng;
+  const tot = (f) => rows.reduce((s, r) => s + r[f], 0);
+  const arev = rows.filter(r => r.m < closed).reduce((s, r) => s + r.arev, 0), acost = rows.filter(r => r.m < closed).reduce((s, r) => s + r.acost, 0);
+  const frev = rows.filter(r => r.m >= closed).reduce((s, r) => s + r.rev, 0), fcost = rows.filter(r => r.m >= closed).reduce((s, r) => s + r.cost, 0);
+  let h = `<h3 style="margin-bottom:10px">${esc(name)} · ${esc(acc)} · ${esc(st)}</h3><div class="stat"><div><div class="k">Actual to date (billable)</div><div class="v">${fmtK(arev)} @ ${arev ? ((arev - acost) / arev * 100).toFixed(1) : '—'}%</div></div><div><div class="k">Forecast remaining</div><div class="v">${fmtK(frev)} @ ${frev ? ((frev - fcost) / frev * 100).toFixed(1) : '—'}%</div></div><div><div class="k">Whole period</div><div class="v">${fmtK(arev + frev)} @ ${(arev + frev) ? ((arev + frev - acost - fcost) / (arev + frev) * 100).toFixed(1) : '—'}%</div></div></div>`;
+  h += `<div class="tbl"><table><thead><tr><th>Month</th><th>Basis</th>` + TYPES.map(t => `<th class="n">${t}</th>`).join('') + `<th class="n">Revenue</th><th class="n">Cost</th><th class="n">Days</th><th class="n">Margin</th></tr></thead><tbody>`;
+  months.forEach(m => { const rs = rows.filter(r => r.m === m), act = m < closed; const rv = rs.reduce((s, r) => s + (act ? r.arev : r.rev), 0), cs = rs.reduce((s, r) => s + (act ? r.acost : r.cost), 0), us = rs.reduce((s, r) => s + (act ? r.ausage : r.usage), 0); const mg = rv ? (rv - cs) / rv * 100 : null;
+    h += `<tr><td class="num">${fmtM(m)}</td><td>${act ? 'actual' : 'forecast'}</td>` + TYPES.map(t => { const x = rs.filter(r => r.rt === t); const v = x.reduce((s, r) => s + (act ? r.arev : r.rev), 0), c = x.reduce((s, r) => s + (act ? r.acost : r.cost), 0); return `<td class="n">${v ? `${fmtK(v)} <span class="mg ${mgClass((v - c) / v * 100, S.mThr)}">${((v - c) / v * 100).toFixed(0)}%</span>` : '—'}</td>`; }).join('') + `<td class="n">${fmtK(rv)}</td><td class="n">${fmtK(cs)}</td><td class="n">${fmtN(us)}</td><td class="n">${mg === null ? '—' : `<span class="mg ${mgClass(mg, S.mThr)}">${mg.toFixed(1)}%</span>`}</td></tr>`; });
+  h += '</tbody></table></div>'; el.innerHTML = h;
+}
+
+/* ================= ALLOCATION ================= */
+const ACOL = { filled: 'var(--won)', stretch: 'var(--best)', contingent: 'var(--cyber)', gap: 'var(--bad)' };
+const ALAB = { filled: 'Filled', stretch: 'Stretch', contingent: 'Contingent', gap: 'Gap' };
+function aPool() {
+  const horizonEnd = A.summary.months[A.summary.months.length - 1] + '-31';
+  return A.placeholders.filter(r => r.rem > 0 && S.aStatus[r.alloc_status] !== false && S.aCap[CAPS.includes(r.cap) ? r.cap : 'OTHER'] !== false && (!S.aClient || r.acc === S.aClient) && (S.aProv || r.start <= horizonEnd));
+}
+function optLine(o, need) {
+  const cls = o.kind === 'primary' ? 'good' : 'warn';
+  return `<div class="d"><span><span class="mg ${cls}">${o.kind === 'primary' ? '●' : '○'}</span> ${esc(o.name)} · ${esc(o.typ)} L${o.lvl} · ${esc(o.role)}</span><span>${o.avail}% free${o.stacked ? ` <span class="flag" title="On T&M ${o.tm_load}% – eligible for outcome-based work (stacking rule)">stacked</span>` : ''}</span></div><div class="d" style="opacity:.7;padding-left:14px"><span>${esc(o.reasons.join(' · '))}${o.cost_flag ? ' · ' + esc(o.cost_flag) : ''}</span><span></span></div>`;
+}
+// ---------- live role cards from the Stargate workspace (parent window). Layout mirrors the Placeholders and options table above; data and actions are the workspace's.
+const LV = { src: 'all', tier: '1', open: {} };
+function sg() { try { return (window.parent && window.parent !== window && window.parent.__stargate) || null; } catch (e) { return null; } }
+window.__refreshLive = () => { try { renderLive(); } catch (e) {} };
+function renderLive() {
+  const W = sg(); const tb = $('#lvTable'); if (!tb) return;
+  $('#lvSrc').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === LV.src)); $('#lvTier').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === LV.tier));
+  if (!W) { $('#lvTiles').innerHTML = ''; tb.innerHTML = '<tbody><tr><td class="empty">Live role cards show when this page is opened inside the Stargate workspace (Resourcing &amp; margin tab).</td></tr></tbody>'; $('#lvFoot').innerHTML = ''; return; }
+  const ML = W.matches(); const role = W.role(); const built = W.built;
+  const tierOf = W.tierOf; const rows = ML.map((m, i) => [m, i]).filter(([m]) => (LV.src === 'all' || (LV.src === 'priced' ? m.priced : !m.priced)) && (LV.tier === 'all' || String(tierOf(m.fstatus)) === LV.tier)).sort(([a], [b]) => tierOf(a.fstatus) - tierOf(b.fstatus) || (b.prob || 0) - (a.prob || 0) || String(a.start || '').localeCompare(String(b.start || '')));
+  const cnt = k => rows.filter(([m]) => m.outcome === k).length; const prop = m => W.proposalFor(m);
+  $('#lvTiles').innerHTML = [tile('Filled by employee', fmtN(cnt('Filled')), 'right role, same or one level up', 'total'), tile('Employee stretch', fmtN(cnt('Stretch')), 'level below or missing a must-have skill'), tile('Contingent', fmtN(cnt('Contingent')), 'supplier or partner is the best option', cnt('Contingent') ? 'alert' : ''), tile('Gap', fmtN(cnt('Gap')), 'nobody scores 60 or has the skills', cnt('Gap') ? 'bad' : ''), tile('Recruit FTE', fmtN(rows.filter(([m]) => m.route === 'Recruit FTE').length), 'sold, strategic, 6+ months, no employee'), tile('Proposed', fmtN(rows.filter(([m]) => prop(m)).length), 'in the approvals queue')].join('');
+  const stageCls = m => tierOf(m.fstatus) === 1 ? 'good' : tierOf(m.fstatus) === 3 ? '' : 'acc'; const routeCls = r => r === 'Recruit FTE' ? 'bad' : r === 'Partner / contractor' ? '' : 'good'; const outCls = o => ({ Filled: 'filled', Stretch: 'stretch', Contingent: 'contingent', Gap: 'gap' }[o]);
+  const grade = o => String(o.grade || '').replace(/\s*-\s*(Employee|Supplier|Partner)$/, ''); const primary = o => o.type === 'Employee' && o.level_gap >= 0 && !o.missing.length;
+  const flags = m => { const f = []; if (m.start && m.start <= built) f.push(['bad', 'started']); else if (m.start && m.start <= W.dayAdd(built, 30)) f.push(['', 'starts ≤30 days']); if (m.sc) f.push(['acc', 'SC required']); if (m.priced) f.push(['acc', 'priced']); if (m.fstatus === 'Not linked') f.push(['', 'not linked to HubSpot']); return f.map(([c, l]) => `<span class="flag ${c}">${l}</span>`).join(' ') || '<span style="color:var(--ink-3)">—</span>'; };
+  let h = '<thead><tr><th>Engagement</th><th>HubSpot stage</th><th>Role</th><th>Start</th><th class="n">Days</th><th>Outcome</th><th>Proposed</th><th>Alternatives</th><th>Route</th><th>Flags</th></tr></thead><tbody>';
+  rows.forEach(([m, i]) => {
+    const open = !!LV.open[i]; const already = prop(m); const best = m.options[0] || null; const alts = m.options.slice(1, 4);
+    h += `<tr class="exp lv" data-i="${i}" aria-expanded="${open}"><td><b>${esc(m.deal)}</b><br><span style="color:var(--ink-3);font-size:12px">${esc(short(m.client))}</span></td><td><span class="flag ${stageCls(m)}">${esc(m.fstatus)}${m.prob != null ? ' ' + Math.round(m.prob * 100) + '%' : ''}</span>${m.hs_name ? `<br><span style="color:var(--ink-3);font-size:12px">${esc(m.hs_name)}</span>` : ''}</td><td class="txt">${esc(m.role)} <span style="color:var(--ink-3)">L${m.sfia}</span></td><td class="num">${fmtD(m.start)}</td><td class="n">${fmtN(m.days)}</td><td><span class="pill"><i style="background:${ACOL[outCls(m.outcome)]}"></i>${esc(m.outcome)}</span></td><td class="txt">${best ? `<b>${esc(best.name)}</b><br><span style="color:var(--ink-3)">${esc(best.type)} ${esc(grade(best))} · ${Math.round(best.free * 100)}% free</span>` : '<span style="color:var(--ink-3)">—</span>'}</td><td class="txt">${alts.map(o => `${esc(o.name)} <span style="color:var(--ink-3)">${o.type !== 'Employee' ? o.type.toLowerCase() + ' ' : ''}${Math.round(o.free * 100)}%</span>`).join(' · ') || '<span style="color:var(--ink-3)">none</span>'}</td><td class="txt">${already ? `<span class="flag ${routeCls(m.route)}">${esc(m.route)}</span><br><span style="color:var(--ink-3);font-size:12px">proposed · ${esc(W.status(already.id))}</span>` : `<button class="rbtn" data-open="${i}" title="Open the options for this role"><span class="flag ${routeCls(m.route)}">${esc(m.route)}</span></button>`}</td><td class="txt">${flags(m)}</td></tr>`;
+    if (open) {
+      const opts = m.options.map((o, k) => `<div class="d"><span><span class="mg ${primary(o) ? 'good' : 'warn'}">${primary(o) ? '●' : '○'}</span> <b>${esc(o.name)}</b> · ${esc(o.type)} ${esc(grade(o))} · score ${o.score} · ${esc(o.why)}${o.missing.length ? ' · missing: ' + o.missing.map(esc).join(', ') : ''}${o.roll_off ? ' · rolls off ' + fmtD(o.roll_off) : ''}</span><span>${already ? '' : `<button class="btn ${k === 0 ? 'primary' : ''}" data-propose="${i}|${esc(o.res)}">Propose</button>`}</span></div>`).join('') || '<div class="d"><span>No one scored.</span><span></span></div>';
+      const need = m.route === 'Resource internally' ? '' : `<div class="d" style="margin-top:6px"><span>Route <b>${esc(m.route)}</b>: ${m.outcome === 'Gap' ? 'nobody scores 60 or has the must-have skills' : 'the best option is a ' + esc((best && best.type) || 'supplier').toLowerCase()}.${already ? ' A proposal is already in the queue.' : ' Raise the requisition, or propose one of the names above.'}</span><span>${already ? '' : `<button class="btn primary" data-req="${i}">Raise requisition · ${esc(m.route)}</button>`}</span></div>`;
+      h += `<tr class="sub" data-p="${i}"><td></td><td colspan="9" class="txt"><div class="dh" style="color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Options (● employee at the level with the skills ○ stretch or contingent) · ${esc(m.deal)} · ${esc(m.role)} L${m.sfia} · ${fmtD(m.start)} to ${fmtD(m.end)} · ${fmtN(m.days)} days${m.fte ? ' · ' + m.fte + ' FTE' : ''} · deal ${fmtK(m.amount)} · must-have: ${m.must.map(esc).join(', ') || 'none given'}${m.priced ? ` · from the pricing app${m.hubspot ? ' · HubSpot ' + esc(m.hubspot) : ''}${m.kantata ? ' · Kantata ' + esc(m.kantata) : ''}` : ''}</div>${opts}${already ? `<div class="d" style="margin-top:6px"><span>Proposed: ${esc(already.summary)} · ${esc(W.status(already.id))}</span><span></span></div>` : ''}${need}</td></tr>`;
+    }
+  });
+  h += '</tbody>';
+  tb.innerHTML = rows.length ? h : '<tbody><tr><td class="empty">No role cards in this filter.</td></tr></tbody>';
+  tb.querySelectorAll('tr.lv').forEach(tr => tr.addEventListener('click', e => { if (e.target.closest('button')) return; const i = tr.dataset.i; LV.open[i] = !LV.open[i]; renderLive(); }));
+  tb.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => { const i = b.dataset.open; LV.open[i] = !LV.open[i]; renderLive(); }));
+  tb.querySelectorAll('[data-propose]').forEach(b => b.addEventListener('click', () => { W.propose(b.dataset.propose); }));
+  tb.querySelectorAll('[data-req]').forEach(b => b.addEventListener('click', () => { W.proposeReq(b.dataset.req); }));
+  $('#lvFoot').innerHTML = `<span>${rows.length} of ${ML.length} role cards</span><span>Scoring: family 40 · SFIA 20/12/8 · availability 20/10/3 · must-skills up to 25 · employee +3; Gap below 60</span><span>Proposing as ${esc(role)}; the approver and the cross-check apply in the Stargate approvals queue</span><span>Pull ${esc(built)}</span>`;
+}
+let _peopleAll = null;
+function peopleAll() { // every resource known to this page: matcher pool (any free days) + everyone with a Kantata assignment + the workspace's people list when embedded
+  if (_peopleAll) return _peopleAll; const seen = new Map();
+  const add = o => { if (!o || !o.name) return; const k = o.name.toLowerCase() + '|' + (o.typ || ''); if (!seen.has(k)) seen.set(k, o); };
+  (A && A.people || []).forEach(o => add({ id: o.id, name: o.name, typ: o.typ, role: o.role, bu: o.bu, lvl: o.lvl, free: o.free }));
+  try { const gp = window.parent && window.parent !== window && window.parent.__stargate && window.parent.__stargate.people; (typeof gp === 'function' ? gp() : gp || []).forEach(o => add({ id: o.id, name: o.name, typ: o.type || o.typ, role: o.role, bu: o.bu, lvl: o.sfia })); } catch (e) {}
+  (D && D.named || []).forEach(r => add({ id: 'name:' + r.res, name: r.res, typ: r.typ }));
+  _peopleAll = [...seen.values()].sort((x, y) => x.name.localeCompare(y.name)); return _peopleAll;
+}
+function renderAlloc() {
+  if (!A) { $('#aTiles').innerHTML = '<div class="empty">No match.json published yet.</div>'; return; }
+  const sm = A.summary, months = sm.months, horizon = `${fmtM(months[0])} to ${fmtM(months[months.length - 1])}`;
+  $('#aHorizon').textContent = horizon;
+  $('#aHint').textContent = `Availability horizon ${horizon}. ${sm.people} named delivery people profiled (Service Delivery and Client Success excluded); ${A.placeholders.length} live placeholders.` + (sm.excluded_ms_n ? ` Managed-services engagements are out of scope: ${sm.excluded_ms_n} placeholders, ${fmtN(sm.excluded_ms_days)} days on ${sm.excluded_ms.join(', ')}.` : '');
+  const pool = aPool();
+  const cnt = k => pool.filter(r => r.alloc_status === k), days = rs => rs.reduce((s, r) => s + r.rem, 0);
+  const bench = A.people.filter(p => p.avail >= S.aFree);
+  $('#aTiles').innerHTML = [
+    tile('Filled by employee', fmtN(cnt('filled').length), `${fmtN(days(cnt('filled')))} days · right role, same or one level up`, 'total'),
+    tile('Employee stretch', fmtN(cnt('stretch').length), `${fmtN(days(cnt('stretch')))} days · level below or practice only`),
+    tile('Contingent', fmtN(cnt('contingent').length), `${fmtN(days(cnt('contingent')))} days · supplier or partner, no employee could fill`, cnt('contingent').length ? 'alert' : ''),
+    // 'Stacked on T&M' tile removed 6 Nov; the stacked flag still shows on individual rows
+    tile('Gap', fmtN(cnt('gap').length), `${fmtN(days(cnt('gap')))} days · nobody with capacity and profile`, cnt('gap').length ? 'bad' : ''),
+    // 'Recruit FTE' tile removed 6 Nov; the recommendation still shows per row in the Action column
+  ].join('');
+  // family chart
+  const fg = {}; pool.forEach(r => { const k = `${r.famlabel} L${r.lvl}`; const f = fg[k] || (fg[k] = { label: k, total: 0, filled: 0, stretch: 0, contingent: 0, gap: 0, n: 0 }); f.total += r.rem; f[r.alloc_status] = (f[r.alloc_status] || 0) + r.rem; f.n++; });
+  hbars($('#aFam'), Object.values(fg).sort((x, y) => y.total - x.total).slice(0, 18).map(f => ({ label: f.label, total: f.total, suffix: `· ${f.n}`, segs: ['filled', 'stretch', 'contingent', 'gap'].map(k => ({ v: f[k] || 0, color: ACOL[k] })), tip: `<b>${esc(f.label)}</b><div class="r"><span>Placeholders</span><span>${f.n}</span></div>` + ['filled', 'stretch', 'contingent', 'gap'].map(k => `<div class="d"><span>${ALAB[k]}</span><span>${fmtN(f[k])} d</span></div>`).join('') })), { fmt: v => fmtN(v), aria: 'Coverage by role family' });
+  // bench chart
+  hbars($('#aBench'), bench.slice(0, 18).map(p => ({ label: p.name, total: p.free, suffix: `· ${p.avail}%`, segs: [{ v: p.free, color: p.matches.length ? 'var(--won)' : 'var(--other)' }], tip: `<b>${esc(p.name)}</b> · ${esc(p.typ)} L${p.lvl} · ${esc(p.bu)}<div class="r"><span>${esc(p.role)}</span><span>${p.free}/${p.cap} days free</span></div>` + (p.assigned_until ? `<div class="d"><span>Assigned until</span><span>${fmtD(p.assigned_until)}</span></div>` : '') + `<div class="dh">Could fill</div>` + (p.matches.length ? p.matches.slice(0, 6).map(m => `<div class="d"><span>${esc(m.key)} · ${esc(m.role)} L${m.lvl}</span><span>${fmtD(m.start)}</span></div>`).join('') : '<div class="d"><span>No live placeholder matches this profile</span><span></span></div>') })), { fmt: v => fmtN(v), aria: 'Available people' });
+  // table
+  const nIgn = pool.filter(r => S.aIgnored[r.id]).length; const vis = S.aShowIgn ? pool : pool.filter(r => !S.aIgnored[r.id]);
+  const sorted = vis.slice().sort((x, y) => x.start < y.start ? -1 : x.start > y.start ? 1 : y.rem - x.rem);
+  const show = S.aAll ? sorted : sorted.slice(0, 40);
+  $('#aTableNote').innerHTML = `${vis.length} generic roles. Proposed name is the capacity-pass pick; alternatives are the next best options. Choose the action in the last column; Ignore hides the row. Click a row for scoring detail. ${nIgn ? `<button class="linkbtn" id="aIgnBtn">${S.aShowIgn ? 'Hide' : 'Show'} ignored (${nIgn})</button>` : ''}`;
+  $('#aMore').hidden = sorted.length <= 40; $('#aMore').textContent = S.aAll ? 'Show first 40' : `Show all ${sorted.length}`;
+  $('#aTable').innerHTML = `<thead><tr><th>Engagement</th><th>Role</th><th>Start</th><th class="n">Days</th><th>Outcome</th><th>Proposed</th><th>Alternatives</th><th>Action</th><th>Flags</th></tr></thead><tbody>` +
+    show.map((r, i) => { const a = r.alloc; const alts = (r.primary.concat(r.secondary)).filter(o => !a || o.id !== a.id).slice(0, 3);
+      const internal = [a].concat(alts).filter(o => o && o.typ === 'Employee'); const def = S.aIgnored[r.id] ? 'ignore' : a && a.typ === 'Employee' ? 'internal|' + a.id : r.recommend === 'recruit FTE' ? 'Recruit FTE' : a ? (a.typ === 'Partner' ? 'Partner' : 'Contractor') : 'Recruit FTC'; const cur = S.aAction[r.id] || def; const curId = cur.startsWith('internal|') ? cur.slice(9) : null; const extra = curId && !internal.some(o => o.id === curId) ? (A.people || []).find(o => o.id === curId) : null; const picking = S.aPick === r.id; const picked = cur.startsWith('pick|') ? (S.aPicked[r.id] || peopleAll().find(o => 'pick|' + o.id === cur)) : null;
+      const opt = (v, l) => `<option value="${esc(v)}" ${cur === v ? 'selected' : ''}>${esc(l)}</option>`;
+      const actionCell = `<select data-aact="${esc(r.id)}" aria-label="Action for this placeholder">${internal.map((o, k) => opt('internal|' + o.id, (o === a ? 'Internal: ' : 'Internal alt: ') + o.name)).join('')}${extra ? opt('internal|' + extra.id, 'Internal: ' + extra.name + ' (chosen)') : ''}${picked ? opt(cur, (picked.typ === 'Employee' ? 'Internal' : picked.typ) + ': ' + picked.name + ' (chosen)') : ''}${opt('other', 'Someone else…')}${opt('Recruit FTE', 'Recruit FTE')}${opt('Recruit FTC', 'Recruit FTC')}${opt('Partner', 'Partner')}${opt('Contractor', 'Contractor')}${opt('ignore', 'Ignore')}</select>${picking ? `<input class="pick" data-apick="${esc(r.id)}" list="peopleList" placeholder="Type a name, then pick…" autocomplete="off">` : ''}${r.recommend ? `<span class="why">Capacity pass: ${esc(r.recommend)}${r.recommend_why ? ' · ' + esc(r.recommend_why) : ''}</span>` : ''}`;
+      return `<tr class="exp" data-i="${i}"><td><b>${esc(r.key)}</b><br><span style="color:var(--ink-3);font-size:12px">${esc(short(r.acc))}</span></td><td class="txt">${esc(r.role || r.famlabel)} <span style="color:var(--ink-3)">L${r.lvl}${r.hint ? ' · ' + r.hint.toUpperCase() : ''}</span></td><td class="num">${fmtD(r.start)}</td><td class="n">${fmtN(r.rem)}</td><td><span class="pill"><i style="background:${ACOL[r.alloc_status]}"></i>${ALAB[r.alloc_status]}</span></td><td class="txt">${a ? `<b>${esc(a.name)}</b> <span style="color:var(--ink-3)">${esc(a.typ)} L${a.lvl}${a.provisional ? ' · provisional' : a.covered !== null && a.covered !== undefined ? ` · ${fmtN(a.covered)}/${fmtN(r.need)} d` : ''}</span>${a.stacked ? ` <span class="flag" title="Already on T&M ${a.tm_load}% over these months – allowed on outcome-based work (stacking rule)">stacked · T&amp;M ${a.tm_load}%</span>` : ''}` : '<span style="color:var(--ink-3)">—</span>'}</td><td class="txt">${alts.map(o => `${esc(o.name)} <span style="color:var(--ink-3)">${o.typ !== 'Employee' ? o.typ.toLowerCase() + ' ' : ''}${o.kind === 'primary' ? '' : '(stretch) '}${o.avail}%${o.stacked ? ' stacked' : ''}</span>`).join('<br>') || '<span style="color:var(--ink-3)">none</span>'}</td><td class="actcell">${actionCell}</td><td>${r.start <= TODAY ? '<span class="flag bad">started</span> ' : ''}${r.recr === 'Yes' ? '<span class="flag">recruit</span>' : ''}</td></tr>` +
+        `<tr class="sub" data-p="${i}" hidden><td></td><td colspan="8" class="txt"><div class="dh" style="color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Options (● primary ○ stretch) · planned £${fmtN(r.daily_cost)}/d cost${r.daily_rate ? `, £${fmtN(r.daily_rate)}/d rate` : ''}</div>${(r.primary.concat(r.secondary)).map(o => optLine(o, r.need)).join('') || 'No options scored 45 or more.'}</td></tr>`; }).join('') + '</tbody>';
+  $('#aTable').querySelectorAll('tr.exp').forEach(tr => tr.addEventListener('click', e => { if (e.target.closest('select, input')) return; const i = tr.dataset.i; $('#aTable').querySelectorAll(`tr.sub[data-p="${i}"]`).forEach(x => x.hidden = !x.hidden); }));
+  $('#aTable').querySelectorAll('select[data-aact]').forEach(sl => sl.addEventListener('change', () => { const id = sl.dataset.aact; if (sl.value === 'other') { S.aPick = id; renderAlloc(); const inp = $('#aTable').querySelector('input[data-apick]'); if (inp) inp.focus(); return; } S.aPick = null; if (sl.value === 'ignore') { S.aIgnored[id] = true; delete S.aAction[id]; } else { S.aAction[id] = sl.value; delete S.aIgnored[id]; } save(); renderAlloc(); }));
+  if (!$('#peopleList')) { const dl = document.createElement('datalist'); dl.id = 'peopleList'; dl.innerHTML = peopleAll().map(o => `<option value="${esc(o.name)}">${esc([o.typ === 'Employee' ? 'Internal' : o.typ, o.role || o.bu || '', o.lvl ? 'L' + o.lvl : '', o.free != null ? (o.free > 0 ? o.free + ' free days' : 'no free days') : ''].filter(Boolean).join(' · '))}</option>`).join(''); document.body.appendChild(dl); }
+  $('#aTable').querySelectorAll('input[data-apick]').forEach(inp => { const pick = () => { const name = inp.value.trim().toLowerCase(); if (!name) return; const all = peopleAll(); const o = all.find(o => o.typ === 'Employee' && o.name.toLowerCase() === name) || all.find(o => o.name.toLowerCase() === name); if (!o) return; const id = inp.dataset.apick; S.aAction[id] = 'pick|' + o.id; S.aPicked[id] = { name: o.name, typ: o.typ }; delete S.aIgnored[id]; S.aPick = null; save(); renderAlloc(); }; inp.addEventListener('change', pick); inp.addEventListener('keydown', e => { if (e.key === 'Enter') pick(); if (e.key === 'Escape') { S.aPick = null; renderAlloc(); } }); inp.addEventListener('click', e => e.stopPropagation()); });
+  const ib = $('#aIgnBtn'); if (ib) ib.addEventListener('click', () => { S.aShowIgn = !S.aShowIgn; renderAlloc(); });
+  // bench table
+  $('#aBenchNote').textContent = `${bench.length} people at least ${S.aFree}% free across ${horizon.replace(' to ', ' – ').split(' – ')[0]} – ${fmtM(months[2] || months[months.length - 1])}. Free days are capacity minus everything booked.`;
+  const buTot = {}; bench.forEach(p => { buTot[p.bu] = (buTot[p.bu] || 0) + p.free; });
+  const sortedBench = bench.slice().sort((x, y) => S.aSort === 'bu' ? (buTot[y.bu] - buTot[x.bu] || x.bu.localeCompare(y.bu) || y.avail - x.avail) : (y.avail - x.avail || y.free - x.free));
+  const rowHtml = p => `<tr><td><b>${esc(p.name)}</b></td><td><span class="pill"><i style="background:${TCOL[p.typ] || 'var(--other)'}"></i>${esc(p.typ)}</span></td><td class="num">SFIA ${p.lvl}</td><td class="txt">${esc(p.bu)}</td><td class="txt">${esc(p.role)}${p.capn === 0 ? ' <span class="flag">no skills profile</span>' : ''}</td><td class="n">${p.free}/${p.cap}</td><td class="n">${p.avail}%</td><td class="num">${p.assigned_until ? fmtD(p.assigned_until) : '—'}</td><td class="txt">${p.matches.length ? [...new Set(p.matches.map(m => m.key))].slice(0, 6).join(', ') : '<span style="color:var(--ink-3)">no match</span>'}</td></tr>`;
+  let bodyHtml = '';
+  if (S.aSort === 'bu') { let cur = null; sortedBench.forEach(p => { if (p.bu !== cur) { cur = p.bu; const n = bench.filter(q => q.bu === cur).length; bodyHtml += `<tr class="sum"><td colspan="5">${esc(cur)}</td><td class="n">${fmtN(buTot[cur])}</td><td colspan="3" style="font-weight:400;color:var(--ink-3)">${n} ${n === 1 ? 'person' : 'people'}</td></tr>`; } bodyHtml += rowHtml(p); }); }
+  else bodyHtml = sortedBench.map(rowHtml).join('');
+  $('#aBenchTable').innerHTML = `<thead><tr><th>Person</th><th>Type</th><th>Level</th><th>Business unit</th><th>Role</th><th class="n">Free days</th><th class="n">Free %</th><th>Assigned until</th><th>Could fill</th></tr></thead><tbody>` + bodyHtml + '</tbody>';
+  bindTips($('#aFam')); bindTips($('#aBench'));
+}
+
+/* ================= NOT DETAILED ================= */
+const ND_STATUS = ['Won Closed', 'Contracted', 'Commit', 'Most Likely', 'Best Case', 'Forecast Placeholder']; // Pipeline excluded from Not detailed (6 Nov)
+const ND_FYS = [['all', 'All years'], ['2027', 'FY27'], ['2028', 'FY28'], ['2029', 'FY29'], ['2030', 'FY30']];
+function ndDates(r) { return r.hs_start ? [r.hs_start, r.hs_end || r.hs_start] : (r.start ? [r.start, r.end || r.start] : null); }
+function daysBetween(a, b) { return Math.max(0, Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000) + 1); }
+function ndInFy(r) {
+  // share of the HubSpot deal value falling in the selected FY, pro-rated by calendar day over the deal's dates; null when no dates
+  if (S.ndFy === 'all') return r.hs_amount || 0;
+  const d = ndDates(r); if (!d) return null;
+  const [fa, fb] = fyRange(+S.ndFy); const s = d[0] > fa ? d[0] : fa, e = d[1] < fb ? d[1] : fb;
+  if (e < s) return 0;
+  return (r.hs_amount || 0) * daysBetween(s, e) / daysBetween(d[0], d[1]);
+}
+function ndKInFy(r) {
+  // share of the Kantata contract revenue falling in the selected FY, pro-rated by calendar day over the Kantata dates; null when Kantata has no dates
+  if (S.ndFy === 'all') return r.rev || 0;
+  if (!r.start) return null; const d = [r.start, r.end || r.start];
+  const [fa, fb] = fyRange(+S.ndFy); const s = d[0] > fa ? d[0] : fa, e = d[1] < fb ? d[1] : fb;
+  if (e < s) return 0;
+  return (r.rev || 0) * daysBetween(s, e) / daysBetween(d[0], d[1]);
+}
+function ndPool() {
+  return (D.not_detailed || []).filter(r => {
+    if (r.st === 'Pipeline') return false;
+    if (!(msOk(r) && S.ndStatus[r.st] !== false && (!S.ndClient || r.acc === S.ndClient) && (!S.ndHsOnly || r.hs_amount))) return false;
+    if (S.ndFy === 'all') return true;
+    const d = ndDates(r); if (!d) return false;
+    const [fa, fb] = fyRange(+S.ndFy); return d[0] <= fb && d[1] >= fa;
+  }).map(r => Object.assign({}, r, { fyv: ndInFy(r), kfyv: ndKInFy(r) }));
+}
+function renderND() {
+  const all = D.not_detailed || [];
+  if (!all.length) { $('#ndTiles').innerHTML = '<div class="empty">No not-detailed list in this data.json.</div>'; return; }
+  const pool = ndPool();
+  const fyLabel = S.ndFy === 'all' ? '' : ` in FY${S.ndFy.slice(2)}`;
+  const hsv = pool.reduce((s, r) => s + (r.fyv || 0), 0), krev = pool.reduce((s, r) => s + r.rev, 0);
+  const soon = pool.filter(r => r.hs_start && r.hs_start <= addDays(TODAY, 90));
+  const empty = pool.filter(r => !r.rev && !r.start);
+  $('#ndTiles').innerHTML = [
+    tile('Engagements not detailed', fmtN(pool.length), `${new Set(pool.map(r => r.acc)).size} clients`, 'total'),
+    tile('HubSpot value' + fyLabel, fmtK(hsv), `${pool.filter(r => r.hs_amount).length} have a matching HubSpot deal${fyLabel ? '; pro-rated by day into the year' : ''}`),
+    tile('Kantata contract revenue', fmtK(krev), `${empty.length} have no revenue and no dates in Kantata`),
+    tile('Due to start ≤ 90 days', fmtN(soon.length), `${fmtK(soon.reduce((s, r) => s + (r.fyv || 0), 0))} HubSpot value${fyLabel}`, soon.length ? 'bad' : ''),
+    tile('Most Likely or better', fmtN(pool.filter(r => ['Won Closed', 'Contracted', 'Commit', 'Most Likely'].includes(r.st)).length), `${fmtK(pool.filter(r => ['Won Closed', 'Contracted', 'Commit', 'Most Likely'].includes(r.st)).reduce((s, r) => s + (r.fyv || 0), 0))} HubSpot value${fyLabel} · Won, Contracted, Commit, Most Likely`, 'alert'),
+  ].join('');
+  const cg = {}; pool.forEach(r => { const c = cg[r.acc] || (cg[r.acc] = { label: short(r.acc), total: 0, n: 0, segs: {}, items: [] }); c.total += r.fyv || 0; c.n++; c.segs[r.st] = (c.segs[r.st] || 0) + (r.fyv || 0); c.items.push(r); });
+  vbars($('#ndClientChart'), Object.values(cg).filter(c => c.total > 0).sort((x, y) => y.total - x.total).slice(0, 18).map(c => ({ label: c.label, total: c.total, suffix: `· ${c.n}`, segs: ND_STATUS.map(k => ({ v: c.segs[k] || 0, color: SCOL[k] || 'var(--other)', name: k })), tip: `<b>${esc(c.label)}</b><div class="r"><span>HubSpot value${fyLabel}</span><span>${fmtK(c.total)}</span></div><div class="dh">Engagements</div>` + c.items.sort((x, y) => (y.fyv || 0) - (x.fyv || 0)).slice(0, 8).map(r => `<div class="d"><span>${esc(r.key)} · ${esc(r.st)}</span><span>${r.fyv ? fmtK(r.fyv) : '—'}</span></div>`).join('') })), { fmt: fmtK, aria: 'HubSpot value not detailed, by client' });
+  const months = monthsBetween(TODAY.slice(0, 7), addDays(TODAY, 540).slice(0, 7));
+  const byM = months.map(m => { const o = { m, tot: 0, segs: {}, engs: {} }; pool.forEach(r => { if ((r.hs_start || '').slice(0, 7) !== m) return; const v = r.fyv || 0; o.tot += v; o.segs[r.st] = (o.segs[r.st] || 0) + v; o.engs[r.key] = v; }); return o; });
+  colChart($('#ndMonths'), byM, { a: TODAY, b: addDays(TODAY, 90), fmt: fmtK, label: fmtK, order: ND_STATUS, col: Object.assign({ 'Forecast Placeholder': 'var(--pipeline)', 'Pipeline': 'var(--pipeline)', 'Contracted': 'var(--commit)' }, SCOL), unit: 'HubSpot value' });
+  $('#ndMonths').querySelectorAll('text.tick').forEach(t => { if (/^[\d,]+$/.test(t.textContent)) t.textContent = fmtK(+t.textContent.replace(/,/g, '')); });
+  $('#ndNote').textContent = `${pool.length} engagements${S.ndFy === 'all' ? '' : ` with dates touching FY${S.ndFy.slice(2)} (1 Dec ${+S.ndFy - 1} to 30 Nov ${S.ndFy})`}. Sorted by earliest start date (HubSpot start, else Kantata; undated last), then value. Kantata figures are what the engagement currently holds; HubSpot figures are the deal(s) with the same code.`;
+  pool.sort((x, y) => { const sx = x.hs_start || x.start || '9999', sy = y.hs_start || y.start || '9999'; return sx < sy ? -1 : sx > sy ? 1 : (y.fyv || y.hs_amount || y.rev || 0) - (x.fyv || x.hs_amount || x.rev || 0); }); // earliest start first (HubSpot start, else Kantata start; undated last), then value (6 Nov)
+  const fyCol = S.ndFy !== 'all'; $('#ndTable').closest('.panel').classList.add('bleed');
+  const pgShort = g => ({ 'Time and Expense': 'T&E', 'Time Only': 'Time only', 'Fixed Price Project': 'Fixed price', 'Managed Service': 'Managed service' })[g] || g || '—';
+  const fmtD2 = d => d ? `${d.slice(8, 10)}-${d.slice(5, 7)}-${d.slice(2, 4)}` : '—'; // dd-mm-yy, asked for this table (6 Nov)
+  const cmp = r => { // compare the two systems for one engagement
+    const hasHs = !!(r.hs_amount || r.hs_start), hasK = !!(r.rev || r.start);
+    const vdiff = r.hs_amount && r.rev ? r.rev - r.hs_amount : null, vpct = vdiff !== null ? vdiff / r.hs_amount : null;
+    const ddiff = r.hs_start && r.start ? Math.round((new Date(r.start + 'T00:00:00Z') - new Date(r.hs_start + 'T00:00:00Z')) / 86400000) : null;
+    const both = r.hs_amount && r.rev ? (Math.abs(vpct) > 0.10 ? 'c-var' : '') : '';
+    const hsVal = both || (r.hs_amount ? '' : 'c-gap'), ktVal = both || (r.rev ? '' : 'c-gap'); // colour the side that is missing; both sides when both present
+    const bothD = r.hs_start && r.start ? (Math.abs(ddiff) > 14 ? 'c-var' : '') : '';
+    const hsDate = bothD || (r.hs_start ? '' : 'c-gap'), ktDate = bothD || (r.start ? '' : 'c-gap');
+    const norm = x => String(x || '').toLowerCase().replace(/[^a-z]/g, ''); const stCls = r.hs_band && r.st && norm(r.hs_band) !== norm(r.st) && !(norm(r.hs_band) === 'closedwon' && norm(r.st) === 'wonclosed') ? 'c-var' : '';
+    const issue = !!(hsVal || ktVal || hsDate || ktDate || stCls || !hasHs || !hasK); return { hasHs, hasK, vdiff, vpct, ddiff, hsVal, ktVal, hsDate, ktDate, stCls, issue };
+  };
+  const ncols = 10 + (fyCol ? 2 : 0);
+  $('#ndTable').innerHTML = `<thead><tr><th colspan="2"></th><th class="grp hs" colspan="${fyCol ? 4 : 3}">HubSpot</th><th class="grp kt" colspan="${fyCol ? 5 : 4}">Kantata</th><th colspan="3"></th></tr>` +
+    `<tr><th>Engagement</th><th>Client</th><th>Stage</th><th class="n">Value £</th>${fyCol ? `<th class="n">In FY${S.ndFy.slice(2)}</th>` : ''}<th>Dates</th><th>Status</th><th class="n">Value £</th>${fyCol ? `<th class="n">In FY${S.ndFy.slice(2)}</th>` : ''}<th>Dates</th><th>Product group</th><th class="n">Variance £</th><th>Flags</th><th>Explain</th></tr></thead><tbody>` +
+    pool.map(r => { const c = cmp(r); const vtxt = c.vdiff === null ? '—' : `${c.vdiff < 0 ? '−' : '+'}${fmtK(Math.abs(c.vdiff))} (${c.vpct > 0 ? '+' : ''}${Math.round(c.vpct * 100)}%)`;
+      return `<tr><td><b>${esc(r.key)}</b></td><td class="txt">${esc(short(r.acc))}</td>` +
+      `<td class="${c.hasHs ? '' : 'c-gap'}">${esc(r.hs_band || (c.hasHs ? '—' : 'no HubSpot deal'))}</td><td class="n ${c.hsVal}">${r.hs_amount ? fmtK(r.hs_amount) : '—'}</td>${fyCol ? `<td class="n ${c.hsVal}">${r.fyv ? fmtK(r.fyv) : '—'}</td>` : ''}<td class="num ${c.hsDate}">${r.hs_start ? `<span class="d2">${fmtD2(r.hs_start)}</span><span class="d2">${fmtD2(r.hs_end)}</span>` : '—'}</td>` +
+      `<td class="${c.stCls}" ${c.stCls ? 'title="Kantata status differs from the HubSpot stage"' : ''}><span class="pill"><i style="background:${SCOL[r.st] || 'var(--other)'}"></i>${esc(r.st)}</span></td><td class="n ${c.ktVal}">${r.rev ? fmtK(r.rev) : '—'}</td>${fyCol ? `<td class="n ${c.ktVal}">${r.kfyv ? fmtK(r.kfyv) : '—'}</td>` : ''}<td class="num ${c.ktDate}">${r.start ? `<span class="d2">${fmtD2(r.start)}</span><span class="d2">${fmtD2(r.end)}</span>` : '—'}</td><td class="txt">${esc(pgShort(r.pg))}</td>` +
+      `<td class="n vdiff ${c.vdiff === null ? '' : c.vdiff < 0 ? 'neg' : 'pos'}" title="Kantata contract revenue minus HubSpot deal value${c.ddiff !== null ? `; Kantata start is ${Math.abs(c.ddiff)} days ${c.ddiff > 0 ? 'later' : 'earlier'} than HubSpot` : ''}">${vtxt}</td>` +
+      `<td>${r.hs_start && r.hs_start <= addDays(TODAY, 90) ? '<span class="flag bad">starts ≤ 90d</span> ' : ''}${r.ms ? '<span class="flag">managed service</span>' : ''}</td><td class="ndxcell">${c.issue ? (NDX[r.key] ? `<div class="ndx"><div class="hd"><span class="muted">AI explanation</span><button class="linkbtn" data-ndx="${esc(r.key)}">Close</button></div>${NDX[r.key].state === 'thinking' && !NDX[r.key].text ? '<span class="muted">Thinking…</span>' : ''}${ndxFmt(NDX[r.key].text || '')}${NDX[r.key].err ? `<div class="muted" style="color:var(--bad)">${esc(NDX[r.key].err)}</div>` : ''}</div>` : `<button class="linkbtn" data-ndx="${esc(r.key)}">Explain</button>`) : '<span class="muted">—</span>'}</td></tr>`; }).join('') +
+    `<tr class="sum"><td colspan="3">Total</td><td class="n">${fmtK(pool.reduce((s, r) => s + (r.hs_amount || 0), 0))}</td>${fyCol ? `<td class="n">${fmtK(hsv)}</td>` : ''}<td></td><td></td><td class="n">${fmtK(krev)}</td>${fyCol ? `<td class="n">${fmtK(pool.reduce((s, r) => s + (r.kfyv || 0), 0))}</td>` : ''}<td colspan="2"></td><td class="n vdiff">${(() => { const d = krev - pool.reduce((s, r) => s + (r.hs_amount || 0), 0); return `${d < 0 ? '−' : '+'}${fmtK(Math.abs(d))}`; })()}</td><td colspan="2"></td></tr></tbody>`;
+  $('#ndTable').querySelectorAll('button[data-ndx]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const k = b.dataset.ndx; if (NDX[k]) { delete NDX[k]; renderND(); } else ndExplain(pool.find(r => r.key === k)); }));
+}
+
+// ---- AI explanation of a supplier/partner displacement opportunity (6 Nov)
+const DX = {};
+async function dExplain(d, k) {
+  if (!d) return; const sg = (() => { try { return window.parent && window.parent !== window ? window.parent.__stargate : null; } catch (e) { return null; } })();
+  const st = DX[k] = { state: 'thinking', text: '', err: '' }; renderActions();
+  if (!sg || !sg.explainText) { st.state = 'done'; st.err = 'Explain runs inside the Stargate workspace (it uses the workspace’s model access); open this tab there.'; renderActions(); return; }
+  const facts = { contingent_worker: d.res, worker_type: d.typ, worker_level: d.lvl, engagement: d.key, client: short(d.acc), role: d.role || '', days_left_on_assignment: d.remu, billed_day_rate_gbp: d.rev_rate, worker_cost_day_rate_gbp: d.cost_rate, current_margin_pct: d.margin, target_margin_pct: 40,
+    employee_who_could_take_over: d.candidate ? { name: d.candidate.name, level: d.candidate.lvl, business_unit: d.candidate.bu, cost_day_rate_gbp: d.candidate.cost, free_days_next_3_months: d.candidate.can, margin_after_swap_pct: d.candidate.new_margin } : null, saving_over_remaining_days_gbp: d.saving || 0, note: d.note || '' };
+  const prompt = `You are briefing an executive at UBDS Digital (UK IT consultancy, GBP) on one assignment where a supplier or partner is doing work that an employee could take over (the employee-first policy). Using ONLY the facts below, write exactly two labelled lines and nothing else, no preamble. Line 1 starts 'So what: ' and is at most 35 words: lead with the saving in pounds over the remaining days and the margin move in points, name the engagement and the employee who could take over, and give the cause in a few words (supplier day rate above the employee's cost for the same grade). If no employee is available, say what the facts say. Line 2 starts 'Recommended action: ' and is at most 40 words: one concrete instruction for the Resource Manager: who to swap in, the handover and the date to do it by (relative to the days left), who to agree it with (delivery principal and account lead) and the notice to give the supplier or partner. Short plain sentences, no lists, no field names or ids, no hedging.` + `\n\nFACTS: ${JSON.stringify(facts)}`;
+  try { const text = await sg.explainText(prompt, t => { st.text = t; renderActions(); }); st.text = text || st.text; st.state = 'done'; }
+  catch (e) { st.state = 'done'; st.err = (e && (e.message || e.code)) || 'The model could not be reached.'; }
+  renderActions();
+}
+// ---- AI explanation of a person below the margin threshold (6 Nov)
+const MX = {};
+async function mExplain(p, thr) {
+  if (!p) return; const sg = (() => { try { return window.parent && window.parent !== window ? window.parent.__stargate : null; } catch (e) { return null; } })();
+  const st = MX[p.res] = { state: 'thinking', text: '', err: '' }; renderMargin();
+  if (!sg || !sg.explainText) { st.state = 'done'; st.err = 'Explain runs inside the Stargate workspace (it uses the workspace’s model access); open this tab there.'; renderMargin(); return; }
+  const fmtD2 = d => d ? `${d.slice(8, 10)}-${d.slice(5, 7)}-${d.slice(2, 4)}` : 'none';
+  const shortfall = Math.round(p.rev * thr / 100 - (p.rev - p.cost));
+  const facts = { person: p.res, resource_type: p.typ, target_margin_pct: thr, blended_margin_pct: +p.mg.toFixed(1), revenue_gbp: Math.round(p.rev), cost_gbp: Math.round(p.cost), margin_gbp: Math.round(p.rev - p.cost), gbp_short_of_target: shortfall, lowest_assignment_margin_pct: +p.lo.toFixed(1), basis: S.mBasis === 'fwd' ? 'forecast months' : 'actual months',
+    assignments: p.items.slice().sort((x, y) => x.mm - y.mm).slice(0, 6).map(x => ({ engagement: x.key, client: short(x.acc), status: x.st, role: x.role || '', revenue_gbp: Math.round(x.mrev), cost_gbp: Math.round(x.mcost), margin_pct: +x.mm.toFixed(1), start: fmtD2(x.start), end: fmtD2(x.end) })) };
+  const prompt = `You are briefing an executive at UBDS Digital (UK IT consultancy, GBP) on one person whose assignments earn below the target gross margin. Margin = (revenue - cost) / revenue; cost is the person's internal cost rate (employee) or the supplier/partner rate; revenue is the billed day rate. Using ONLY the facts below, write exactly two labelled lines and nothing else, no preamble. Line 1 starts 'So what: ' and is at most 35 words: lead with the pounds short of the target and the margin gap in points, name the engagement that drives it, then the likely cause in a few words (rate too low for the grade, cost too high for the role, supplier or partner rate, over-graded person on a junior role). Line 2 starts 'Recommended action: ' and is at most 40 words: one concrete action to raise the margin on the named engagement (re-rate at the next change request, swap to a lower-cost person of the right grade, renegotiate the supplier rate, reduce the allocation), who owns it (resource manager, account lead or delivery principal) and by when relative to the assignment dates. Short plain sentences, no lists, no field names or ids, no hedging.` + `\n\nFACTS: ${JSON.stringify(facts)}`;
+  try { const text = await sg.explainText(prompt, t => { st.text = t; renderMargin(); }); st.text = text || st.text; st.state = 'done'; }
+  catch (e) { st.state = 'done'; st.err = (e && (e.message || e.code)) || 'The model could not be reached.'; }
+  renderMargin();
+}
+// ---- AI explanation of a HubSpot vs Kantata gap (6 Nov). Uses the workspace's model access when this page is embedded in Stargate.
+const NDX = {};
+const ndxFmt = t => esc(t).replace(/(^|\n)(So what:)/g, '$1<span class="sw1">$2</span>').replace(/(^|\n)(Recommended action:)/g, '$1<span class="sw2">$2</span>').replace(/\n/g, '<br>');
+async function ndExplain(r) {
+  if (!r) return; const sg = (() => { try { return window.parent && window.parent !== window ? window.parent.__stargate : null; } catch (e) { return null; } })();
+  const st = NDX[r.key] = { state: 'thinking', text: '', err: '' }; renderND();
+  if (!sg || !sg.explainText) { st.state = 'done'; st.err = 'Explain runs inside the Stargate workspace (it uses the workspace’s model access); open this tab there.'; renderND(); return; }
+  const fmtD2 = d => d ? `${d.slice(8, 10)}-${d.slice(5, 7)}-${d.slice(2, 4)}` : 'none';
+  const vdiff = r.hs_amount && r.rev ? r.rev - r.hs_amount : null, vpct = vdiff !== null ? Math.round(vdiff / r.hs_amount * 100) : null;
+  const ddiff = r.hs_start && r.start ? Math.round((new Date(r.start + 'T00:00:00Z') - new Date(r.hs_start + 'T00:00:00Z')) / 86400000) : null;
+  const norm = x => String(x || '').toLowerCase().replace(/[^a-z]/g, '');
+  const issues = [];
+  if (!r.hs_amount) issues.push('no HubSpot deal value'); if (!r.rev) issues.push('no Kantata contract value'); if (!r.start) issues.push('no Kantata dates');
+  if (vdiff !== null && Math.abs(vpct) > 10) issues.push(`value variance: Kantata is £${Math.round(Math.abs(vdiff)).toLocaleString('en-GB')} ${vdiff > 0 ? 'higher' : 'lower'} than HubSpot (${vpct > 0 ? '+' : ''}${vpct}%)`);
+  if (ddiff !== null && Math.abs(ddiff) > 14) issues.push(`start variance: Kantata starts ${Math.abs(ddiff)} days ${ddiff > 0 ? 'later' : 'earlier'} than HubSpot`);
+  if (r.hs_band && norm(r.hs_band) !== norm(r.st) && !(norm(r.hs_band) === 'closedwon' && norm(r.st) === 'wonclosed')) issues.push(`stage mismatch: HubSpot says ${r.hs_band}, Kantata says ${r.st}`);
+  issues.push('no resource assignments in Kantata (not detailed)');
+  const facts = { engagement: r.key, client: r.acc, issues_largest_first: issues, hubspot: { stage: r.hs_band || 'no deal', value_gbp: r.hs_amount || 0, start: fmtD2(r.hs_start), end: fmtD2(r.hs_end) }, kantata: { status: r.st, product_group: r.pg, contract_value_gbp: r.rev || 0, start: fmtD2(r.start), end: fmtD2(r.end), has_assignments: false }, managed_service: !!r.ms, today: fmtD2(TODAY) };
+  const prompt = `You are briefing an executive at UBDS Digital (UK IT consultancy, GBP) on one data gap between HubSpot (the deal) and Kantata (the engagement and its resource forecast). "Not detailed" means the Kantata engagement has no resource assignments, so nobody can be scheduled against it. Using ONLY the facts below, write exactly two labelled lines and nothing else, no preamble. Line 1 starts 'So what: ' and is at most 35 words: lead with the most material item in issues_largest_first, always naming a value variance in pounds and percent or a start variance in days when one is listed, and its consequence (revenue at risk, misstated forecast, start-date pressure), then the likely cause in a few words. Line 2 starts 'Recommended action: ' and is at most 40 words: one concrete instruction for the Resource Manager that resolves that item (which system to correct and to what figure or date, then the assignments to build), who to confirm it with (account lead or deal owner) and by when relative to the start date. Short plain sentences, no lists, no field names or ids, no hedging, no repetition of the facts beyond what the reader needs.` + `\n\nFACTS: ${JSON.stringify(facts)}`;
+  try { const text = await sg.explainText(prompt, t => { st.text = t; renderND(); }); st.text = text || st.text; st.state = 'done'; }
+  catch (e) { st.state = 'done'; st.err = (e && (e.message || e.code)) || 'The model could not be reached.'; }
+  renderND();
+}
+
+/* ================= MARGIN ACTIONS ================= */
+function renderActions() {
+  const I = A && A.initiatives; if (!I) { $('#xTiles').innerHTML = '<div class="empty">No initiatives in match.json yet.</div>'; return; }
+  $('#xTiles').innerHTML = [
+    tile('Displacement saving', fmtK(I.displacement.total), `${I.displacement.n} of ${I.displacement.of} supplier/partner assignments have an employee who could take over`, 'total'),
+    tile('Below rate card', fmtK(I.rate_leakage.total), `${I.rate_leakage.n} employee assignments under 85% of standard rate (ceiling, not forecast)`),
+    tile('Over-graded', fmtN(I.over_graded.n), `SFIA 6 assignments under 30% margin, ${fmtK(I.over_graded.rev)} revenue`, I.over_graded.n ? 'alert' : ''),
+    tile('Bench cost', fmtK(I.bench_cost.total), `${I.bench_cost.n} employees ≥30% free, next 3 months`, 'bad'),
+    tile('Contracts ending', fmtN(I.contracts_ending.n), 'supplier/partner contracts ending within 120 days while still assigned'),
+  ].join('');
+  const mg = m => m === null || m === undefined ? '—' : `<span class="mg ${+m >= 40 ? 'good' : 'bad'}">${(+m).toFixed(1)}%</span>`; // Margin actions bands (6 Nov): ≥40% green, below 40% red
+  $('#xDisp').innerHTML = `<thead><tr><th>Supplier / partner</th><th>Engagement</th><th>Role</th><th class="n">Days left</th><th class="n">Rate</th><th class="n">Cost</th><th class="n">Margin</th><th>Employee who could take over</th><th class="n">Saving</th><th class="n">New margin</th><th>Explain</th></tr></thead><tbody>` +
+    (I.displacement.sorted = I.displacement.items.slice().sort((x, y) => (x.margin ?? 999) - (y.margin ?? 999))).map((d, i) => `<tr><td><b>${esc(d.res)}</b> <span style="color:var(--ink-3)">${esc(d.typ)} L${d.lvl ?? '?'}</span></td><td>${esc(d.key)}<br><span style="color:var(--ink-3);font-size:12px">${esc(short(d.acc))}</span></td><td class="txt">${esc(d.role || '—')}</td><td class="n">${fmtN(d.remu)}</td><td class="n">£${fmtN(d.rev_rate)}</td><td class="n">£${fmtN(d.cost_rate)}</td><td class="n">${mg(d.margin)}</td><td class="txt">${d.candidate ? `<b>${esc(d.candidate.name)}</b> <span style="color:var(--ink-3)">L${d.candidate.lvl} · ${esc(d.candidate.bu)} · £${fmtN(d.candidate.cost)}/d · ${d.candidate.can} d free</span>` : `<span style="color:var(--ink-3)">${esc(d.note)}</span>`}</td><td class="n">${d.saving ? fmtK(d.saving) : '—'}</td><td class="n">${d.candidate ? mg(d.candidate.new_margin) : '—'}</td><td class="ndxcell">${(k => DX[k] ? `<div class="ndx"><div class="hd"><span class="muted">AI explanation</span><button class="linkbtn" data-dx="${esc(k)}">Close</button></div>${DX[k].state === 'thinking' && !DX[k].text ? '<span class="muted">Thinking…</span>' : ''}${ndxFmt(DX[k].text || '')}${DX[k].err ? `<div class="muted" style="color:var(--bad)">${esc(DX[k].err)}</div>` : ''}</div>` : `<button class="linkbtn" data-dx="${esc(k)}">Explain</button>`)(d.res + '|' + d.key + '|' + i)}</td></tr>`).join('') +
+    `<tr class="sum"><td colspan="8">Total identified</td><td class="n">${fmtK(I.displacement.total)}</td><td colspan="2"></td></tr></tbody>`;
+  $('#xDisp').querySelectorAll('button[data-dx]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const k = b.dataset.dx; if (DX[k]) { delete DX[k]; renderActions(); } else dExplain(I.displacement.sorted[+k.split('|').pop()], k); }));
+  $('#xLeak').innerHTML = `<thead><tr><th>Person</th><th>Engagement</th><th>Role</th><th class="n">Billed</th><th class="n">Standard</th><th class="n">Days left</th><th class="n">Uplift</th><th class="n">Margin</th></tr></thead><tbody>` +
+    I.rate_leakage.items.map(x => `<tr><td><b>${esc(x.res)}</b> <span style="color:var(--ink-3)">L${x.lvl}</span></td><td>${esc(x.key)}</td><td class="txt">${esc(x.role || '—')}</td><td class="n">£${fmtN(x.rate)}</td><td class="n">£${fmtN(x.std)}</td><td class="n">${fmtN(x.remu)}</td><td class="n">${fmtK(x.uplift)}</td><td class="n">${mg(x.margin)}</td></tr>`).join('') + `<tr class="sum"><td colspan="6">Total (${I.rate_leakage.n} assignments)</td><td class="n">${fmtK(I.rate_leakage.total)}</td><td></td></tr></tbody>`;
+  $('#xOver').innerHTML = `<thead><tr><th>Person</th><th>Engagement</th><th>Role</th><th class="n">Days left</th><th class="n">Revenue</th><th class="n">Margin</th></tr></thead><tbody>` +
+    I.over_graded.items.map(x => `<tr><td><b>${esc(x.res)}</b> <span style="color:var(--ink-3)">L${x.lvl}</span></td><td>${esc(x.key)}</td><td class="txt">${esc(x.role || '—')}</td><td class="n">${fmtN(x.remu)}</td><td class="n">${fmtK(x.rev)}</td><td class="n">${mg(x.margin)}</td></tr>`).join('') + '</tbody>';
+  $('#xBench').innerHTML = `<thead><tr><th>Person</th><th>Business unit</th><th>Role</th><th class="n">Free days</th><th class="n">Unrecovered cost</th></tr></thead><tbody>` +
+    I.bench_cost.items.map(x => `<tr><td><b>${esc(x.name)}</b> <span style="color:var(--ink-3)">L${x.lvl}</span></td><td class="txt">${esc(x.bu)}</td><td class="txt">${esc(x.role)}</td><td class="n">${fmtN(x.free)}</td><td class="n">${fmtK(x.cost)}</td></tr>`).join('') + `<tr class="sum"><td colspan="4">Total (${I.bench_cost.n} people)</td><td class="n">${fmtK(I.bench_cost.total)}</td></tr></tbody>`;
+  $('#xEnd').innerHTML = `<thead><tr><th>Person</th><th>Type</th><th>Contract ends</th><th>Engagements</th><th class="n">Days left</th><th class="n">Cost/day</th></tr></thead><tbody>` +
+    I.contracts_ending.items.map(x => `<tr><td><b>${esc(x.name)}</b> <span style="color:var(--ink-3)">L${x.lvl}</span></td><td><span class="pill"><i style="background:${TCOL[x.typ] || 'var(--other)'}"></i>${esc(x.typ)}</span></td><td class="num">${fmtD(x.contract_end)}</td><td class="txt">${x.engagements.join(', ')}</td><td class="n">${fmtN(x.remu)}</td><td class="n">£${fmtN(x.cost_rate)}</td></tr>`).join('') + '</tbody>';
+}
+
+/* ================= wiring ================= */
+function setTab(t) { S.tab = t; save(); document.querySelectorAll('#mainTabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t)); const rd = document.querySelector('[data-x="rulesDemand"]'), rm = document.querySelector('[data-x="rulesMargin"]'); if (rd) rd.hidden = !['demand', 'alloc', 'nd'].includes(t); if (rm) rm.hidden = !['margin', 'margin2'].includes(t); $('#tab-demand').hidden = t !== 'demand'; $('#tab-margin').hidden = t !== 'margin'; $('#tab-alloc').hidden = t !== 'alloc'; $('#tab-nd').hidden = t !== 'nd'; $('#tab-margin2').hidden = t !== 'margin2'; }
+function seg(el, fn) { el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; fn(b.dataset.v); el.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b)); save(); }); }
+function chips(el, keys, state, colors, labels, fn) { el.innerHTML = keys.map(k => `<button class="chip" data-k="${k}" aria-pressed="${state[k] !== false}"><i class="sw" style="background:${colors[k]}"></i>${labels ? labels[k] : k}</button>`).join(''); el.addEventListener('click', e => { const b = e.target.closest('.chip'); if (!b) return; state[b.dataset.k] = state[b.dataset.k] === false; b.setAttribute('aria-pressed', state[b.dataset.k] !== false); save(); fn(); }); }
+
+function boot() {
+  TODAY = D.today;
+  $('#asof').innerHTML = `Kantata pulled ${esc(new Date(D.asof).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dubai' }))} Dubai · refreshed each weekday morning by the scheduled task (to be re-pointed at the lake)<br>Basis: Kantata P3 forecast (Won + Commit + Most Likely + Best Case) unless narrowed by the status chips`;
+  document.querySelectorAll('#mainTabs button').forEach(b => b.addEventListener('click', () => setTab(b.dataset.tab)));
+  document.querySelectorAll('.panel.col').forEach(pn => { const k = pn.dataset.x; const apply = () => { const c = (S.xCollapsed || {})[k] === undefined ? !!pn.dataset.rules : !!(S.xCollapsed || {})[k]; pn.classList.toggle('collapsed', c); pn.querySelector('.xhead').setAttribute('aria-expanded', String(!c)); }; apply(); const tog = () => { S.xCollapsed = S.xCollapsed || {}; const cur = S.xCollapsed[k] === undefined ? !!pn.dataset.rules : !!S.xCollapsed[k]; S.xCollapsed[k] = !cur; save(); apply(); }; const h = pn.querySelector('.xhead'); h.addEventListener('click', e => { if (e.target.closest('button, a, input, select, label')) return; tog(); }); h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tog(); } }); });
+  if (location.hash === '#margin') S.tab = 'margin'; if (location.hash === '#alloc') S.tab = 'alloc'; if (location.hash === '#nd') S.tab = 'nd'; if (location.hash === '#actions') S.tab = 'margin2'; if (EMBED === 'charts') S.tab = 'alloc'; if (TABS.length) { document.querySelectorAll('#mainTabs button').forEach(b => { if (!TABS.includes(b.dataset.tab)) b.hidden = true; }); if (!TABS.includes('demand')) { const h = document.querySelector('h1'); if (h) h.textContent = 'MARGIN'; document.title = 'Margin'; const pp = document.getElementById('poPurpose'), po = document.getElementById('poObjective'); if (pp) pp.textContent = 'A view of where named assignments earn below the target margin and the levers that would lift it.'; if (po) po.textContent = 'Raise the margin on the engagements that fall short by re-rating, swapping to a lower-cost person of the right grade, or replacing a supplier or partner with an employee.'; } if (!TABS.includes(S.tab)) S.tab = TABS[0]; } setTab(S.tab);
+  // demand controls
+  $('#dWin').innerHTML = DWINS.map(([v, l]) => `<button data-v="${v}" aria-pressed="${S.dWin === v}">${l}</button>`).join('');
+  seg($('#dWin'), v => { S.dWin = v; S.dAll = false; renderDemand(); });
+  const clients = [...new Set(D.generic.filter(r => r.rem > 0 && r.end >= TODAY).map(r => r.acc))].sort();
+  const msKeys = D.ms_keys || [];
+  const setMsNote = () => { const ex = D.generic.filter(r => r.ms && r.rem > 0 && r.end >= TODAY); $('#gMsNote').textContent = S.ms === 'ex' ? `${msKeys.length} Kantata managed-service engagements hidden (${ex.length} placeholders, ${fmtN(ex.reduce((s, r) => s + r.rem, 0))} days). Allocation options always exclude them.` : `Showing ${msKeys.length} managed-service engagements too (IoC, SoC, BU-delivered). Allocation options still exclude them.`; };
+  $('#gMs').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.ms));
+  seg($('#gMs'), v => { S.ms = v; S.dAll = false; S.mAll = false; setMsNote(); renderDemand(); renderMargin(); renderND(); });
+  setMsNote();
+  $('#dClient').innerHTML = '<option value="">All clients</option>' + clients.map(c => `<option${S.dClient === c ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  $('#dClient').addEventListener('change', e => { S.dClient = e.target.value; save(); renderDemand(); });
+  chips($('#dStatus'), STATUS, S.dStatus, SCOL, null, renderDemand);
+
+  chips($('#dCap'), CAPS, S.dCap, CCOL, CAPNAME, renderDemand);
+  $('#dMore').addEventListener('click', () => { S.dAll = !S.dAll; renderDemand(); });
+  $('#dHistWin').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.dHist = +b.dataset.v; save(); renderDemandHistory(); });
+  // margin controls
+  seg($('#mBasis'), v => { S.mBasis = v; S.mWin = v === 'fwd' ? 'live' : 'l6'; S.mAll = false; renderMargin(); });
+  $('#mWin').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.mWin = b.dataset.v; S.mAll = false; save(); renderMargin(); });
+  $('#mThr').addEventListener('input', e => { S.mThr = +e.target.value; S.mThrSet = true; $('#mThrV').textContent = S.mThr + '%'; save(); renderMargin(); });
+  chips($('#mType'), TYPES, S.mType, TCOL, null, renderMargin);
+  const mclients = [...new Set(D.named.map(r => r.acc))].sort();
+  $('#mClient').innerHTML = '<option value="">All clients</option>' + mclients.map(c => `<option${S.mClient === c ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  $('#mClient').addEventListener('change', e => { S.mClient = e.target.value; S.mEng = ''; fillEng(); save(); renderMargin(); });
+  function fillEng() { const engs = [...new Set(D.named.filter(r => !S.mClient || r.acc === S.mClient).map(r => r.key))].sort(); $('#mEng').innerHTML = '<option value="">All engagements</option>' + engs.map(c => `<option${S.mEng === c ? ' selected' : ''}>${esc(c)}</option>`).join(''); }
+  fillEng();
+  $('#mEng').addEventListener('change', e => { S.mEng = e.target.value; save(); renderMargin(); });
+  $('#mMore').addEventListener('click', () => { S.mAll = !S.mAll; renderMargin(); });
+  // allocation controls
+  if (S.aStatus.contingent === undefined) S.aStatus.contingent = true;
+  chips($('#aStatus'), ['filled', 'stretch', 'contingent', 'gap'], S.aStatus, ACOL, ALAB, renderAlloc);
+  chips($('#aCap'), CAPS, S.aCap, CCOL, CAPNAME, renderAlloc);
+  if (A) { const ac = [...new Set(A.placeholders.map(r => r.acc))].sort(); $('#aClient').innerHTML = '<option value="">All clients</option>' + ac.map(c => `<option${S.aClient === c ? ' selected' : ''}>${esc(c)}</option>`).join(''); }
+  $('#aClient').addEventListener('change', e => { S.aClient = e.target.value; save(); renderAlloc(); });
+  $('#lvSrc').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; LV.src = b.dataset.v; renderLive(); });
+  $('#lvTier').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; LV.tier = b.dataset.v; renderLive(); });
+  renderLive();
+  $('#aProv').checked = !!S.aProv; $('#aProv').addEventListener('change', e => { S.aProv = e.target.checked; save(); renderAlloc(); });
+  $('#aFree').value = S.aFree; $('#aFreeV').textContent = S.aFree + '%'; $('#aFree').addEventListener('input', e => { S.aFree = +e.target.value; $('#aFreeV').textContent = S.aFree + '%'; save(); renderAlloc(); });
+  $('#aMore').addEventListener('click', () => { S.aAll = !S.aAll; renderAlloc(); });
+  seg($('#aSort'), v => { S.aSort = v; renderAlloc(); });
+  $('#aSort').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.aSort));
+  // not-detailed controls
+  const ndCol = Object.assign({ 'Forecast Placeholder': 'var(--pipeline)', 'Pipeline': 'var(--pipeline)', 'Contracted': 'var(--commit)' }, SCOL);
+  ND_STATUS.forEach(k => { if (S.ndStatus[k] === undefined) S.ndStatus[k] = true; });
+  $('#ndFy').innerHTML = ND_FYS.map(([v, l]) => `<button data-v="${v}" aria-pressed="${S.ndFy === v}">${l}</button>`).join('');
+  seg($('#ndFy'), v => { S.ndFy = v; renderND(); });
+  chips($('#ndStatus'), ND_STATUS, S.ndStatus, ndCol, null, renderND);
+  const ndc = [...new Set((D.not_detailed || []).map(r => r.acc))].sort(); $('#ndClient').innerHTML = '<option value="">All clients</option>' + ndc.map(c => `<option${S.ndClient === c ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  $('#ndClient').addEventListener('change', e => { S.ndClient = e.target.value; save(); renderND(); });
+  $('#ndHsOnly').checked = !!S.ndHsOnly; $('#ndHsOnly').addEventListener('change', e => { S.ndHsOnly = e.target.checked; save(); renderND(); });
+  renderDemand(); renderMargin(); renderAlloc(); renderND(); renderActions();
+}
+
+Promise.all([fetch('data.json').then(r => r.json()), fetch('history.json').then(r => r.json()).catch(() => ({ runs: [], changes: [], snapshots: [] })), fetch('match.json').then(r => r.ok ? r.json() : null).catch(() => null)])
+  .then(([d, h, a]) => { D = d; H = h; A = a; boot(); })
+  .catch(err => { $('#dTiles').innerHTML = `<div class="empty">Could not load data.json (${esc(err.message)}).</div>`; });
+})();
+</script>
+
+<script>
+// Dates as dd/Mmm/yyyy everywhere (5 Nov): rewrites ISO (2026-11-09), dd/mm/yyyy and dd/mm text wherever it is rendered, leaving inputs, values and data attributes alone.
+(function () {
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const ok = (d, m) => +m >= 1 && +m <= 12 && +d >= 1 && +d <= 31;
+  const f = t => t
+    .replace(/\b(20\d\d)-(\d\d)-(\d\d)(?:T(\d\d:\d\d)(?::\d\d(?:\.\d+)?)?Z?)?\b/g, (m, y, mo, d, hm) => ok(d, mo) ? `${d}/${MON[+mo - 1]}/${y}${hm ? ' ' + hm : ''}` : m)
+    .replace(/\b(\d{2})\/(\d{2})\/(\d{4})\b/g, (m, d, mo, y) => ok(d, mo) ? `${d}/${MON[+mo - 1]}/${y}` : m)
+    .replace(/(^|[^\d\/])(\d{2})\/(\d{2})(?![\d\/])/g, (m, pre, d, mo) => ok(d, mo) ? `${pre}${d}/${MON[+mo - 1]}` : m);
+  const SKIP = /^(SCRIPT|STYLE|INPUT|TEXTAREA|PRE|CODE)$/;
+  const walk = n => { if (n.nodeType === 3) { const v = f(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; return; } if (n.nodeType !== 1 || SKIP.test(n.tagName)) return; for (const c of n.childNodes) walk(c); };
+  const fixAttr = el => { for (const a of ['title', 'data-tip']) { if (el.nodeType === 1 && el.hasAttribute && el.hasAttribute(a)) { const v = f(el.getAttribute(a)); if (v !== el.getAttribute(a)) el.setAttribute(a, v); } } };
+  const walkAll = n => { walk(n); if (n.nodeType === 1) { fixAttr(n); n.querySelectorAll && n.querySelectorAll('[title],[data-tip]').forEach(fixAttr); } };
+  new MutationObserver(ms => ms.forEach(m => { if (m.type === 'characterData') { const v = f(m.target.nodeValue); if (v !== m.target.nodeValue) m.target.nodeValue = v; } else m.addedNodes.forEach(walkAll); })).observe(document.body, {childList: true, subtree: true, characterData: true});
+  walkAll(document.body);
+})();
+</script>
+<script>
+// Collapsible tables (6 Nov): every table gets a small Hide/Show control above it; the choice is remembered per table in this browser.
+(function () {
+  const KEY = 'ubds-tbl-collapsed'; let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { st = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const css = document.createElement('style'); css.textContent = '.tcol-bar{display:flex;justify-content:flex-end;margin:2px 0 4px}.tcol-bar button{font:inherit;font-size:11.5px;color:var(--muted,var(--ink-3,#5b6473));background:none;border:1px solid transparent;border-radius:6px;padding:2px 8px;cursor:pointer}.tcol-bar button:hover{border-color:var(--line,var(--grid,#e3e7ed))}.tcol-bar button:focus-visible{outline:2px solid var(--accent,#0d366b);outline-offset:2px}'; document.head.appendChild(css);
+  const headingOf = t => { let n = t; for (let d = 0; d < 6 && n; d++) { let p = n.previousElementSibling; while (p) { const h = /^H[1-4]$/.test(p.tagName) ? p : p.querySelector && p.querySelector('h1,h2,h3,h4'); if (h) return h.textContent.trim(); p = p.previousElementSibling; } n = n.parentElement; } return ''; };
+  const keyOf = t => (location.pathname.split('/').slice(-2).join('/')) + '|' + (t.id || '') + '|' + headingOf(t).slice(0, 60);
+  const apply = t => {
+    if (t.dataset.tcol || t.closest('td, th, .panel.col, .ndx, .tip, [data-tip]')) return; const rows = t.querySelectorAll('tbody tr, tr').length; if (rows < 2) return;
+    t.dataset.tcol = '1'; const k = keyOf(t); const bar = document.createElement('div'); bar.className = 'tcol-bar'; const b = document.createElement('button'); b.type = 'button'; bar.appendChild(b);
+    const paint = () => { const c = !!st[k]; t.style.display = c ? 'none' : ''; b.textContent = c ? `▸ Show table (${rows} rows)` : '▾ Hide table'; b.setAttribute('aria-expanded', String(!c)); };
+    b.addEventListener('click', e => { e.stopPropagation(); st[k] = !st[k]; save(); paint(); }); paint();
+    const host = t.closest('.wrap, .tbl') || t; host.parentNode.insertBefore(bar, host);
+  };
+  const scan = root => { if (root.nodeType !== 1) return; if (root.tagName === 'TABLE') apply(root); root.querySelectorAll && root.querySelectorAll('table').forEach(apply); };
+  let pend = null; new MutationObserver(ms => { if (pend) return; pend = setTimeout(() => { pend = null; scan(document.body); }, 60); }).observe(document.body, { childList: true, subtree: true });
+  scan(document.body);
+})();
+</script>
+</body></html>
