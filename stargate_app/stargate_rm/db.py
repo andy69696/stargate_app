@@ -69,6 +69,20 @@ def query(sql_text: str, cached: bool = True, params: dict | None = None) -> pd.
     return df
 
 
+def columns(table: str) -> set[str]:
+    """Lower-cased column names of a table (empty set if it cannot be read).  Lets queries treat custom fields as optional."""
+    with _cache_lock:
+        hit = _cache.get("__columns__" + table)
+    if hit and time.time() - hit[0] < CACHE_TTL:
+        return set(hit[1].columns)
+    with _connection() as conn, conn.cursor() as cur:
+        cur.execute(f"SELECT * FROM {table} LIMIT 0")
+        cols = [c[0].lower() for c in cur.description]
+    with _cache_lock:
+        _cache["__columns__" + table] = (time.time(), pd.DataFrame(columns=cols))
+    return set(cols)
+
+
 def execute(sql_text: str, params: dict | None = None) -> None:
     """Run a statement with no result set (app-state tables only); params bind as :name."""
     with _connection() as conn, conn.cursor() as cur:
