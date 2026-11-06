@@ -1,0 +1,19 @@
+# Databricks Apps manifest for the Stargate Resource manager app (Streamlit).
+# Resources: add a SQL warehouse resource named "sql-warehouse" to the app in the Databricks UI (Apps > this app > Resources)
+# and the app's service principal gets CAN_USE on it; the warehouse id is injected below.
+command: ["streamlit", "run", "app.py", "--server.port", "8000", "--server.address", "0.0.0.0", "--server.headless", "true"]
+env:
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse            # app resource key (SQL warehouse)
+  - name: KANTATA_CATALOG
+    value: "salesforce_dev"             # Kantata (Salesforce) bronze: same object and field names as Salesforce, lower-cased
+  - name: KANTATA_SCHEMA
+    value: "bronze"
+  - name: HUBSPOT_DEALS_TABLE
+    value: "hubspot_dev.silver.deals"   # TODO(databricks): the HubSpot deals table for the Not detailed tab (see queries.hubspot_deals)
+  - name: APP_STATE_SCHEMA
+    value: "salesforce_dev.stargate_app" # TODO(databricks): schema the app may write to (exception ledger, RM actions, history)
+  - name: LLM_ENDPOINT
+    value: "databricks-claude-sonnet-4" # TODO(databricks): Foundation Model API chat endpoint for Explain; grant the app CAN_QUERY
+  - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
+    value: "false"
