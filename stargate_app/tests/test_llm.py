@@ -17,6 +17,16 @@ from stargate_rm import config, db, llm  # noqa: E402
 MSG = [{"role": "user", "content": "Explain this"}]
 
 
+import pytest  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def _auto_kind(monkeypatch):
+    """Most tests exercise the auto-detection; the provider test sets LLM_KIND itself."""
+    monkeypatch.setattr(config, "LLM_KIND", "auto")
+    llm._resolved.clear(); llm._sig_cache.clear()
+
+
 def test_kind():
     assert llm.kind("gpt_apikey_test") == "serving_endpoint"
     assert llm.kind("databricks-claude-sonnet-4") == "serving_endpoint"
@@ -130,6 +140,39 @@ def test_sample_route_uses_llm(monkeypatch):
 def test_llm_check_route():
     r = TestClient(server.app).get("/api/llm-check").json()
     assert r["llm_endpoint"] == config.LLM_ENDPOINT == "ubds_ai_models.default.gpt_apikey_test" and r["called_as"] == "uc_function"
+
+
+def test_model_provider_service(monkeypatch):
+    monkeypatch.setattr(config, "LLM_KIND", "model_provider_service")
+    monkeypatch.setattr(config, "LLM_ENDPOINT", "ubds_ai_models.default.gpt_apikey_test")
+    monkeypatch.setattr(config, "LLM_MODEL", "gpt-5-mini")
+    posts = []
+
+    class Resp:
+        def __init__(self, code, data):
+            self.status_code, self._d = code, data
+            self.ok = code == 200
+            self.text = json.dumps(data)
+
+        def json(self):
+            return self._d
+
+    def post(url, headers, json, timeout):  # noqa: A002 - mirrors requests.post
+        posts.append((url, dict(headers), dict(json)))
+        if "max_tokens" in json:
+            return Resp(400, {"error": {"message": "Unsupported parameter: 'max_tokens'. Use 'max_completion_tokens' instead."}})
+        if "temperature" in json:
+            return Resp(400, {"error": {"message": "Unsupported value: 'temperature' does not support 0.2."}})
+        return Resp(200, {"choices": [{"message": {"content": "So what: ok"}, "finish_reason": "stop"}]})
+    monkeypatch.setitem(sys.modules, "requests", types.SimpleNamespace(post=post))
+    cfg = types.SimpleNamespace(host="https://adb-1.azuredatabricks.net/", authenticate=lambda: {"Authorization": "Bearer t"})
+    _fake_sdk(monkeypatch, type("WC", (), {"__init__": lambda self: setattr(self, "config", cfg)}))
+    llm._resolved.clear()
+    assert llm.complete(MSG, max_tokens=50) == ("So what: ok", False)
+    url, headers, body = posts[-1]
+    assert url == "https://adb-1.azuredatabricks.net/ai-gateway/openai/v1/chat/completions"
+    assert headers["Databricks-Model-Provider-Service"] == "ubds_ai_models.default.gpt_apikey_test" and headers["Authorization"] == "Bearer t"
+    assert body["model"] == "gpt-5-mini" and body["max_completion_tokens"] == 50 and "temperature" not in body and body["messages"] == MSG
 
 
 def test_three_part_name_matches_endpoint_named_after_it(monkeypatch):
