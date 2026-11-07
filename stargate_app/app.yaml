@@ -16,7 +16,7 @@ env:
   - name: APP_STATE_SCHEMA
     value: "salesforce_dev.stargate_app" # TODO(databricks): schema the app may write to (workspace_db, resourcing_history; Streamlit also uses exception_ledger, rm_actions)
   - name: LLM_ENDPOINT
-    value: "gpt_apikey_test"   # serving endpoint for Explain and Ask (its inference table is ubds_ai_models.default.gpt_apikey_test_payload);
-                               # add it to the app as a "Serving endpoint" resource with "Can query". A catalog.schema.function name also works (llm.py).
+    value: "ubds_ai_models.default.gpt_apikey_test"   # Explain and Ask: a Unity Catalog function, or a registered model (called through the
+                                                     # endpoint that serves it), or a plain serving endpoint name. /api/llm-check shows which (llm.py).
   - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
     value: "false"

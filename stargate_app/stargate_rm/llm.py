@@ -146,7 +146,7 @@ def _call_function(messages: list[dict], max_tokens: int, temperature: float) ->
 
 
 # ---------------------------------------------------------------- serving endpoint
-def _call_endpoint(messages: list[dict], max_tokens: int, temperature: float) -> tuple[str, bool, object]:
+def _call_endpoint(messages: list[dict], max_tokens: int, temperature: float, endpoint: str | None = None) -> tuple[str, bool, object]:
     from databricks.sdk import WorkspaceClient
     from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
 
@@ -156,7 +156,7 @@ def _call_endpoint(messages: list[dict], max_tokens: int, temperature: float) ->
     w = WorkspaceClient()
     for _ in range(3):     # some models (GPT-5, o-series) reject temperature or max_tokens: drop the one named and retry
         try:
-            r = w.serving_endpoints.query(name=config.LLM_ENDPOINT, messages=msgs, **kw)
+            r = w.serving_endpoints.query(name=endpoint or config.LLM_ENDPOINT, messages=msgs, **kw)
             break
         except Exception as e:  # noqa: BLE001
             low = str(e).lower()
@@ -171,40 +171,107 @@ def _call_endpoint(messages: list[dict], max_tokens: int, temperature: float) ->
     return (ch.message.content or "").strip(), getattr(ch, "finish_reason", None) == "length", None
 
 
+def visible_endpoints() -> list[dict]:
+    """Serving endpoints the app's service principal can see, with what each serves (Unity Catalog model or external model)."""
+    from databricks.sdk import WorkspaceClient
+
+    out = []
+    for ep in WorkspaceClient().serving_endpoints.list():
+        served = []
+        cfg = getattr(ep, "config", None)
+        for se in (getattr(cfg, "served_entities", None) or []):
+            ext = getattr(se, "external_model", None)
+            served.append(getattr(se, "entity_name", None) or (f"external {getattr(ext, 'provider', '')}:{getattr(ext, 'name', '')}" if ext else getattr(se, "name", None)))
+        for sm in (getattr(cfg, "served_models", None) or []):
+            served.append(getattr(sm, "model_name", None))
+        out.append({"name": ep.name, "task": getattr(ep, "task", None), "serves": [x for x in served if x]})
+    return out
+
+
+# ---------------------------------------------------------------- what LLM_ENDPOINT points at
+_resolved: dict[str, dict] = {}
+
+
+def resolve(name: str | None = None, refresh: bool = False) -> dict:
+    """{'kind': 'uc_function' | 'serving_endpoint', 'target': ..., 'how': ...}.
+    A plain name is a serving endpoint.  A catalog.schema.name is a Unity Catalog function if DESCRIBE FUNCTION finds it;
+    otherwise a registered model, called through the serving endpoint that serves it."""
+    name = name or config.LLM_ENDPOINT
+    if not refresh and name in _resolved:
+        return _resolved[name]
+    if kind(name) == "serving_endpoint":
+        r = {"kind": "serving_endpoint", "target": name, "how": "serving endpoint named in LLM_ENDPOINT"}
+    else:
+        try:
+            signature(name, refresh=refresh)
+            r = {"kind": "uc_function", "target": name, "how": "Unity Catalog function, called through the SQL warehouse"}
+        except Exception as fe:  # noqa: BLE001 - not a function (or not visible): try a registered model behind an endpoint
+            fn_err = str(fe).splitlines()[0][:300] if str(fe) else type(fe).__name__
+            try:
+                eps = visible_endpoints()
+            except Exception as ee:  # noqa: BLE001
+                raise RuntimeError(f"{name} is not a function the app can describe ({fn_err}) and the serving endpoints could not be listed "
+                                   f"({str(ee).splitlines()[0][:200]})") from ee
+            hits = [e["name"] for e in eps if any(str(s).lower() == name.lower() for s in e["serves"])]
+            if not hits:
+                raise RuntimeError(f"{name} is not a function the app can describe ({fn_err}), and none of the {len(eps)} serving endpoints the "
+                                   f"app can see serves it as a model. If it is a registered model, give the app CAN_QUERY on the endpoint that "
+                                   f"serves it (or set LLM_ENDPOINT to that endpoint's name)")
+            r = {"kind": "serving_endpoint", "target": hits[0], "how": f"registered model {name}, served by endpoint {hits[0]}"}
+    _resolved[name] = r
+    return r
+
+
 # ---------------------------------------------------------------- public
 def complete(messages: list[dict], max_tokens: int = 1500, temperature: float = 0.2) -> tuple[str, bool]:
     """(text, truncated).  Raises on failure; the caller turns the error into a message."""
     max_tokens = max(1, min(int(max_tokens or 1500), 4000))
-    fn = _call_function if kind() == "uc_function" else _call_endpoint
-    text, cut, _raw = fn(messages, max_tokens, temperature)
+    r = resolve()
+    if r["kind"] == "uc_function":
+        text, cut, _raw = _call_function(messages, max_tokens, temperature)
+    else:
+        text, cut, _raw = _call_endpoint(messages, max_tokens, temperature, r["target"])
     return text, cut
 
 
 def help_text() -> str:
     if kind() == "uc_function":
-        return (f"check LLM_ENDPOINT ({config.LLM_ENDPOINT}) and that the app's service principal has USE CATALOG, USE SCHEMA and "
-                "EXECUTE on the function; /api/llm-check shows the details")
+        return (f"LLM_ENDPOINT is {config.LLM_ENDPOINT}: as a function the app needs USE CATALOG, USE SCHEMA and EXECUTE; as a registered model, "
+                "CAN_QUERY on the serving endpoint that serves it. /api/llm-check shows which it is")
     return f"check LLM_ENDPOINT ({config.LLM_ENDPOINT}) and the app's CAN_QUERY on that serving endpoint; /api/llm-check shows the details"
 
 
 def check() -> dict:
-    """What /api/llm-check reports: how the model is called, its signature and one test call."""
-    out: dict = {"llm_endpoint": config.LLM_ENDPOINT, "called_as": kind()}
+    """What /api/llm-check reports: what LLM_ENDPOINT resolves to, the function signature, visible endpoints and one test call."""
+    out: dict = {"llm_endpoint": config.LLM_ENDPOINT}
     if config.SAMPLE_MODE:
+        out["called_as"] = kind()
         out["note"] = "sample mode: the model is not called"
         return out
-    if kind() == "uc_function":
-        try:
-            sig = signature(refresh=True)
-            out["signature"] = {"params": sig["params"], "returns": sig["returns"], "describe": sig["describe"]}
-            holders, values = _arguments(sig, [{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0)
-            out["call"] = {"sql": f"SELECT {config.LLM_ENDPOINT}({', '.join(holders)}) AS out", "arguments": values}
-        except Exception as e:  # noqa: BLE001
-            out["signature_error"] = str(e).splitlines()[0][:400] if str(e) else type(e).__name__
+    try:
+        r = resolve(refresh=True)
+        out["called_as"], out["target"], out["how"] = r["kind"], r["target"], r["how"]
+    except Exception as e:  # noqa: BLE001
+        out["called_as"] = "unresolved"
+        out["resolve_error"] = str(e)[:900]
+        r = None
+    if r and r["kind"] == "uc_function":
+        sig = signature()
+        out["signature"] = {"params": sig["params"], "returns": sig["returns"], "describe": sig["describe"]}
+        holders, values = _arguments(sig, [{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0)
+        out["call"] = {"sql": f"SELECT {config.LLM_ENDPOINT}({', '.join(holders)}) AS out", "arguments": values}
+    try:
+        out["visible_endpoints"] = visible_endpoints()[:60]
+    except Exception as e:  # noqa: BLE001
+        out["visible_endpoints_error"] = str(e).splitlines()[0][:300] if str(e) else type(e).__name__
+    if r is None:
+        return out
     t0 = time.time()
     try:
-        fn = _call_function if kind() == "uc_function" else _call_endpoint
-        text, cut, raw = fn([{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0)
+        if r["kind"] == "uc_function":
+            text, cut, raw = _call_function([{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0)
+        else:
+            text, cut, raw = _call_endpoint([{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0, r["target"])
         out["test"] = {"ok": True, "seconds": round(time.time() - t0, 2), "text": text[:500], "truncated": cut,
                        "raw": None if raw is None else str(raw)[:1500]}
     except Exception as e:  # noqa: BLE001

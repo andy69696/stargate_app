@@ -24,7 +24,7 @@ HUBSPOT_DEALS_TABLE = os.environ.get("HUBSPOT_DEALS_TABLE", "hubspot_dev.silver.
 APP_STATE_SCHEMA = os.environ.get("APP_STATE_SCHEMA", "salesforce_dev.stargate_app")
 # ---- Model serving endpoint used by the Explain buttons (a Databricks Foundation Model API chat endpoint).
 #      TODO(databricks): confirm the endpoint name and grant the app CAN_QUERY on it.
-LLM_ENDPOINT = os.environ.get("LLM_ENDPOINT", "gpt_apikey_test")   # serving endpoint name, or catalog.schema.function (see llm.py)
+LLM_ENDPOINT = os.environ.get("LLM_ENDPOINT", "ubds_ai_models.default.gpt_apikey_test")   # serving endpoint name, or catalog.schema.function (see llm.py)
 # ---- Set STARGATE_SAMPLE=1 to run the UI on the bundled sample JSON instead of the warehouse (offline review / smoke tests).
 SAMPLE_MODE = os.environ.get("STARGATE_SAMPLE", "") == "1"
 
