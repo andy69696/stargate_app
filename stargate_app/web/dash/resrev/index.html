@@ -346,7 +346,7 @@ function csv() {
 }
 
 function boot() {
-  $('#asof').innerHTML = `Kantata pulled ${esc(new Date(D.asof).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dubai' }))} Dubai · refreshed each weekday morning by the scheduled task (to be re-pointed at the lake)`;
+  $('#asof').innerHTML = `Data last updated ${esc(new Date(D.asof).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' }))} (UK time)`;
   D.groups.forEach(g => { if (S.groups[g] === undefined) S.groups[g] = true; });
   seg($('#view'), 'view', render); seg($('#basis'), 'basis', render);
   chips($('#types'), TYPES.filter(t => D.types.includes(t)), S.types, TCOL, render);
