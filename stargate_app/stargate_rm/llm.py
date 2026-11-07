@@ -181,6 +181,12 @@ def _call_endpoint(messages: list[dict], max_tokens: int, temperature: float, en
 
 # ---------------------------------------------------------------- AI Gateway model provider service
 GATEWAY_CHAT_PATH = "/ai-gateway/openai/v1/chat/completions"
+REASONING_PREFIXES = ("gpt-5", "o1", "o3", "o4")   # reasoning models: max_completion_tokens, no temperature, reasoning counts in the budget
+REASONING_MIN_TOKENS = 1000
+
+
+def _is_reasoning(model: str) -> bool:
+    return (model or "").lower().startswith(REASONING_PREFIXES)
 
 
 def _call_provider(messages: list[dict], max_tokens: int, temperature: float, service: str | None = None) -> tuple[str, bool, object]:
@@ -192,28 +198,42 @@ def _call_provider(messages: list[dict], max_tokens: int, temperature: float, se
     url = w.config.host.rstrip("/") + GATEWAY_CHAT_PATH
     headers = dict(w.config.authenticate())
     headers.update({"Databricks-Model-Provider-Service": service, "Content-Type": "application/json"})
-    body: dict = {"messages": messages, "max_tokens": max_tokens, "temperature": temperature}
-    if config.LLM_MODEL:
-        body["model"] = config.LLM_MODEL
-    for _ in range(4):     # newer OpenAI models want max_completion_tokens and may reject temperature: adjust and retry
-        r = requests.post(url, headers=headers, json=body, timeout=120)
-        if r.ok:
-            break
-        txt, low = r.text[:700], r.text.lower()
-        if r.status_code == 400:
-            if "max_completion_tokens" in low and "max_tokens" in body:
-                body["max_completion_tokens"] = body.pop("max_tokens")
-                continue
-            dropped = [k for k in ("temperature", "max_tokens", "max_completion_tokens") if k in body and k in low]
-            if dropped:
-                for k in dropped:
-                    body.pop(k)
-                continue
-        raise RuntimeError(f"AI Gateway answered {r.status_code}: {txt}")
+    model = config.LLM_MODEL
+    if _is_reasoning(model):
+        # GPT-5 / o-series: no temperature; reasoning tokens come out of max_completion_tokens, so keep reasoning minimal and
+        # leave room for the answer
+        body: dict = {"messages": messages, "max_completion_tokens": max(max_tokens, REASONING_MIN_TOKENS), "reasoning_effort": "minimal"}
     else:
+        body = {"messages": messages, "max_tokens": max_tokens, "temperature": temperature}
+    if model:
+        body["model"] = model
+
+    def post(b):
+        for _ in range(5):     # drop or rename whatever parameter the model or gateway rejects, then retry
+            r = requests.post(url, headers=headers, json=b, timeout=180)
+            if r.ok:
+                return r.json()
+            txt, low = r.text[:700], r.text.lower()
+            if r.status_code == 400:
+                if "max_completion_tokens" in low and "max_tokens" in b:
+                    b["max_completion_tokens"] = b.pop("max_tokens")
+                    continue
+                dropped = [k for k in ("temperature", "reasoning_effort", "max_tokens", "max_completion_tokens") if k in b and k in low]
+                if dropped:
+                    for k in dropped:
+                        b.pop(k)
+                    continue
+            raise RuntimeError(f"AI Gateway answered {r.status_code}: {txt}")
         raise RuntimeError("AI Gateway rejected the request parameters")
-    data = r.json()
+
+    data = post(body)
     text, cut = _text_from(data)
+    if not text and cut and "max_completion_tokens" in body:     # spent the budget reasoning: once more with room to answer
+        body["max_completion_tokens"] = min(body["max_completion_tokens"] * 4, 16000)
+        data = post(body)
+        text, cut = _text_from(data)
+    if not text:
+        raise RuntimeError(f"the model returned no text ({'cut off at the token limit' if cut else 'empty answer'}); raw: {json.dumps(data)[:300]}")
     return text, cut, json.dumps(data)[:1500]
 
 

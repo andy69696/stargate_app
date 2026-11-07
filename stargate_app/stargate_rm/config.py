@@ -27,7 +27,7 @@ APP_STATE_SCHEMA = os.environ.get("APP_STATE_SCHEMA", "salesforce_dev.stargate_a
 LLM_ENDPOINT = os.environ.get("LLM_ENDPOINT", "ubds_ai_models.default.gpt_apikey_test")   # what Explain and Ask call (see llm.py)
 # How LLM_ENDPOINT is called: model_provider_service (AI Gateway), uc_function, serving_endpoint, or auto (work it out).
 LLM_KIND = os.environ.get("LLM_KIND", "model_provider_service").strip().lower()
-LLM_MODEL = os.environ.get("LLM_MODEL", "").strip()     # for a model provider service: one of the models it allows, e.g. gpt-4o-mini
+LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-5-nano").strip()     # for a model provider service: one of the models it allows, e.g. gpt-4o-mini
 # ---- Set STARGATE_SAMPLE=1 to run the UI on the bundled sample JSON instead of the warehouse (offline review / smoke tests).
 SAMPLE_MODE = os.environ.get("STARGATE_SAMPLE", "") == "1"
 
