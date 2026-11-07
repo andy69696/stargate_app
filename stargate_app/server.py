@@ -8,8 +8,12 @@ answers the data the pages fetch from the lake:
     dash/resourcing/data.json     Resourcing & margin: placeholders, named, months (legacy/resourcing_refresh.py)
     dash/resourcing/match.json    matcher: people, roles, matches                   (legacy/match.py)
     dash/resourcing/history.json  weekly placeholder history (app-state table)
+    the "gold" data embedded in index.html, swapped in as the page is served       (stargate_rm/gold)
+    dash/rm/demand.json           demand by family, from the same gold build
   snapshot, as published in the artifact (no lake build yet):
-    the "gold" data embedded in index.html, dash/rm/demand.json, dash/revenue/*, dash/resrev/*, dash/pricing/*
+    dash/revenue/*, dash/resrev/*, the pricing page's own files
+  If the gold build itself errors (not a single failed query, which is a data gap), index.html keeps its published snapshot
+  and /api/status says so.
 
 The claude.ai artifact runtime the pages call (claude.use: user, db, sample, downloads) is provided by web_runtime/claude.js,
 injected into each page's <head> as it is served, backed by the /api routes below.
@@ -84,7 +88,10 @@ LIVE = {
     "dash/resourcing/data.json": "res",
     "dash/resourcing/match.json": "match",
     "dash/resourcing/history.json": "history",
+    "dash/rm/demand.json": "rm_demand",
 }
+GOLD_TAG = b'<script id="gold" type="application/json">'
+_index_cache: dict = {"key": None, "html": None}
 
 
 def _live_json(key: str, path: str) -> Response:
@@ -124,6 +131,7 @@ def status() -> dict:
             "error": build.error,
             "gaps": (data or {}).get("gaps", []),
             "rm_people": len(((data or {}).get("rm") or {}).get("rows", [])) if data else None,
+            "gold": _gold_status(data),
             "live_files": list(LIVE),
         },
         "store": store.status(),
@@ -204,6 +212,37 @@ def runtime_js() -> Response:
     return FileResponse(RUNTIME_JS, media_type="application/javascript", headers={"Cache-Control": "no-cache"})
 
 
+def _gold_status(data: dict | None) -> dict:
+    if not data:
+        return {"source": "not built yet"}
+    g = data.get("gold")
+    if not g:
+        return {"source": "snapshot (published 4 Nov 2026)", "reason": data.get("gold_error") or ("sample mode" if config.SAMPLE_MODE else "not built")}
+    return {"source": "lake", "built": g["meta"]["built"], "people": len(g["people"]), "engagements": len(g["engagements"]), "deals": len(g["deals"]),
+            "exceptions": len(g["exceptions"]), "proposals": len(g["proposals"])}
+
+
+def _with_gold(html: bytes) -> bytes:
+    """Replace the JSON inside <script id="gold"> with the lake build (cached per build)."""
+    try:
+        data = build.get()
+    except Exception:  # noqa: BLE001 - the page still works on its snapshot
+        return html
+    gold = data.get("gold")
+    if not gold:
+        return html
+    key = id(gold)
+    if _index_cache["key"] != key:
+        i = html.find(GOLD_TAG)
+        j = html.find(b"</script>", i) if i >= 0 else -1
+        if i < 0 or j < 0:
+            log.error("index.html has no <script id=gold> block; serving the snapshot")
+            return html
+        payload = json.dumps(gold, default=str, separators=(",", ":"), ensure_ascii=False).replace("</", "<\\/").encode("utf-8")
+        _index_cache.update(key=key, html=html[: i + len(GOLD_TAG)] + payload + html[j:])
+    return _index_cache["html"]
+
+
 def _inject(html: bytes) -> bytes:
     i = html.lower().find(b"<head>")
     if i >= 0:
@@ -220,7 +259,10 @@ def _static(path: str) -> Response:
     if not target.is_file():
         raise HTTPException(404)
     if target.suffix == ".html":
-        return Response(_inject(target.read_bytes()), media_type="text/html; charset=utf-8", headers={"Cache-Control": "no-cache"})
+        html = target.read_bytes()
+        if target == (WEB / "index.html").resolve():
+            html = _with_gold(html)
+        return Response(_inject(html), media_type="text/html; charset=utf-8", headers={"Cache-Control": "no-cache"})
     return FileResponse(target, headers={"Cache-Control": "no-cache", "X-Stargate-Source": "snapshot"})
 
 

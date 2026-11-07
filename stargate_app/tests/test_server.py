@@ -47,3 +47,15 @@ def test_runtime_routes():
 def test_no_path_traversal():
     assert client.get("/../server.py").status_code == 404
     assert client.get("/%2e%2e/server.py").status_code == 404
+
+
+def test_index_serves_lake_gold_when_built(monkeypatch):
+    gold = {"meta": {"built": "2026-11-06", "months": []}, "people": [], "note": "</script> stays inside the JSON"}
+    monkeypatch.setattr(server.build, "get", lambda: {"gold": gold, "rm_demand": {"rows": [1]}})
+    server._index_cache.update(key=None, html=None)
+    html = client.get("/").content
+    i = html.find(server.GOLD_TAG) + len(server.GOLD_TAG)
+    body = html[i: html.find(b"</script>", i)]
+    assert json.loads(body.decode().replace("<\\/", "</")) == gold
+    assert client.get("/dash/rm/demand.json").json() == {"rows": [1]}
+    server._index_cache.update(key=None, html=None)

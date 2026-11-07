@@ -131,7 +131,34 @@ def build_data(today: str | None = None) -> dict:
         "time": _safe(queries.time_entries, (t - dt.timedelta(days=120)).isoformat(), what="time entries"),
         "required": _safe(queries.required_capabilities, what="required capabilities"),
     }
-    return {"rm": rm, "res": res, "match": mt, "history": history, "extras": extras, "today": today, "gaps": list(_gaps)}
+    gold, gold_error = build_gold(today)
+    return {"rm": rm, "res": res, "match": mt, "history": history, "extras": extras, "gold": gold, "gold_error": gold_error,
+            "rm_demand": _rm_demand(gold), "today": today, "gaps": list(_gaps)}
+
+
+def _safe_sql(sql_text: str, what: str) -> list[dict]:
+    try:
+        return db.records(sql_text)
+    except Exception as e:  # noqa: BLE001
+        _gaps.append(f"{what}: {str(e).splitlines()[0][:200]}")
+        return []
+
+
+def build_gold(today: str) -> tuple[dict | None, str | None]:
+    """The workspace's embedded data from the lake (stargate_rm/gold).  Individual query failures become data gaps; only an
+    error in the build itself returns (None, error), and the server then keeps the published snapshot and says so in /api/status."""
+    from .gold import build as gold_build
+    try:
+        return gold_build.build(today, _safe_sql, _gaps), None
+    except Exception as e:  # noqa: BLE001
+        import logging
+        logging.getLogger("stargate").exception("gold build failed")
+        return None, f"{type(e).__name__}: {str(e).splitlines()[0][:300] if str(e) else ''}"
+
+
+def _rm_demand(gold: dict | None) -> dict | None:
+    from .gold import build as gold_build
+    return gold_build.rm_demand(gold) if gold else None
 
 
 def build(today: str | None = None) -> dict:
@@ -155,6 +182,7 @@ def _sample() -> dict:
     with open(SAMPLE / "match.json") as f:
         mt = json.load(f)
     return {"rm": rm, "res": res, "match": mt, "history": None, "extras": {"actors": [], "status": [], "po": [], "invoices": [], "time": [], "required": []},
+            "gold": None, "gold_error": None, "rm_demand": None,
             "today": res.get("today"), "gaps": ["Sample mode: bundled JSON, not the lake"]}
 
 

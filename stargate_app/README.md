@@ -11,11 +11,39 @@ to each page is one `<script src="/_stargate/claude.js">` tag injected into its 
 
 | Served from the lake | Still the artifact snapshot (no lake build yet) |
 |---|---|
-| `dash/rm/data.json` (Resource manager: utilisation, margin) | the "gold" data embedded in `web/index.html` |
-| `dash/resourcing/data.json`, `match.json`, `history.json` | `dash/rm/demand.json`, `dash/revenue/*`, `dash/resrev/*`, `dash/pricing/*` |
+| the "gold" data embedded in `web/index.html` (swapped in as the page is served; `stargate_rm/gold`) | `dash/revenue/*`, `dash/resrev/*` |
+| `dash/rm/data.json` (Resource manager: utilisation, margin), `dash/rm/demand.json` | |
+| `dash/resourcing/data.json`, `match.json`, `history.json` | |
 
-The live files have exactly the artifact's shapes (the pipeline's builders are the ones that made them), so the pages read them
-unchanged. Moving the snapshot data onto the lake means porting `build_gold.py` and the revenue builders into the pipeline.
+The live files have exactly the artifact's shapes, so the pages read them unchanged.
+
+### The main page's gold data (`stargate_rm/gold`)
+
+The original builder (`build_gold.py` and `engines/`) was never in this repo; the snapshot it made on 4 Nov 2026 was a one-off pull
+of the Kantata sandbox and HubSpot. `stargate_rm/gold` rebuilds it from the lake on every app build:
+
+- `queries.py` — engagements, month-by-month forecasts (Kantata **month** periods only), assignments, milestones, HubSpot deals;
+- `build.py` — people, capacity, team utilisation, engagement × month, demand, generics, p123, assignments, deals;
+- `engines.py` — role cards and matcher, proposals and cross-checks, exceptions X01–X29, variance D0–D7, levers;
+- `rules.py` — every rule and threshold, with where it came from;
+- `fields.py` — custom / unconfirmed column names (see TODO below).
+
+**How the rules were recovered.** The matcher's scoring and outcomes and the bench rule are ported exactly from the page's own
+JavaScript, which states it uses the same rules as `build_gold.py`. The rest were inferred by re-deriving each part of the
+snapshot from its inputs; `tests/test_gold.py` pins them. Against the snapshot: every role card and matcher choice; X01, X02,
+X03, X27 and X29 exactly; variance rows and cause codes 119 of 119; bench, over-graded and ending levers exactly; displacement
+rows exactly, with candidates the most available same-family employee within one SFIA level (ties broken at a precision the
+snapshot does not keep). X04, X18 and X26 and variance's milestone evidence need the milestones pull (TODO 11 below).
+
+**The snapshot's figures were doubled.** It summed Kantata's week and month periods, so revenue, cost and usage were twice the
+month values (November P1 £4.13m instead of £2.07m), and it compared those doubled days against available *hours*, so nearly
+everyone showed about 25% utilised. The lake build reads month periods only and converts days to hours the way the page expects
+(booked hours = days × 8; available hours = working days × 7.5). Revenue figures roughly halve and utilisation rises; rules that
+depend on them (X03 team utilisation, X27 generic hours, the bench) change accordingly. The snapshot also listed 5 HubSpot deals
+twice; the build de-duplicates deals by id.
+
+If one query fails or a column is missing, that part is empty and the reason is listed in `/api/status` under `gaps`. Only if the
+build itself errors does the page keep the published snapshot, and `/api/status` → `build.gold` then says `snapshot` and why.
 
 **Artifact runtime.** On claude.ai the pages call `claude.use('user' | 'db' | 'sample' | 'downloads')`. `web_runtime/claude.js`
 provides the same calls, backed by the server:
@@ -164,6 +192,15 @@ Search the code for `TODO(databricks)`; every gap is flagged in place. In summar
    switch to the id once the PO → engagement lookup is confirmed.
 10. **Time entries** (`views/margin.py`) — used for "days booked so far" in the Margin watch person drill-down; the table
     renders without them if the pull is missing.
+11. **Gold data columns** (`stargate_rm/gold/fields.py`) — confirm these names in bronze and the HubSpot table; each missing one
+    reads as empty and is named in `/api/status`:
+    - delivery group: contract cost, baseline revenue and cost (X01, X02, variance), offering (engagement family),
+      pre-mobilisation, linked HubSpot deal id;
+    - milestones object and its fields (forecast, contracted, original contracted date, RAG, RAG updated, complete) for
+      X04, X18, X26 and variance's milestone evidence;
+    - HubSpot deals: id, name, stage, probability, amount, close / start / end dates, offering, forecast status, owner, company.
+12. **Bank holidays** (`stargate_rm/gold/build.py`, `legacy/rm_build.py`, `legacy/match.py`) — the gold build's list runs to
+    the end of 2028; `legacy/match.py` still has Easter 2027 on 2 and 5 April (it is 26 and 29 March).
 
 ## Streamlit equivalents of the artifact controls
 
