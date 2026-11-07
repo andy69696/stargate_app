@@ -1,6 +1,12 @@
 """The model behind Explain and Ask.
 
-config.LLM_ENDPOINT names either
+config.LLM_KIND says how config.LLM_ENDPOINT is called (or "auto" to work it out):
+  * model_provider_service: a Databricks AI Gateway model provider service, catalog.schema.name, holding an external
+    provider's connection and key (e.g. ubds_ai_models.default.gpt_apikey_test).  Called on
+    <workspace>/ai-gateway/openai/v1/chat/completions with the header Databricks-Model-Provider-Service: <name>, the app's own
+    Databricks token, and config.LLM_MODEL as the model.  The app needs EXECUTE on it and USE CATALOG / USE SCHEMA above it.
+
+Otherwise config.LLM_ENDPOINT names either
   * a Unity Catalog function, catalog.schema.function (three parts), e.g. ubds_ai_models.default.gpt_apikey_test_payload:
     called through the app's SQL warehouse as  SELECT <function>(...)  with the arguments bound as parameters; or
   * a model serving endpoint (a plain name, e.g. databricks-claude-sonnet-4): called through the Databricks SDK.
@@ -31,6 +37,8 @@ _sig_cache: dict[str, dict] = {}
 
 
 def kind(name: str | None = None) -> str:
+    if config.LLM_KIND in ("model_provider_service", "uc_function", "serving_endpoint") and name is None:
+        return config.LLM_KIND
     return "uc_function" if _FUNCTION_NAME.match(name or config.LLM_ENDPOINT) else "serving_endpoint"
 
 
@@ -171,6 +179,44 @@ def _call_endpoint(messages: list[dict], max_tokens: int, temperature: float, en
     return (ch.message.content or "").strip(), getattr(ch, "finish_reason", None) == "length", None
 
 
+# ---------------------------------------------------------------- AI Gateway model provider service
+GATEWAY_CHAT_PATH = "/ai-gateway/openai/v1/chat/completions"
+
+
+def _call_provider(messages: list[dict], max_tokens: int, temperature: float, service: str | None = None) -> tuple[str, bool, object]:
+    import requests
+    from databricks.sdk import WorkspaceClient
+
+    service = service or config.LLM_ENDPOINT
+    w = WorkspaceClient()
+    url = w.config.host.rstrip("/") + GATEWAY_CHAT_PATH
+    headers = dict(w.config.authenticate())
+    headers.update({"Databricks-Model-Provider-Service": service, "Content-Type": "application/json"})
+    body: dict = {"messages": messages, "max_tokens": max_tokens, "temperature": temperature}
+    if config.LLM_MODEL:
+        body["model"] = config.LLM_MODEL
+    for _ in range(4):     # newer OpenAI models want max_completion_tokens and may reject temperature: adjust and retry
+        r = requests.post(url, headers=headers, json=body, timeout=120)
+        if r.ok:
+            break
+        txt, low = r.text[:700], r.text.lower()
+        if r.status_code == 400:
+            if "max_completion_tokens" in low and "max_tokens" in body:
+                body["max_completion_tokens"] = body.pop("max_tokens")
+                continue
+            dropped = [k for k in ("temperature", "max_tokens", "max_completion_tokens") if k in body and k in low]
+            if dropped:
+                for k in dropped:
+                    body.pop(k)
+                continue
+        raise RuntimeError(f"AI Gateway answered {r.status_code}: {txt}")
+    else:
+        raise RuntimeError("AI Gateway rejected the request parameters")
+    data = r.json()
+    text, cut = _text_from(data)
+    return text, cut, json.dumps(data)[:1500]
+
+
 def visible_endpoints() -> list[dict]:
     """Serving endpoints the app's service principal can see, with what each serves (Unity Catalog model or external model)."""
     from databricks.sdk import WorkspaceClient
@@ -199,6 +245,12 @@ def resolve(name: str | None = None, refresh: bool = False) -> dict:
     name = name or config.LLM_ENDPOINT
     if not refresh and name in _resolved:
         return _resolved[name]
+    if config.LLM_KIND in ("model_provider_service", "uc_function", "serving_endpoint"):
+        how = {"model_provider_service": f"AI Gateway model provider service (model {config.LLM_MODEL or 'not set: the service default'})",
+               "uc_function": "Unity Catalog function, called through the SQL warehouse", "serving_endpoint": "serving endpoint named in LLM_ENDPOINT"}
+        r = {"kind": config.LLM_KIND, "target": name, "how": how[config.LLM_KIND] + " (LLM_KIND)"}
+        _resolved[name] = r
+        return r
     if kind(name) == "serving_endpoint":
         r = {"kind": "serving_endpoint", "target": name, "how": "serving endpoint named in LLM_ENDPOINT"}
     else:
@@ -231,15 +283,22 @@ def resolve(name: str | None = None, refresh: bool = False) -> dict:
 def complete(messages: list[dict], max_tokens: int = 1500, temperature: float = 0.2) -> tuple[str, bool]:
     """(text, truncated).  Raises on failure; the caller turns the error into a message."""
     max_tokens = max(1, min(int(max_tokens or 1500), 4000))
-    r = resolve()
-    if r["kind"] == "uc_function":
-        text, cut, _raw = _call_function(messages, max_tokens, temperature)
-    else:
-        text, cut, _raw = _call_endpoint(messages, max_tokens, temperature, r["target"])
+    text, cut, _raw = _dispatch(resolve(), messages, max_tokens, temperature)
     return text, cut
 
 
+def _dispatch(r: dict, messages: list[dict], max_tokens: int, temperature: float):
+    if r["kind"] == "uc_function":
+        return _call_function(messages, max_tokens, temperature)
+    if r["kind"] == "model_provider_service":
+        return _call_provider(messages, max_tokens, temperature, r["target"])
+    return _call_endpoint(messages, max_tokens, temperature, r["target"])
+
+
 def help_text() -> str:
+    if kind() == "model_provider_service":
+        return (f"LLM_ENDPOINT is the model provider service {config.LLM_ENDPOINT}: the app needs EXECUTE on it and USE CATALOG / USE SCHEMA on "
+                f"its catalog and schema, and LLM_MODEL ({config.LLM_MODEL or 'not set'}) must be a model the service allows. /api/llm-check shows the details")
     if kind() == "uc_function":
         return (f"LLM_ENDPOINT is {config.LLM_ENDPOINT}: as a function the app needs USE CATALOG, USE SCHEMA and EXECUTE; as a registered model, "
                 "CAN_QUERY on the serving endpoint that serves it. /api/llm-check shows which it is")
@@ -266,17 +325,18 @@ def check() -> dict:
         holders, values = _arguments(sig, [{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0)
         out["call"] = {"sql": f"SELECT {config.LLM_ENDPOINT}({', '.join(holders)}) AS out", "arguments": values}
     try:
-        out["visible_endpoints"] = visible_endpoints()[:60]
+        if r is None or r["kind"] != "model_provider_service":
+            out["visible_endpoints"] = visible_endpoints()[:60]
     except Exception as e:  # noqa: BLE001
         out["visible_endpoints_error"] = str(e).splitlines()[0][:300] if str(e) else type(e).__name__
     if r is None:
         return out
     t0 = time.time()
+    if r["kind"] == "model_provider_service":
+        out["call"] = {"url": "<workspace>" + GATEWAY_CHAT_PATH, "header": {"Databricks-Model-Provider-Service": r["target"]},
+                       "model": config.LLM_MODEL or "(not set)"}
     try:
-        if r["kind"] == "uc_function":
-            text, cut, raw = _call_function([{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0)
-        else:
-            text, cut, raw = _call_endpoint([{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0, r["target"])
+        text, cut, raw = _dispatch(r, [{"role": "user", "content": "Reply with the single word OK."}], 20, 0.0)
         out["test"] = {"ok": True, "seconds": round(time.time() - t0, 2), "text": text[:500], "truncated": cut,
                        "raw": None if raw is None else str(raw)[:1500]}
     except Exception as e:  # noqa: BLE001

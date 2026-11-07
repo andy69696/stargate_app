@@ -16,7 +16,10 @@ env:
   - name: APP_STATE_SCHEMA
     value: "salesforce_dev.stargate_app" # TODO(databricks): schema the app may write to (workspace_db, resourcing_history; Streamlit also uses exception_ledger, rm_actions)
   - name: LLM_ENDPOINT
-    value: "ubds_ai_models.default.gpt_apikey_test"   # Explain and Ask: a Unity Catalog function, or a registered model (called through the
-                                                     # endpoint that serves it), or a plain serving endpoint name. /api/llm-check shows which (llm.py).
+    value: "ubds_ai_models.default.gpt_apikey_test"   # Explain and Ask: the AI Gateway model provider service (llm.py)
+  - name: LLM_KIND
+    value: "model_provider_service"                  # or uc_function / serving_endpoint / auto
+  - name: LLM_MODEL
+    value: ""                                        # TODO: a model the provider service allows, e.g. gpt-4o-mini
   - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
     value: "false"
