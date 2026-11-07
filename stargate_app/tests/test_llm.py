@@ -172,7 +172,40 @@ def test_model_provider_service(monkeypatch):
     url, headers, body = posts[-1]
     assert url == "https://adb-1.azuredatabricks.net/ai-gateway/openai/v1/chat/completions"
     assert headers["Databricks-Model-Provider-Service"] == "ubds_ai_models.default.gpt_apikey_test" and headers["Authorization"] == "Bearer t"
-    assert body["model"] == "gpt-5-mini" and body["max_completion_tokens"] == 50 and "temperature" not in body and body["messages"] == MSG
+    assert body["model"] == "gpt-5-mini" and body["max_completion_tokens"] == 1000 and body["reasoning_effort"] == "minimal"
+    assert "temperature" not in body and body["messages"] == MSG and len(posts) == 1     # reasoning model: right parameters first time
+
+    # a non-reasoning model starts with max_tokens and temperature and adapts to what is rejected
+    monkeypatch.setattr(config, "LLM_MODEL", "gpt-4o-mini")
+    posts.clear()
+    assert llm.complete(MSG, max_tokens=50) == ("So what: ok", False)
+    assert posts[-1][2]["max_completion_tokens"] == 50 and "temperature" not in posts[-1][2] and len(posts) == 3
+
+
+def test_reasoning_model_retries_when_budget_spent(monkeypatch):
+    monkeypatch.setattr(config, "LLM_KIND", "model_provider_service")
+    monkeypatch.setattr(config, "LLM_MODEL", "gpt-5-nano")
+    budgets = []
+
+    class Resp:
+        ok, status_code = True, 200
+
+        def __init__(self, data):
+            self._d, self.text = data, json.dumps(data)
+
+        def json(self):
+            return self._d
+
+    def post(url, headers, json, timeout):  # noqa: A002
+        budgets.append(json["max_completion_tokens"])
+        if len(budgets) == 1:
+            return Resp({"choices": [{"message": {"content": ""}, "finish_reason": "length"}]})
+        return Resp({"choices": [{"message": {"content": "OK"}, "finish_reason": "stop"}]})
+    monkeypatch.setitem(sys.modules, "requests", types.SimpleNamespace(post=post))
+    cfg = types.SimpleNamespace(host="https://h", authenticate=lambda: {})
+    _fake_sdk(monkeypatch, type("WC", (), {"__init__": lambda self: setattr(self, "config", cfg)}))
+    llm._resolved.clear()
+    assert llm.complete(MSG, max_tokens=20) == ("OK", False) and budgets == [1000, 4000]
 
 
 def test_three_part_name_matches_endpoint_named_after_it(monkeypatch):

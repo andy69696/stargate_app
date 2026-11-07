@@ -20,6 +20,6 @@ env:
   - name: LLM_KIND
     value: "model_provider_service"                  # or uc_function / serving_endpoint / auto
   - name: LLM_MODEL
-    value: ""                                        # TODO: a model the provider service allows, e.g. gpt-4o-mini
+    value: "gpt-5-nano"                              # the model the provider service allows
   - name: STREAMLIT_BROWSER_GATHER_USAGE_STATS
     value: "false"
