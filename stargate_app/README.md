@@ -52,7 +52,7 @@ provides the same calls, backed by the server:
 |---|---|
 | `user` | the signed-in user, from the `X-Forwarded-Email` header the Apps proxy adds (`/api/me`) |
 | `db` (approvals, proposals, exception ledger, settings, pricing deals …) | Firestore-style collections in the Delta table `<APP_STATE_SCHEMA>.workspace_db` (`/api/db`); browsers poll every 15 s for other users' changes |
-| `sample` (Explain, Ask) | the model serving endpoint `LLM_ENDPOINT` (`/api/sample`) |
+| `sample` (Explain, Ask) | `LLM_ENDPOINT` (`/api/sample`): the serving endpoint `gpt_apikey_test`, or a `catalog.schema.function` called through the SQL warehouse (`stargate_rm/llm.py`). `GET /api/llm-check` shows how it is called and makes one test call. |
 | `downloads` | a normal browser download |
 
 If `workspace_db` cannot be created or written, shared state is kept in memory (works, but is lost on restart).

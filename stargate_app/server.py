@@ -33,7 +33,7 @@ from pathlib import Path
 from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 
-from stargate_rm import config, db, pipeline
+from stargate_rm import config, db, llm, pipeline
 from stargate_rm.workspace_store import store
 
 HERE = Path(__file__).resolve().parent
@@ -135,8 +135,14 @@ def status() -> dict:
             "live_files": list(LIVE),
         },
         "store": store.status(),
-        "llm": {"enabled": True, "endpoint": config.LLM_ENDPOINT, "sample_mode": config.SAMPLE_MODE},
+        "llm": {"enabled": True, "endpoint": config.LLM_ENDPOINT, "called_as": llm.kind(), "sample_mode": config.SAMPLE_MODE},
     }
+
+
+@app.get("/api/llm-check")
+def llm_check() -> Response:
+    """How Explain calls the model, and one test call with the raw answer."""
+    return Response(json.dumps(llm.check(), default=str, indent=1, ensure_ascii=False), media_type="application/json", headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/diagnose")
@@ -205,20 +211,12 @@ def sample(body: dict = Body(...)) -> Response:
     if config.SAMPLE_MODE:
         return JSONResponse({"text": "So what: (sample mode) the model is not called; the executive summary appears here.\n"
                                      "Recommended action: (sample mode) the recommended action appears here.", "truncated": False})
-    max_tokens = int(body.get("max_tokens") or 1500)
     try:
-        from databricks.sdk import WorkspaceClient
-        from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
-
-        w = WorkspaceClient()
-        role = {"user": ChatMessageRole.USER, "assistant": ChatMessageRole.ASSISTANT}
-        r = w.serving_endpoints.query(name=config.LLM_ENDPOINT, messages=[ChatMessage(role=role[m["role"]], content=m["content"]) for m in msgs],
-                                      max_tokens=min(max_tokens, 4000), temperature=0.2)
-        ch = r.choices[0]
-        return JSONResponse({"text": (ch.message.content or "").strip(), "truncated": getattr(ch, "finish_reason", None) == "length"})
+        text, truncated = llm.complete(msgs, max_tokens=int(body.get("max_tokens") or 1500))
+        return JSONResponse({"text": text, "truncated": truncated})
     except Exception as e:  # noqa: BLE001
         log.exception("model call failed")
-        return JSONResponse({"error": f"Explain is not available: {str(e).splitlines()[0][:200]} (check LLM_ENDPOINT and the app's CAN_QUERY grant)",
+        return JSONResponse({"error": f"Explain is not available: {str(e).splitlines()[0][:200] if str(e) else type(e).__name__} ({llm.help_text()})",
                              "code": "sampling_disabled"}, status_code=503)
 
 

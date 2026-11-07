@@ -29,15 +29,11 @@ def explain(kind: str, facts: dict) -> str:
     prompt = PROMPTS[kind] + "\n\nFACTS: " + json.dumps(facts, default=str)
     if config.SAMPLE_MODE:
         return "So what: (sample mode) the model is not called; this is where the executive summary of the row appears.\nRecommended action: (sample mode) the one concrete instruction for the Resource manager appears here."
+    from . import llm
     try:
-        from databricks.sdk import WorkspaceClient
-        from databricks.sdk.service.serving import ChatMessage, ChatMessageRole
-
-        w = WorkspaceClient()
-        r = w.serving_endpoints.query(name=config.LLM_ENDPOINT, messages=[ChatMessage(role=ChatMessageRole.USER, content=prompt)], max_tokens=300, temperature=0.2)
-        return (r.choices[0].message.content or "").strip()
+        return llm.complete([{"role": "user", "content": prompt}], max_tokens=300)[0]
     except Exception as e:  # noqa: BLE001
-        return f"Explain is not available: {str(e).splitlines()[0][:200]}  (check LLM_ENDPOINT in app.yaml and the app's CAN_QUERY grant)"
+        return f"Explain is not available: {str(e).splitlines()[0][:200]}  ({llm.help_text()})"
 
 
 def render(text: str) -> str:
