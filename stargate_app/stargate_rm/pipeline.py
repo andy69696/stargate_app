@@ -52,11 +52,14 @@ _gaps: list[str] = []
 
 def _safe(fn, *args, what: str = "") -> list[dict]:
     """Run a lake query; on failure (table missing, column renamed) return no rows and remember the gap for the banner."""
+    tok = db.label.set(what or fn.__name__)
     try:
         return db.records(fn(*args))
     except Exception as e:  # noqa: BLE001 - we want the page to render with a visible gap, not crash
         _gaps.append(f"{what or fn.__name__}: {str(e).splitlines()[0][:200]}")
         return []
+    finally:
+        db.label.reset(tok)
 
 
 def build_data(today: str | None = None) -> dict:
@@ -137,11 +140,14 @@ def build_data(today: str | None = None) -> dict:
 
 
 def _safe_sql(sql_text: str, what: str) -> list[dict]:
+    tok = db.label.set(what)
     try:
         return db.records(sql_text)
     except Exception as e:  # noqa: BLE001
         _gaps.append(f"{what}: {str(e).splitlines()[0][:200]}")
         return []
+    finally:
+        db.label.reset(tok)
 
 
 def build_gold(today: str) -> tuple[dict | None, str | None]:

@@ -59,6 +59,21 @@ If `workspace_db` cannot be created or written, shared state is kept in memory (
 `GET /api/status` shows the build time, any data gaps from the lake build, the number of people in the Utilisation data, and
 whether the store is on Delta or in memory. `POST /api/rebuild` clears the cache and rebuilds from the lake.
 
+**Debugging the lake data (`/api/diagnose`)**
+
+Open `<app URL>/api/diagnose?download=1` in the deployed app. It runs a fresh build with every query observed, then probe
+queries, and downloads one JSON report (a minute or two; no people's names, costs or rates):
+- `queries`: every query the build ran, with its rows, time, error and how many values per column came back empty;
+- `probes`: duplicate rows per table, period types and the day weeks start on, usage units, forecast statuses,
+  resource types, the billable flag, business units, grades, absence activities, engagement-name formats, product
+  group Ids, generic placeholders, skills, milestone values and data freshness;
+- `outputs`: what each Resource manager view receives.
+
+`tests/lake_schema.csv` is the bronze/HubSpot column export; `tests/test_lake_schema.py` checks every generated query and
+probe against it (`pip install -r requirements-dev.txt`). Tables the app used to join but bronze does not have
+(product group, location, time pattern, unit type, resource activity role) are now joined only if present. Product group
+names: set `PRODUCT_GROUP_NAMES` (JSON `{"<Id>": "<name>"}`) from the `product_groups` probe until the table is ingested.
+
 **Run locally**
 
 ```bash

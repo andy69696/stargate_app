@@ -139,6 +139,22 @@ def status() -> dict:
     }
 
 
+@app.get("/api/diagnose")
+def diagnose(download: int = 0) -> Response:
+    """Fresh build with every query observed plus probe queries (stargate_rm/diagnose.py).  Takes as long as a build, a minute or two."""
+    from stargate_rm import diagnose as diag
+
+    with build.lock:
+        report, data = diag.run()
+        if data and not report["build"]["error"]:
+            build.data, build.at, build.error, build.seconds = data, time.time(), None, report["build"]["seconds"]
+            _index_cache.update(key=None, html=None)
+    headers = {"Cache-Control": "no-store"}
+    if download:
+        headers["Content-Disposition"] = f'attachment; filename="stargate-diagnose-{report["today"]}.json"'
+    return Response(json.dumps(report, default=str, indent=1, ensure_ascii=False), media_type="application/json", headers=headers)
+
+
 @app.post("/api/rebuild")
 def rebuild() -> dict:
     build.clear()

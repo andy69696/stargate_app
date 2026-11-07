@@ -31,6 +31,12 @@ SAMPLE_MODE = os.environ.get("STARGATE_SAMPLE", "") == "1"
 # ---- Business rules (as signed off by the Resource Management team; keep in step with the Rules applied panels)
 EXCL_BU = {"Service Delivery", "Client Success"}            # business units outside the resourcing pool
 MS_PRODUCT_GROUPS = ("IoC Managed Services", "SoC Managed Services", "Annuities")   # engagements outside resourcing scope
+
+# KimbleOne__ProductGroup__c is not ingested into bronze (Nov 2026), so product group names cannot be joined.  Until it is,
+# name the product groups by Id here (JSON {"<Id>": "<name>"}; /api/diagnose lists the Ids in use with example engagements).
+# Only the managed-services groups above and match.py's OUTCOME_PG matter.  Once the table is ingested this is ignored.
+import json as _json
+PRODUCT_GROUP_NAMES: dict = _json.loads(os.environ.get("PRODUCT_GROUP_NAMES", "{}") or "{}")
 BENCH_THRESHOLD = 0.25        # weekly availability at or above this = under-utilised
 OVER_THRESHOLD = 0.0          # weekly availability below this = over-utilised
 MARGIN_TARGET = 40            # target GPM %, Margin watch default threshold and the fixed band on Margin improvement actions

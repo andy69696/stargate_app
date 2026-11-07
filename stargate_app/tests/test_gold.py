@@ -73,7 +73,7 @@ def test_levers_match_snapshot():
 
 
 def test_full_build_offline(monkeypatch):
-    cols = {v.lower() for m in (F.DG, F.MILESTONE, F.HUBSPOT) for v in m.values()} | {F.ASSIGNMENT_CLIENT_ROLE}
+    cols = {v.lower() for m in (F.DG, F.MILESTONE, F.HUBSPOT) for v in m.values() if v} | {F.ASSIGNMENT_CLIENT_ROLE}
     monkeypatch.setattr(db, "columns", lambda t: cols)
     gaps = []
     gold = B.build(TODAY, FX.fake_safe(FX.lake_rows()), gaps)
@@ -94,4 +94,4 @@ def test_missing_columns_become_gaps(monkeypatch):
     gaps = []
     gold = B.build(TODAY, FX.fake_safe({}), gaps)
     assert set(gold) == set(SNAP)
-    assert any("milestones skipped" in g for g in gaps) and any("has no column" in g for g in gaps)
+    assert any("milestones skipped" in g for g in gaps) and any("no column for" in g for g in gaps)
