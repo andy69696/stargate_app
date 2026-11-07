@@ -212,12 +212,17 @@ def resolve(name: str | None = None, refresh: bool = False) -> dict:
             except Exception as ee:  # noqa: BLE001
                 raise RuntimeError(f"{name} is not a function the app can describe ({fn_err}) and the serving endpoints could not be listed "
                                    f"({str(ee).splitlines()[0][:200]})") from ee
-            hits = [e["name"] for e in eps if any(str(s).lower() == name.lower() for s in e["serves"])]
+            last = name.split(".")[-1].strip("`")
+            alias = {last.lower(), last.replace("_", "-").lower()}       # inference tables are <endpoint name, - as _>_payload
+            hits = [e["name"] for e in eps if any(str(s).lower() == name.lower() for s in e["serves"])] + \
+                   [e["name"] for e in eps if e["name"].lower() in alias]
             if not hits:
                 raise RuntimeError(f"{name} is not a function the app can describe ({fn_err}), and none of the {len(eps)} serving endpoints the "
                                    f"app can see serves it as a model. If it is a registered model, give the app CAN_QUERY on the endpoint that "
-                                   f"serves it (or set LLM_ENDPOINT to that endpoint's name)")
-            r = {"kind": "serving_endpoint", "target": hits[0], "how": f"registered model {name}, served by endpoint {hits[0]}"}
+                                   f"serves it, or to the endpoint named {last.replace('_', '-')} / {last} if that is the one (or set LLM_ENDPOINT to the endpoint's name)")
+            how = f"registered model {name}, served by endpoint {hits[0]}" if hits[0].lower() not in alias else \
+                f"serving endpoint {hits[0]} (named after {name}; no function or served model of that name)"
+            r = {"kind": "serving_endpoint", "target": hits[0], "how": how}
     _resolved[name] = r
     return r
 

@@ -130,3 +130,21 @@ def test_sample_route_uses_llm(monkeypatch):
 def test_llm_check_route():
     r = TestClient(server.app).get("/api/llm-check").json()
     assert r["llm_endpoint"] == config.LLM_ENDPOINT == "ubds_ai_models.default.gpt_apikey_test" and r["called_as"] == "uc_function"
+
+
+def test_three_part_name_matches_endpoint_named_after_it(monkeypatch):
+    monkeypatch.setattr(config, "LLM_ENDPOINT", "ubds_ai_models.default.gpt_apikey_test")
+
+    def no_function(sql_text, cached=True, params=None):
+        raise RuntimeError("[UNRESOLVED_ROUTINE] Cannot resolve routine")
+    monkeypatch.setattr(db, "query", no_function)
+
+    class Endpoints:
+        def list(self):
+            ext = types.SimpleNamespace(entity_name=None, external_model=types.SimpleNamespace(provider="openai", name="gpt-4o"), name="gpt")
+            return [types.SimpleNamespace(name="databricks-gpt-oss-120b", task="llm/v1/chat", config=None),
+                    types.SimpleNamespace(name="gpt-apikey-test", task="llm/v1/chat", config=types.SimpleNamespace(served_entities=[ext], served_models=None))]
+    _fake_sdk(monkeypatch, type("WC", (), {"serving_endpoints": Endpoints()}))
+    llm._sig_cache.clear(); llm._resolved.clear()
+    r = llm.resolve()
+    assert r["target"] == "gpt-apikey-test" and r["kind"] == "serving_endpoint"
