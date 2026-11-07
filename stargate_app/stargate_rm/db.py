@@ -7,6 +7,7 @@ under the FastAPI server, which do not share Streamlit's cache); clear_cache() e
 """
 from __future__ import annotations
 
+import contextvars
 import decimal
 import os
 import threading
@@ -20,6 +21,18 @@ from . import config
 CACHE_TTL = 3600
 _cache: dict[str, tuple[float, pd.DataFrame]] = {}
 _cache_lock = threading.Lock()
+
+# Diagnostics hooks: the pipeline labels each pull; observers see every query (label, sql, frame or None, seconds, error).
+label: contextvars.ContextVar[str] = contextvars.ContextVar("stargate_query_label", default="")
+observers: list = []
+
+
+def _notify(sql_text: str, df, seconds: float, error: str | None) -> None:
+    for fn in list(observers):
+        try:
+            fn(label.get(), sql_text, df, seconds, error)
+        except Exception:  # noqa: BLE001 - an observer must never break a query
+            pass
 
 
 def clear_cache() -> None:
@@ -59,10 +72,16 @@ def query(sql_text: str, cached: bool = True, params: dict | None = None) -> pd.
             hit = _cache.get(sql_text)
         if hit and now - hit[0] < CACHE_TTL:
             return hit[1]
-    with _connection() as conn, conn.cursor() as cur:
-        cur.execute(sql_text, params) if params else cur.execute(sql_text)
-        cols = [c[0] for c in cur.description]
-        df = pd.DataFrame(cur.fetchall_arrow().to_pandas() if hasattr(cur, "fetchall_arrow") else cur.fetchall(), columns=cols)
+    t0 = time.time()
+    try:
+        with _connection() as conn, conn.cursor() as cur:
+            cur.execute(sql_text, params) if params else cur.execute(sql_text)
+            cols = [c[0] for c in cur.description]
+            df = pd.DataFrame(cur.fetchall_arrow().to_pandas() if hasattr(cur, "fetchall_arrow") else cur.fetchall(), columns=cols)
+    except Exception as e:
+        _notify(sql_text, None, time.time() - t0, str(e).splitlines()[0][:400] if str(e) else type(e).__name__)
+        raise
+    _notify(sql_text, df, time.time() - t0, None)
     if cached:
         with _cache_lock:
             _cache[sql_text] = (now, df)
@@ -81,6 +100,14 @@ def columns(table: str) -> set[str]:
     with _cache_lock:
         _cache["__columns__" + table] = (time.time(), pd.DataFrame(columns=cols))
     return set(cols)
+
+
+def table_exists(table: str) -> bool:
+    """True if the table can be read.  Optional lookup tables (e.g. product group) are joined only when present."""
+    try:
+        return bool(columns(table))
+    except Exception:  # noqa: BLE001 - missing table or no grant: treat as absent
+        return False
 
 
 def execute(sql_text: str, params: dict | None = None) -> None:

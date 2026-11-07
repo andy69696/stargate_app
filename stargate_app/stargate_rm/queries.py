@@ -13,18 +13,42 @@ Conventions
 """
 from __future__ import annotations
 
+from . import config, db
 from .config import kt, MS_PRODUCT_GROUPS
 
-# Reference objects the joins rely on.  TODO(databricks): confirm each exists in salesforce_dev.bronze; if one is missing,
-# either add it to the ingestion or replace the join with a CASE on the Id (the app will run but the names come back NULL).
+# Reference objects the joins rely on (checked against the bronze column export of 6 Nov 2026).  Not in bronze:
+# KimbleOne__ProductGroup__c (names come from config.PRODUCT_GROUP_NAMES until it is ingested), KimbleOne__Location__c,
+# KimbleOne__TimePattern__c, KimbleOne__UnitType__c (display only: left empty), KimbleOne__ResourceActivityRole__c (the matcher
+# falls back to each resource's own activity role).  Joining a missing table fails the whole query, so these are joined only
+# when db.table_exists() says they are there.
 REFERENCE_OBJECTS = [
     "KimbleOne__ResourceType__c", "KimbleOne__Grade__c", "KimbleOne__BusinessUnit__c", "KimbleOne__BusinessUnitGroup__c",
-    "KimbleOne__ActivityRole__c", "KimbleOne__TimePattern__c", "KimbleOne__TimePeriod__c", "KimbleOne__PeriodType__c",
-    "KimbleOne__ForecastStatus__c", "KimbleOne__ProductGroup__c", "KimbleOne__DeliveryStage__c", "KimbleOne__ResourcedActivity__c",
+    "KimbleOne__ActivityRole__c", "KimbleOne__TimePeriod__c", "KimbleOne__PeriodType__c",
+    "KimbleOne__ForecastStatus__c", "KimbleOne__DeliveryStage__c", "KimbleOne__ResourcedActivity__c",
     "KimbleOne__AnalysisFact__c", "KimbleOne__DeliveryElement__c", "KimbleOne__DomainClass__c", "KimbleOne__CapabilityType__c",
-    "KimbleOne__CapabilityGroup__c", "KimbleOne__Location__c", "KimbleOne__UnitType__c", "KimbleOne__ResourceActivityRole__c",
-    "KimbleOne__PerformanceAnalysis__c", "Account",
+    "KimbleOne__CapabilityGroup__c", "KimbleOne__PerformanceAnalysis__c", "Account",
 ]
+OPTIONAL_REFERENCE_OBJECTS = ["KimbleOne__ProductGroup__c", "KimbleOne__Location__c", "KimbleOne__TimePattern__c",
+                              "KimbleOne__UnitType__c", "KimbleOne__ResourceActivityRole__c"]
+
+
+def has(obj: str) -> bool:
+    return db.table_exists(kt(obj))
+
+
+def pg_join(dg: str = "dg") -> str:
+    """Join for the product group name, or nothing when the table is not in bronze."""
+    return f"\n      LEFT JOIN {kt('KimbleOne__ProductGroup__c')} pg ON pg.id = {dg}.kimbleone__productgroup__c" if has("KimbleOne__ProductGroup__c") else ""
+
+
+def pg_name(dg: str = "dg") -> str:
+    """Product group name: from the table when ingested, else from config.PRODUCT_GROUP_NAMES by Id, else NULL."""
+    if has("KimbleOne__ProductGroup__c"):
+        return "pg.name"
+    if not config.PRODUCT_GROUP_NAMES:
+        return "CAST(NULL AS STRING)"
+    whens = " ".join(f"WHEN '{k.replace(chr(39), '')}' THEN '{v.replace(chr(39), chr(39) * 2)}'" for k, v in config.PRODUCT_GROUP_NAMES.items())
+    return f"(CASE {dg}.kimbleone__productgroup__c {whens} END)"
 
 ABSENCE_ACTIVITIES = ("Planned absence (Bamboo)", "Unplanned absence (Bamboo)", "Contracted Non-Working day", "Non Working Day(3BDS)",
                       "IOC Shift Rest Day", "Supplier Unavailability")
@@ -41,8 +65,7 @@ def _resource_joins(alias="r"):
       LEFT JOIN {kt('KimbleOne__Grade__c')} gr ON gr.id = {alias}.kimbleone__grade__c
       LEFT JOIN {kt('KimbleOne__BusinessUnit__c')} bu ON bu.id = {alias}.kimbleone__businessunit__c
       LEFT JOIN {kt('KimbleOne__BusinessUnitGroup__c')} bug ON bug.id = bu.kimbleone__businessunitgroup__c
-      LEFT JOIN {kt('KimbleOne__ActivityRole__c')} rrole ON rrole.id = {alias}.kimbleone__activityrole__c
-      LEFT JOIN {kt('KimbleOne__TimePattern__c')} tpat ON tpat.id = {alias}.kimbleone__timepattern__c"""
+      LEFT JOIN {kt('KimbleOne__ActivityRole__c')} rrole ON rrole.id = {alias}.kimbleone__activityrole__c"""
 
 
 def _apa_joins():
@@ -56,8 +79,7 @@ def _apa_joins():
       LEFT JOIN {kt('KimbleOne__ActivityAssignment__c')} aa ON aa.id = apa.kimbleone__activityassignment__c
       LEFT JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = aa.kimbleone__deliverygroup__c
       LEFT JOIN {kt('KimbleOne__ForecastStatus__c')} fs ON fs.id = dg.kimbleone__forecaststatus__c
-      LEFT JOIN Account_ acc ON acc.id = dg.kimbleone__account__c
-      LEFT JOIN {kt('KimbleOne__ProductGroup__c')} pg ON pg.id = dg.kimbleone__productgroup__c
+      LEFT JOIN Account_ acc ON acc.id = dg.kimbleone__account__c{pg_join()}
       LEFT JOIN {kt('KimbleOne__ResourcedActivity__c')} ra ON ra.id = aa.kimbleone__resourcedactivity__c""".replace("Account_", kt("Account"))
 
 
@@ -71,18 +93,16 @@ def resources(prev_monday: str) -> str:
     SELECT r.id AS `Id`, r.name AS `Name`, rt.name AS `KimbleOne__ResourceType__r.Name`, gr.name AS `KimbleOne__Grade__r.Name`,
            bu.name AS `KimbleOne__BusinessUnit__r.Name`, bug.name AS `KimbleOne__BusinessUnit__r.KimbleOne__BusinessUnitGroup__r.Name`,
            bus.name AS `KimbleOne__BusinessUnitSecondary__r.Name`, rrole.name AS `KimbleOne__ActivityRole__r.Name`,
-           r.budget_role__c AS `Budget_role__c`, loc.name AS `KimbleOne__Location__r.Name`,
+           r.budget_role__c AS `Budget_role__c`, CAST(NULL AS STRING) AS `KimbleOne__Location__r.Name`,
            r.kimbleone__startdate__c AS `KimbleOne__StartDate__c`, r.kimbleone__enddate__c AS `KimbleOne__EndDate__c`,
-           r.ubds_contract_end_date__c AS `UBDS_Contract_end_date__c`, tpat.name AS `KimbleOne__TimePattern__r.Name`,
-           r.kimbleone__standardcost__c AS `KimbleOne__StandardCost__c`, ut.name AS `KimbleOne__StandardCostUnitType__r.Name`,
+           r.ubds_contract_end_date__c AS `UBDS_Contract_end_date__c`, CAST(NULL AS STRING) AS `KimbleOne__TimePattern__r.Name`,
+           r.kimbleone__standardcost__c AS `KimbleOne__StandardCost__c`, CAST(NULL AS STRING) AS `KimbleOne__StandardCostUnitType__r.Name`,
            r.kimbleone__standardrevenue__c AS `KimbleOne__StandardRevenue__c`,
            r.kimbleone__latestp1assignmentenddate__c AS `KimbleOne__LatestP1AssignmentEndDate__c`,
            r.suppress_utilisation_reporting__c AS `Suppress_Utilisation_reporting__c`
       FROM {kt('KimbleOne__Resource__c')} r
       {_resource_joins('r')}
       LEFT JOIN {kt('KimbleOne__BusinessUnit__c')} bus ON bus.id = r.kimbleone__businessunitsecondary__c
-      LEFT JOIN {kt('KimbleOne__Location__c')} loc ON loc.id = r.kimbleone__location__c
-      LEFT JOIN {kt('KimbleOne__UnitType__c')} ut ON ut.id = r.kimbleone__standardcostunittype__c
      WHERE rt.name IN ('Employee','Supplier','Partner') AND COALESCE(r.isdeleted, false) = false
        AND (r.kimbleone__enddate__c IS NULL OR r.kimbleone__enddate__c >= DATE '{prev_monday}')
      ORDER BY bu.name, r.name"""
@@ -239,20 +259,18 @@ def months(m_from: str, m_to: str) -> str:
 
 def ms_engagements(today: str) -> str:
     return f"""
-    SELECT dg.name AS `Name`, pg.name AS `KimbleOne__ProductGroup__r.Name`
-      FROM {kt('KimbleOne__DeliveryGroup__c')} dg
-      LEFT JOIN {kt('KimbleOne__ProductGroup__c')} pg ON pg.id = dg.kimbleone__productgroup__c
+    SELECT dg.name AS `Name`, {pg_name()} AS `KimbleOne__ProductGroup__r.Name`
+      FROM {kt('KimbleOne__DeliveryGroup__c')} dg{pg_join()}
       LEFT JOIN {kt('KimbleOne__ForecastStatus__c')} fs ON fs.id = dg.kimbleone__forecaststatus__c
-     WHERE pg.name IN {_in(MS_PRODUCT_GROUPS)} AND (dg.kimbleone__expectedenddate__c >= DATE '{today}' OR dg.kimbleone__expectedenddate__c IS NULL)
+     WHERE {pg_name()} IN {_in(MS_PRODUCT_GROUPS)} AND (dg.kimbleone__expectedenddate__c >= DATE '{today}' OR dg.kimbleone__expectedenddate__c IS NULL)
        AND COALESCE(fs.name, '') <> 'Lost Closed'"""
 
 
 def eng_pg(today: str) -> str:
     return f"""
-    SELECT dg.name AS `Name`, pg.name AS `KimbleOne__ProductGroup__r.Name`, fs.name AS `KimbleOne__ForecastStatus__r.Name`,
+    SELECT dg.name AS `Name`, {pg_name()} AS `KimbleOne__ProductGroup__r.Name`, fs.name AS `KimbleOne__ForecastStatus__r.Name`,
            dg.kimbleone__expectedenddate__c AS `KimbleOne__ExpectedEndDate__c`
-      FROM {kt('KimbleOne__DeliveryGroup__c')} dg
-      LEFT JOIN {kt('KimbleOne__ProductGroup__c')} pg ON pg.id = dg.kimbleone__productgroup__c
+      FROM {kt('KimbleOne__DeliveryGroup__c')} dg{pg_join()}
       LEFT JOIN {kt('KimbleOne__ForecastStatus__c')} fs ON fs.id = dg.kimbleone__forecaststatus__c
      WHERE (dg.kimbleone__expectedenddate__c >= DATE '{today}' OR dg.kimbleone__expectedenddate__c IS NULL) AND COALESCE(fs.name, '') <> 'Lost Closed'
      ORDER BY dg.name"""
@@ -263,11 +281,10 @@ def not_detailed(today: str) -> str:
     SELECT dg.name AS `Name`, acc.name AS `KimbleOne__Account__r.Name`, fs.name AS `KimbleOne__ForecastStatus__r.Name`,
            dg.kimbleone__forecastatthislevel__c AS `KimbleOne__ForecastAtThisLevel__c`, dg.kimbleone__contractrevenue__c AS `KimbleOne__ContractRevenue__c`,
            dg.kimbleone__expectedstartdate__c AS `KimbleOne__ExpectedStartDate__c`, dg.kimbleone__expectedenddate__c AS `KimbleOne__ExpectedEndDate__c`,
-           pg.name AS `KimbleOne__ProductGroup__r.Name`, ds.name AS `KimbleOne__DeliveryStage__r.Name`
+           {pg_name()} AS `KimbleOne__ProductGroup__r.Name`, ds.name AS `KimbleOne__DeliveryStage__r.Name`
       FROM {kt('KimbleOne__DeliveryGroup__c')} dg
       LEFT JOIN {kt('Account')} acc ON acc.id = dg.kimbleone__account__c
-      LEFT JOIN {kt('KimbleOne__ForecastStatus__c')} fs ON fs.id = dg.kimbleone__forecaststatus__c
-      LEFT JOIN {kt('KimbleOne__ProductGroup__c')} pg ON pg.id = dg.kimbleone__productgroup__c
+      LEFT JOIN {kt('KimbleOne__ForecastStatus__c')} fs ON fs.id = dg.kimbleone__forecaststatus__c{pg_join()}
       LEFT JOIN {kt('KimbleOne__DeliveryStage__c')} ds ON ds.id = dg.kimbleone__deliverystage__c
      WHERE COALESCE(fs.name, '') <> 'Lost Closed' AND (dg.kimbleone__expectedenddate__c >= DATE '{today}' OR dg.kimbleone__expectedenddate__c IS NULL)
        AND COALESCE(dg.kimbleone__forecastatthislevel__c, 'Y') <> 'N'"""
@@ -275,6 +292,14 @@ def not_detailed(today: str) -> str:
 
 # ---- matcher inputs ---------------------------------------------------------------------------------------------------------
 def res_roles(today: str) -> str:
+    if not has("KimbleOne__ResourceActivityRole__c"):     # not in bronze: each resource's own activity role
+        return f"""
+    SELECT r.id AS `KimbleOne__Resource__c`, arole.name AS `KimbleOne__ActivityRole__r.Name`
+      FROM {kt('KimbleOne__Resource__c')} r
+      LEFT JOIN {kt('KimbleOne__ResourceType__c')} rt ON rt.id = r.kimbleone__resourcetype__c
+      LEFT JOIN {kt('KimbleOne__ActivityRole__c')} arole ON arole.id = r.kimbleone__activityrole__c
+     WHERE rt.name IN ('Employee','Supplier','Partner') AND arole.name IS NOT NULL
+       AND (r.kimbleone__enddate__c IS NULL OR r.kimbleone__enddate__c >= DATE '{today}')"""
     return f"""
     SELECT rar.kimbleone__resource__c AS `KimbleOne__Resource__c`, arole.name AS `KimbleOne__ActivityRole__r.Name`
       FROM {kt('KimbleOne__ResourceActivityRole__c')} rar
@@ -296,11 +321,11 @@ def booked(m_from: str, m_to: str) -> str:
 
 def booked_type(m_from: str, m_to: str) -> str:
     return f"""
-    SELECT apa.kimbleone__resource__c AS res, tp.kimbleone__startdate__c AS sd, pg.name AS pg, SUM(apa.kimbleone__forecastp3usage__c) AS u3
+    SELECT apa.kimbleone__resource__c AS res, tp.kimbleone__startdate__c AS sd, {pg_name()} AS pg, SUM(apa.kimbleone__forecastp3usage__c) AS u3
       {_apa_joins()}
      WHERE pt.name = 'Month' AND tp.kimbleone__startdate__c BETWEEN DATE '{m_from}' AND DATE '{m_to}'
        AND rt.name IN ('Employee','Supplier','Partner') AND COALESCE(fs.name, '') <> 'Lost Closed'
-     GROUP BY apa.kimbleone__resource__c, tp.kimbleone__startdate__c, pg.name"""
+     GROUP BY apa.kimbleone__resource__c, tp.kimbleone__startdate__c, {pg_name()}"""
 
 
 def capabilities(today: str) -> str:
@@ -319,10 +344,9 @@ def capabilities(today: str) -> str:
 
 # ---- additional lake objects (new in salesforce_dev.bronze) used to enrich the views and the Explain facts -------------------
 def required_capabilities() -> str:
-    """Skills a generic role asks for (RequiredCapability on the assignment / activity role).
-    TODO(databricks): confirm the parent lookup field on KimbleOne__RequiredCapability__c (assumed KimbleOne__ActivityAssignment__c)."""
+    """Skills a generic role asks for (RequiredCapability on the activity assignment)."""
     return f"""
-    SELECT rq.kimbleone__activityassignment__c AS aid, ct.name AS capability, cg.name AS capability_group, rq.kimbleone__minimumrating__c AS min_rating
+    SELECT rq.kimbleone__activityassignment__c AS aid, ct.name AS capability, cg.name AS capability_group, rq.kimbleone__minimumnumericrating__c AS min_rating
       FROM {kt('KimbleOne__RequiredCapability__c')} rq
       LEFT JOIN {kt('KimbleOne__CapabilityType__c')} ct ON ct.id = rq.kimbleone__capabilitytype__c
       LEFT JOIN {kt('KimbleOne__CapabilityGroup__c')} cg ON cg.id = ct.kimbleone__capabilitygroup__c
@@ -330,62 +354,67 @@ def required_capabilities() -> str:
 
 
 def dg_actors() -> str:
-    """Who is who on each engagement (DeliveryGroupActor): used so Explain can name the account lead / delivery principal.
-    TODO(databricks): confirm the role field name on KimbleOne__DeliveryGroupActor__c (assumed KimbleOne__ActorRole__c, picklist)."""
+    """Who is who on each engagement (DeliveryGroupActor): used so Explain can name the account lead / delivery principal."""
     return f"""
-    SELECT dg.name AS dg, a.kimbleone__actorrole__c AS actor_role, u.name AS actor
+    SELECT dg.name AS dg, ar.name AS actor_role, u.name AS actor
       FROM {kt('KimbleOne__DeliveryGroupActor__c')} a
       JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = a.kimbleone__deliverygroup__c
+      LEFT JOIN {kt('KimbleOne__ActorRole__c')} ar ON ar.id = a.kimbleone__actorrole__c
       LEFT JOIN {kt('User')} u ON u.id = a.kimbleone__user__c
      WHERE COALESCE(a.isdeleted, false) = false"""
 
 
 def status_summaries() -> str:
-    """Latest RAG status per engagement (StatusSummary), shown in Explain facts for live engagements."""
+    """Current RAG status per engagement: the delivery group's status summary, its delivery status (the RAG) and narrative."""
     return f"""
-    SELECT dg.name AS dg, s.kimbleone__ragstatus__c AS rag, s.kimbleone__summary__c AS summary, s.lastmodifieddate AS modified
-      FROM {kt('KimbleOne__StatusSummary__c')} s
-      JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = s.kimbleone__deliverygroup__c
-     QUALIFY ROW_NUMBER() OVER (PARTITION BY dg.name ORDER BY s.lastmodifieddate DESC) = 1"""
+    SELECT dg.name AS dg, st.name AS rag, s.kimbleone__narrative__c AS summary, s.lastmodifieddate AS modified
+      FROM {kt('KimbleOne__DeliveryGroup__c')} dg
+      JOIN {kt('KimbleOne__StatusSummary__c')} s ON s.id = dg.kimbleone__deliverygroupstatussummary__c
+      LEFT JOIN {kt('KimbleOne__DeliveryStatus__c')} st ON st.id = s.kimbleone__deliverystatus__c
+     WHERE COALESCE(s.isdeleted, false) = false"""
 
 
 def purchase_orders() -> str:
     """PO cover per engagement: used as the third system check on Not detailed (Kantata value vs HubSpot value vs PO value)."""
     return f"""
-    SELECT dg.name AS dg, SUM(po.kimbleone__amount__c) AS po_value, MIN(po.kimbleone__startdate__c) AS po_start, MAX(po.kimbleone__enddate__c) AS po_end, COUNT(po.id) AS po_n
-      FROM {kt('KimbleOne__PurchaseOrder__c')} po
-      JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = po.kimbleone__deliverygroup__c
-     WHERE COALESCE(po.isdeleted, false) = false
+    SELECT dg.name AS dg, SUM(poa.kimbleone__allocatedvalue__c) AS po_value, MIN(po.kimbleone__orderdate__c) AS po_start,
+           MAX(po.kimbleone__expirydate__c) AS po_end, COUNT(DISTINCT po.id) AS po_n
+      FROM {kt('KimbleOne__PurchaseOrderAllocation__c')} poa
+      JOIN {kt('KimbleOne__PurchaseOrder__c')} po ON po.id = poa.kimbleone__purchaseorder__c
+      JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = poa.kimbleone__deliverygroup__c
+     WHERE COALESCE(poa.isdeleted, false) = false AND COALESCE(po.isdeleted, false) = false
      GROUP BY dg.name"""
 
 
 def invoices() -> str:
-    """Invoiced to date per engagement (Invoice), used in Margin watch's engagement facts."""
+    """Invoiced to date per engagement, used in Margin watch's engagement facts.  Invoices carry no delivery group in bronze
+    (invoice items are not ingested), so this is the invoiced value of each engagement's purchase-order allocations: invoicing
+    not raised against a PO is not counted."""
     return f"""
-    SELECT dg.name AS dg, SUM(i.kimbleone__invoicevalue__c) AS invoiced, MAX(i.kimbleone__invoicedate__c) AS last_invoice
-      FROM {kt('KimbleOne__Invoice__c')} i
-      JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = i.kimbleone__deliverygroup__c
-     WHERE COALESCE(i.isdeleted, false) = false
+    SELECT dg.name AS dg, SUM(poa.kimbleone__invoicedvalue__c) AS invoiced, MAX(poa.kimbleone__latestinvoiceitemdate__c) AS last_invoice
+      FROM {kt('KimbleOne__PurchaseOrderAllocation__c')} poa
+      JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = poa.kimbleone__deliverygroup__c
+     WHERE COALESCE(poa.isdeleted, false) = false
      GROUP BY dg.name"""
 
 
 def time_entries(d_from: str) -> str:
     """Actual days booked per person x engagement since d_from (TimeEntry via Timesheet): the 'actual so far' behind a margin row."""
     return f"""
-    SELECT ts.kimbleone__resource__c AS rid, dg.name AS dg, SUM(te.kimbleone__units__c) AS units, MAX(te.kimbleone__date__c) AS last_entry
+    SELECT te.kimbleone__resource__c AS rid, dg.name AS dg, SUM(te.kimbleone__entryunits__c) AS units, MAX(tp.kimbleone__startdate__c) AS last_entry
       FROM {kt('KimbleOne__TimeEntry__c')} te
-      JOIN {kt('KimbleOne__Timesheet__c')} ts ON ts.id = te.kimbleone__timesheet__c
+      JOIN {kt('KimbleOne__TimePeriod__c')} tp ON tp.id = te.kimbleone__timeperiod__c
       LEFT JOIN {kt('KimbleOne__ActivityAssignment__c')} aa ON aa.id = te.kimbleone__activityassignment__c
       LEFT JOIN {kt('KimbleOne__DeliveryGroup__c')} dg ON dg.id = aa.kimbleone__deliverygroup__c
-     WHERE te.kimbleone__date__c >= DATE '{d_from}' AND COALESCE(te.isdeleted, false) = false
-     GROUP BY ts.kimbleone__resource__c, dg.name"""
+     WHERE tp.kimbleone__startdate__c >= DATE '{d_from}' AND COALESCE(te.isdeleted, false) = false
+     GROUP BY te.kimbleone__resource__c, dg.name"""
 
 
 def hubspot_deals(table: str) -> str:
-    """HubSpot deals for the Not detailed comparison.  TODO(databricks): map these aliases onto the real deals table columns:
-    key = the CLIENT-PROJ engagement code held on the deal (deal name prefix or a custom property), amount, band = deal stage,
-    start / end = expected start and end dates, name = deal name."""
+    """HubSpot deals for the Not detailed comparison.  The deals table has no engagement-code property, so the key is the
+    CLIENT-PROJ prefix of the deal name (the same rule key_of() applies to Kantata delivery group names)."""
     return f"""
-    SELECT engagement_code AS key, amount, dealstage AS band, expected_start_date AS start, expected_end_date AS `end`, dealname AS name
+    SELECT COALESCE(NULLIF(regexp_extract(dealname, '^([A-Za-z0-9]+-[A-Za-z0-9]+)', 1), ''), dealname) AS key, amount,
+           dealstage AS band, start_date AS start, end_date AS `end`, dealname AS name
       FROM {table}
-     WHERE COALESCE(is_closed_lost, false) = false"""
+     WHERE COALESCE(CAST(archived AS BOOLEAN), false) = false"""

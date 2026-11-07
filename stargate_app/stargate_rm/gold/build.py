@@ -83,6 +83,16 @@ def _flag(u: float) -> str:
     return "over" if u > R.OVER_UTILISED else "under" if u < R.UNDER_UTILISED else "ok"
 
 
+_BANDS = {"commit": "Commit", "mostlikely": "Most Likely", "bestcase": "Best Case", "pipeline": "Pipeline", "omitted": "Omitted", "closedwon": "Closed Won"}
+
+
+def _band(v) -> str | None:
+    """HubSpot forecast status as the page labels it (commit -> Commit, most_likely -> Most Likely)."""
+    if v is None:
+        return None
+    return _BANDS.get(str(v).lower().replace(" ", "").replace("_", ""), str(v))
+
+
 def _yes(v) -> bool:
     return v is True or str(v).strip().lower() in ("true", "y", "yes", "1")
 
@@ -93,6 +103,7 @@ class Optional:
     def __init__(self, gaps: list):
         self.gaps = gaps
         self.tables: dict[str, tuple[str, dict]] = {}
+        self.declared: dict[str, dict] = {}
 
     def table(self, alias: str, table: str, fieldmap: dict) -> None:
         try:
@@ -100,13 +111,16 @@ class Optional:
         except Exception as e:  # noqa: BLE001
             self.gaps.append(f"gold: cannot read {table}: {str(e).splitlines()[0][:160]}")
             cols = set()
-        self.tables[alias] = (table, {k: (v if v.lower() in cols else None) for k, v in fieldmap.items()})
+        self.tables[alias] = (table, {k: (v if v and v.lower() in cols else None) for k, v in fieldmap.items()})
+        self.declared[alias] = dict(fieldmap)
 
     def __call__(self, alias: str, key: str) -> str:
         table, fmap = self.tables[alias]
         col = fmap.get(key)
+        if col is None and self.declared.get(alias, {}).get(key) is None:
+            return "NULL"                       # documented as not in the lake (fields.py): not a gap
         if col is None:
-            note = f"gold: {table} has no column for '{key}' (fields.py); it reads as empty"
+            note = f"gold: {table}: no column for '{key}' (fields.py); it reads as empty"
             if note not in self.gaps:
                 self.gaps.append(note)
             return "NULL"
@@ -135,10 +149,10 @@ def build(today: str, safe, gaps: list) -> dict:
     eng_recs = safe(Q.engagements(eng_floor, opt), "gold: engagements")
     mon_recs = safe(Q.monthly(months_fwd[0] + "-01", _month_end(months_fwd[-1]), opt), "gold: monthly forecast")
     asg_recs = safe(Q.assignments(monday, opt), "gold: assignments")
-    dg_col = opt.tables["m"][1].get("delivery_group")
-    ms_recs = safe(Q.milestones(F.MILESTONE_OBJECT, dg_col, opt), "gold: milestones") if dg_col else []
-    if not dg_col:
-        gaps.append("gold: milestones skipped (no delivery group column; see fields.py); X04, X18, X26 and milestone variance are empty")
+    de_col = opt.tables["m"][1].get("delivery_element")
+    ms_recs = safe(Q.milestones(F.MILESTONE_OBJECT, de_col, opt), "gold: milestones") if de_col else []
+    if not de_col:
+        gaps.append("gold: milestones skipped (no delivery element column; see fields.py); X04, X18, X26 and milestone variance are empty")
     deal_recs = safe(Q.deals(F.HUBSPOT_DEALS_TABLE, opt, F.HUBSPOT_OPEN_BANDS), "gold: HubSpot deals") \
         if opt.tables["hs"][1].get("id") and opt.tables["hs"][1].get("fstatus") else []
 
@@ -153,7 +167,8 @@ def build(today: str, safe, gaps: list) -> dict:
              "start": _day(r.get("start")), "end": _day(r.get("end")), "rev": round(rev, 2), "cost": round(cost, 2),
              "margin": round((rev - cost) / rev * 100, 2) if rev else None, "brev": round(brev, 2),
              "bmargin": round((brev - _f(bcost)) / brev * 100, 2) if brev and bcost is not None else None,
-             "family": R.OFFERING_FAMILY.get(r.get("offering") or "", "Unmapped"), "pre_mob": r.get("pre_mob"), "offering": r.get("offering"),
+             "family": R.OFFERING_FAMILY.get(r.get("offering") or "") or R.BU_FAMILY.get(r.get("product_bu") or "", "Unmapped"),
+             "pre_mob": r.get("pre_mob"), "offering": r.get("offering") or r.get("product_bu"),
              "product_group": r.get("product_group"), "at_level": _yes(r.get("at_level")), "ms": r.get("product_group") in R.MS_PRODUCT_GROUPS,
              "hs_deal": str(r["hs_deal"]) if r.get("hs_deal") else None, "_bcost": _f(bcost) if bcost is not None else None}
         engs.append(e); eng_by_id[e["id"]] = e
@@ -288,7 +303,7 @@ def build(today: str, safe, gaps: list) -> dict:
         deals.append({"id": did, "name": r.get("name"), "pipeline": r.get("pipeline"), "stage": r.get("stage"),
                       "prob": None if r.get("prob") is None else str(r["prob"]), "amount": None if r.get("amount") is None else str(r["amount"]),
                       "close": _day(r.get("close")), "start": _day(r.get("start")), "end": _day(r.get("end")), "bu": r.get("bu"),
-                      "offering": r.get("offering"), "fstatus": r.get("fstatus"), "margin": r.get("margin"), "owner": r.get("owner"),
+                      "offering": r.get("offering"), "fstatus": _band(r.get("fstatus")), "margin": r.get("margin"), "owner": r.get("owner"),
                       "sf_account": r.get("sf_account"), "company": r.get("company")})
     milestones = []
     for r in ms_recs:
@@ -297,7 +312,8 @@ def build(today: str, safe, gaps: list) -> dict:
             milestones.append({"id": r["id"], "name": r.get("name"), "code": e["code"], "description": r.get("description"),
                                "forecast": _day(r.get("forecast")), "contracted": _day(r.get("contracted")),
                                "original_contracted": _day(r.get("original_contracted")), "rag": r.get("rag"),
-                               "rag_updated": _day(r.get("rag_updated")), "complete": _yes(r.get("complete"))})
+                               "rag_updated": _day(r.get("rag_updated")),
+                               "complete": bool(r.get("delivered")) or str(r.get("status") or "").strip().lower() in F.MILESTONE_DONE_STATUSES})
 
     # ---- engines
     mt = E.matches(deals, people)

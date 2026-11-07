@@ -1,34 +1,35 @@
-"""Column names the gold queries need that are not already used (and so proven) elsewhere in the app.
+"""Column names the gold queries need, checked against the bronze and HubSpot column export of 6 Nov 2026.
 
-TODO(databricks): confirm each name against salesforce_dev.bronze and the HubSpot deals table.  Every column here is
-optional: the build checks the table's columns first, reads NULL for any that is missing, and lists it in the build's
-data gaps (/api/status) with the field that went empty.  Fix a name here and rebuild; nothing else needs to change.
+A value of None means the lake has no such column: the field reads as empty and /api/status lists it under gaps.  Every
+column here is also checked at run time, so a renamed column degrades to empty rather than failing the query.
 """
 import os
 
 # ---- Kantata delivery group (engagement)
 DG = {
-    "contract_revenue": "kimbleone__contractrevenue__c",        # used already by the Not detailed pull
+    "contract_revenue": "kimbleone__contractrevenue__c",
     "contract_cost": "kimbleone__contractcost__c",
-    "baseline_revenue": "kimbleone__baselinecontractrevenue__c",  # the sold baseline; X01 and variance compare against it
+    "baseline_revenue": "kimbleone__baselinecontractrevenue__c",   # the sold baseline; X01 and variance compare against it
     "baseline_cost": "kimbleone__baselinecontractcost__c",
-    "offering": "offering__c",                                  # UBDS custom: offering / proposition (drives the family)
-    "pre_mob": "pre_mobilisation__c",                           # UBDS custom: Yes / No / TBC
-    "hubspot_deal": "hubspot_deal_id__c",                       # UBDS custom: linked HubSpot deal id
+    "offering": None,              # no offering on the delivery group: the family comes from its products' business unit
+    "pre_mob": "pre_mob__c",
+    "hubspot_deal": None,          # no HubSpot deal id on the delivery group
 }
 
-# ---- Kantata milestones (X04, X18, X26 and variance's milestone evidence)
+# ---- Kantata milestones.  Milestones hang off a delivery element, which carries the delivery group.
 MILESTONE_OBJECT = "KimbleOne__Milestone__c"
 MILESTONE = {
-    "delivery_group": "kimbleone__deliverygroup__c",
-    "description": "kimbleone__description__c",
-    "forecast": "kimbleone__forecastdate__c",
-    "contracted": "kimbleone__contracteddate__c",
-    "original_contracted": "kimbleone__originalcontracteddate__c",
-    "rag": "kimbleone__ragstatus__c",
-    "rag_updated": "kimbleone__ragstatusupdateddate__c",
-    "complete": "kimbleone__iscomplete__c",
+    "delivery_element": "kimbleone__deliveryelement__c",
+    "description": "kimbleone__narrative__c",
+    "forecast": "forecast_delivery_date__c",
+    "contracted": "ubds_contracted_due_date__c",
+    "original_contracted": "ubds_previous_contracted_due_date__c",   # set when the contracted date has been changed (X26)
+    "rag": "ubds_rag_status__c",
+    "rag_updated": "lastmodifieddate",          # no RAG-changed date: the milestone's last edit stands in (X04)
+    "delivered": "ubds_milestone_delivered_date__c",
+    "status": "kimbleone__milestonestatus__c",
 }
+MILESTONE_DONE_STATUSES = {"complete", "completed", "delivered", "closed", "invoiced", "approved"}   # see /api/diagnose for the values in use
 
 # ---- Activity assignment custom field (also used by the Resourcing pull)
 ASSIGNMENT_CLIENT_ROLE = "client_role__c"
@@ -43,15 +44,14 @@ HUBSPOT = {
     "prob": "hs_deal_stage_probability",
     "amount": "amount",
     "close": "closedate",
-    "start": "expected_start_date",
-    "end": "expected_end_date",
+    "start": "start_date",
+    "end": "end_date",
     "bu": "business_unit",
-    "offering": "offering",
-    "fstatus": "forecast_status",          # Commit / Most Likely / Best Case / Pipeline
+    "offering": "service_offering",
+    "fstatus": "forecast_status",          # compared ignoring case, spaces and underscores (commit, most_likely, ...)
     "margin": "final_margin_percentage",
-    "owner": "hubspot_owner_name",
-    "sf_account": "salesforce_account_id",
-    "company": "company_name",
-    "closed": "hs_is_closed",              # deals with this true are left out
+    "owner": "hubspot_owner_id",           # an owner id: owner names are not in the lake
+    "sf_account": "salesforce_account_id", # joined to the Salesforce account for the company name
+    "closed": "archived",                  # archived deals are left out
 }
 HUBSPOT_OPEN_BANDS = ("Commit", "Most Likely", "Best Case")   # the snapshot's 62 deals were all in these three bands
