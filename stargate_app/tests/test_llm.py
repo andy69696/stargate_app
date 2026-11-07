@@ -50,9 +50,47 @@ def test_function_call(monkeypatch):
             return pd.DataFrame({"function_desc": ["Function: ubds_ai_models.default.fn", "Type:     SCALAR", "Input:    payload STRING", "Returns:  STRING"]})
         return pd.DataFrame({"out": [json.dumps({"choices": [{"message": {"content": "OK"}}]})]})
     monkeypatch.setattr(db, "query", fake_query)
-    llm._sig_cache.clear()
+    llm._sig_cache.clear(); llm._resolved.clear()
     assert llm.complete(MSG) == ("OK", False)
     assert calls[-1][0] == "SELECT ubds_ai_models.default.fn(:a0) AS out"
+
+
+def _fake_sdk(monkeypatch, wc):
+    sdk = types.ModuleType("databricks.sdk")
+    sdk.WorkspaceClient = wc
+    serving = types.ModuleType("databricks.sdk.service.serving")
+    serving.ChatMessage = lambda role, content: {"role": role, "content": content}
+    serving.ChatMessageRole = types.SimpleNamespace(USER="user", ASSISTANT="assistant", SYSTEM="system")
+    monkeypatch.setitem(sys.modules, "databricks.sdk", sdk)
+    monkeypatch.setitem(sys.modules, "databricks.sdk.service.serving", serving)
+
+
+def test_registered_model_resolves_to_its_endpoint(monkeypatch):
+    monkeypatch.setattr(config, "LLM_ENDPOINT", "ubds_ai_models.default.gpt_apikey_test")
+
+    def no_function(sql_text, cached=True, params=None):
+        raise RuntimeError("[ROUTINE_NOT_FOUND] The routine ubds_ai_models.default.gpt_apikey_test cannot be found.")
+    monkeypatch.setattr(db, "query", no_function)
+    asked = []
+
+    class Endpoints:
+        def list(self):
+            ent = types.SimpleNamespace(entity_name="ubds_ai_models.default.gpt_apikey_test", external_model=None, name="v1")
+            other = types.SimpleNamespace(entity_name=None, external_model=types.SimpleNamespace(provider="openai", name="gpt-4o"), name="x")
+            return [types.SimpleNamespace(name="other-ep", task="llm/v1/chat", config=types.SimpleNamespace(served_entities=[other], served_models=None)),
+                    types.SimpleNamespace(name="gpt-ep", task=None, config=types.SimpleNamespace(served_entities=[ent], served_models=None))]
+
+        def query(self, name, messages, **kw):
+            asked.append(name)
+            msg = types.SimpleNamespace(content="OK")
+            return types.SimpleNamespace(choices=[types.SimpleNamespace(message=msg, finish_reason="stop")])
+
+    class WC:
+        serving_endpoints = Endpoints()
+    _fake_sdk(monkeypatch, WC)
+    llm._sig_cache.clear(); llm._resolved.clear()
+    assert llm.resolve()["target"] == "gpt-ep"
+    assert llm.complete(MSG) == ("OK", False) and asked == ["gpt-ep"]
 
 
 def test_endpoint_retries_without_rejected_parameter(monkeypatch):
@@ -70,13 +108,8 @@ def test_endpoint_retries_without_rejected_parameter(monkeypatch):
     class WC:
         serving_endpoints = Endpoints()
 
-    sdk = types.ModuleType("databricks.sdk")
-    sdk.WorkspaceClient = WC
-    serving = types.ModuleType("databricks.sdk.service.serving")
-    serving.ChatMessage = lambda role, content: {"role": role, "content": content}
-    serving.ChatMessageRole = types.SimpleNamespace(USER="user", ASSISTANT="assistant", SYSTEM="system")
-    monkeypatch.setitem(sys.modules, "databricks.sdk", sdk)
-    monkeypatch.setitem(sys.modules, "databricks.sdk.service.serving", serving)
+    _fake_sdk(monkeypatch, WC)
+    llm._resolved.clear()
     assert llm.complete(MSG, max_tokens=50) == ("So what: fine", False)
     assert seen[0][0] == "gpt_apikey_test" and "temperature" in seen[0][1] and "temperature" not in seen[1][1] and seen[1][1]["max_tokens"] == 50
 
@@ -96,4 +129,4 @@ def test_sample_route_uses_llm(monkeypatch):
 
 def test_llm_check_route():
     r = TestClient(server.app).get("/api/llm-check").json()
-    assert r["llm_endpoint"] == config.LLM_ENDPOINT and r["called_as"] == "serving_endpoint"
+    assert r["llm_endpoint"] == config.LLM_ENDPOINT == "ubds_ai_models.default.gpt_apikey_test" and r["called_as"] == "uc_function"
